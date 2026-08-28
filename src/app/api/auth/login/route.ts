@@ -4,6 +4,16 @@ import { prisma } from "@/lib/db";
 import { signToken, homeFor, Role } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
+  try {
+    return await handleLogin(req);
+  } catch (e) {
+    console.error("Login error:", e);
+    const message = e instanceof Error ? e.message : "Internal error";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+async function handleLogin(req: NextRequest) {
   const { username, password } = await req.json();
   const user = await prisma.user.findUnique({ where: { username } });
   if (!user || !user.active || !(await bcrypt.compare(password, user.password))) {
