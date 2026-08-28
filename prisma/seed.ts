@@ -2,7 +2,13 @@ import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "../src/generated/prisma/client";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasourceUrl:
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_PRISMA_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRES_URL_NON_POOLING,
+});
 
 async function main() {
   const users = [
