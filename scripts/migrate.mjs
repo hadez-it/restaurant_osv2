@@ -1,6 +1,7 @@
 // Run prisma migrate deploy, falling back to Neon/Vercel Postgres env vars
 // when DATABASE_URL is not set.
 import { spawnSync } from "node:child_process";
+import "dotenv/config";
 
 const url =
   process.env.DATABASE_URL ||
