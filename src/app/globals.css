@@ -2,8 +2,49 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-orange-50 text-gray-900;
+@layer base {
+  :root {
+    --background: 240 10% 98%;
+    --foreground: 240 10% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 9%;
+    --primary: 24 95% 53%;
+    --primary-foreground: 0 0% 100%;
+    --muted: 240 5% 94%;
+    --muted-foreground: 240 4% 46%;
+    --border: 240 6% 90%;
+    --ring: 24 95% 53%;
+  }
+
+  body {
+    @apply bg-zinc-50 text-zinc-900 antialiased selection:bg-orange-500 selection:text-white;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* Modern subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(161, 161, 170, 0.4);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(161, 161, 170, 0.7);
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.02); }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 @media print {
@@ -19,5 +60,9 @@ body {
     left: 0;
     top: 0;
     width: 100%;
+    margin: 0;
+    padding: 16px;
+    background: white !important;
+    color: black !important;
   }
 }
