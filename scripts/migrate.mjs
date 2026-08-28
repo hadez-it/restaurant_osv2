@@ -18,4 +18,13 @@ const res = spawnSync("npx", ["prisma", "migrate", "deploy"], {
   stdio: "inherit",
   env: { ...process.env, DATABASE_URL: url },
 });
+
+if (res.status === 0) {
+  console.log("Migration successful, ensuring database is seeded...");
+  spawnSync("npx", ["tsx", "prisma/seed.ts"], {
+    stdio: "inherit",
+    env: { ...process.env, DATABASE_URL: url },
+  });
+}
+
 process.exit(res.status ?? 1);

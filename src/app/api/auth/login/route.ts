@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { signToken, homeFor, Role } from "@/lib/auth";
+import { ensureSeeded } from "@/lib/seed";
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,7 +16,11 @@ export async function POST(req: NextRequest) {
 
 async function handleLogin(req: NextRequest) {
   const { username, password } = await req.json();
-  const user = await prisma.user.findUnique({ where: { username } });
+  let user = await prisma.user.findUnique({ where: { username } });
+  if (!user) {
+    await ensureSeeded();
+    user = await prisma.user.findUnique({ where: { username } });
+  }
   if (!user || !user.active || !(await bcrypt.compare(password, user.password))) {
     return NextResponse.json({ error: "Invalid username or password" }, { status: 401 });
   }
