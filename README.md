@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🍊 OrangePOS — Restaurant Workflow
 
-## Getting Started
+A restaurant workflow web app: waiters take orders per table, confirmed orders print a kitchen slip, the cashier sees table bills and completes checkout to free the table, and the owner/admin manages tables, users, and the menu.
 
-First, run the development server:
+## Roles & workflow
+
+1. **Waiter** — sees the table map, opens a free table, adds menu items, and **confirms** the order → a kitchen slip (ticket) is created. When guests want to pay, the waiter sends the table to **checkout**.
+2. **Kitchen** — sees incoming slips in real time; slips can auto-print (browser print) or print on demand; marks slips done when cooked.
+3. **Cashier** — sees all open tables with items & totals; checkout requests are highlighted. "Mark paid" completes the order, shows a printable receipt, and frees the table.
+4. **Admin (owner)** — manages tables, menu items, and users; also has access to all role screens.
+
+## Getting started
 
 ```bash
+npm install
+npx prisma migrate dev   # creates the SQLite database
+npx tsx prisma/seed.ts   # seed demo users, tables and menu
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 and log in with one of the demo accounts (password `password123`):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Username | Role    |
+| -------- | ------- |
+| admin    | Admin   |
+| waiter   | Waiter  |
+| kitchen  | Kitchen |
+| cashier  | Cashier |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Stack
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Next.js 14 (App Router) + TypeScript
+- Tailwind CSS (orange theme)
+- Prisma + SQLite
+- JWT cookie auth (set `JWT_SECRET` in production)

@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  name      String
+  role      String // ADMIN | WAITER | KITCHEN | CASHIER
+  active    Boolean  @default(true)
+  orders    Order[]
+  createdAt DateTime @default(now())
+}
+
+model Table {
+  id     Int     @id @default(autoincrement())
+  name   String  @unique
+  seats  Int     @default(4)
+  status String  @default("FREE") // FREE | OCCUPIED | CHECKOUT
+  orders Order[]
+}
+
+model MenuItem {
+  id        Int         @id @default(autoincrement())
+  name      String
+  price     Float
+  category  String      @default("General")
+  available Boolean     @default(true)
+  items     OrderItem[]
+}
+
+model Order {
+  id        Int         @id @default(autoincrement())
+  table     Table       @relation(fields: [tableId], references: [id])
+  tableId   Int
+  waiter    User        @relation(fields: [waiterId], references: [id])
+  waiterId  Int
+  status    String      @default("OPEN") // OPEN | CHECKOUT | PAID | CANCELLED
+  items     OrderItem[]
+  tickets   Ticket[]
+  createdAt DateTime    @default(now())
+  paidAt    DateTime?
+}
+
+model OrderItem {
+  id         Int      @id @default(autoincrement())
+  order      Order    @relation(fields: [orderId], references: [id])
+  orderId    Int
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  menuItemId Int
+  qty        Int      @default(1)
+  price      Float
+  note       String?
+  ticket     Ticket?  @relation(fields: [ticketId], references: [id])
+  ticketId   Int?
+}
+
+model Ticket {
+  id        Int         @id @default(autoincrement())
+  order     Order       @relation(fields: [orderId], references: [id])
+  orderId   Int
+  status    String      @default("NEW") // NEW | DONE
+  items     OrderItem[]
+  createdAt DateTime    @default(now())
+}
