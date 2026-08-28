@@ -12,9 +12,13 @@ A restaurant workflow web app: waiters take orders per table, confirmed orders p
 ## Getting started
 
 ```bash
+# start a local Postgres (or point DATABASE_URL at any Postgres)
+docker run -d --name pg -e POSTGRES_PASSWORD=devpass -e POSTGRES_DB=restaurant -p 5432:5432 postgres:16-alpine
+
+cp .env.example .env         # adjust DATABASE_URL if needed
 npm install
-npx prisma migrate dev   # creates the SQLite database
-npx tsx prisma/seed.ts   # seed demo users, tables and menu
+npx prisma migrate dev       # create the database schema
+npm run db:seed              # seed demo users, tables and menu
 npm run dev
 ```
 
@@ -31,5 +35,15 @@ Open http://localhost:3000 and log in with one of the demo accounts (password `p
 
 - Next.js 14 (App Router) + TypeScript
 - Tailwind CSS (orange theme)
-- Prisma + SQLite
+- Prisma + PostgreSQL
 - JWT cookie auth (set `JWT_SECRET` in production)
+
+## Deploying to Vercel
+
+1. Create a Postgres database — easiest is **Neon** from the Vercel Marketplace (Storage → Create Database → Neon, free tier). This sets `DATABASE_URL` on the project automatically.
+2. Import this repo into Vercel. The build script runs `prisma migrate deploy`, so the schema is created on first deploy.
+3. Add a `JWT_SECRET` environment variable (any long random string).
+4. Seed demo data once from your machine:
+   ```bash
+   DATABASE_URL="<your neon connection string>" npm run db:seed
+   ```
