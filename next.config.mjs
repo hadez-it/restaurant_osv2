@@ -3,7 +3,7 @@ const nextConfig = {
   experimental: {
     // Ensure the Prisma query engine binary is bundled into serverless functions
     outputFileTracingIncludes: {
-      "/**/*": ["./src/generated/prisma/*.node"],
+      "/**": ["./node_modules/.prisma/client/**/*"],
     },
   },
 };

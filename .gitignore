@@ -38,3 +38,10 @@ next-env.d.ts
 /src/generated/prisma
 dev.db
 src/generated/
+
+# local agent & skill files
+.agents/
+.claude/
+.omp/
+CLAUDE.md
+skills-lock.json
