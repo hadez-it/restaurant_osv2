@@ -213,7 +213,7 @@ export default function LoginPage() {
                 </span>
               </div>
               <p className="text-xs text-zinc-400 font-medium">
-                Restaurant Operating Engine
+                TCS RestaurantOS
               </p>
             </div>
           </div>
@@ -291,7 +291,7 @@ export default function LoginPage() {
             </div>
           </div>
           <span className="text-[11px] text-zinc-400">
-            OrangeOS v2.4 Enterprise
+            TCS RestaurantOS v2.4 Enterprise
           </span>
         </div>
       </div>
@@ -525,7 +525,7 @@ export default function LoginPage() {
 
         {/* Bottom subtle copyright on right side */}
         <div className="mt-5 text-center text-xs text-zinc-400">
-          OrangeOS Restaurant Suite &bull; Hardware Accelerated POS
+          TCS RestaurantOS &bull; Hardware Accelerated POS
         </div>
       </div>
     </div>

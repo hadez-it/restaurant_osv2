@@ -802,7 +802,7 @@ export default function CashierPage() {
                     </div>
 
                     <div className="rounded-xl border border-zinc-100 bg-zinc-50/50 p-3 space-y-1">
-                      <div className="text-center font-bold">🍊 OrangePOS Restaurant</div>
+                      <div className="text-center font-bold">🍊 TCS RestaurantOS</div>
                       <div className="text-center text-[10px] text-zinc-500">
                         Table: {activePayment.table.name} · Order #{activePayment.order.id}
                       </div>
@@ -865,7 +865,7 @@ export default function CashierPage() {
       <div className="hidden print:block print:w-72 print:mx-auto print:font-mono print:text-black print:text-xs print:leading-tight">
         {printedReceipt ? (
           <div>
-            <div className="text-center font-bold text-sm">🍊 OrangePOS</div>
+            <div className="text-center font-bold text-sm">🍊 TCS RestaurantOS</div>
             <div className="text-center text-[10px]">RESTAURANT MANAGEMENT OS</div>
             <div className="text-center text-[10px]">123 Gourmet Ave, Suite 100</div>
             <div className="text-center text-[10px]">Tel: (555) 019-2834</div>
@@ -918,7 +918,7 @@ export default function CashierPage() {
           </div>
         ) : activePayment ? (
           <div>
-            <div className="text-center font-bold text-sm">🍊 OrangePOS</div>
+            <div className="text-center font-bold text-sm">🍊 TCS RestaurantOS</div>
             <div className="text-center text-[10px]">TABLE BILL ESTIMATE</div>
             <div className="my-2 border-t border-dashed border-black" />
             <div>TABLE: {activePayment.table.name}</div>

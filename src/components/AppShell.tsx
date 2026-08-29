@@ -134,7 +134,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   </span>
                 </div>
                 <span className="text-[10px] font-medium text-zinc-400 mt-0.5">
-                  Restaurant Workflow Suite
+                  TCS RestaurantOS
                 </span>
               </div>
             </Link>

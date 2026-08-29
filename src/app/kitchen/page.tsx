@@ -876,7 +876,7 @@ export default function KitchenPage() {
               *** KITCHEN EXPEDITE SLIP ***
             </div>
             <div className="text-center text-[10px] text-zinc-600 pb-2 border-b border-black">
-              OrangePOS Restaurant OS
+              TCS RestaurantOS
             </div>
 
             <div className="py-2 space-y-0.5 text-xs">

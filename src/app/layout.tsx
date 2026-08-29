@@ -9,7 +9,7 @@ const geistSans = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "OrangePOS — Restaurant Workflow",
+  title: "TCS RestaurantOS",
   description: "Waiter, kitchen, cashier and admin workflow for restaurants",
 };
 
