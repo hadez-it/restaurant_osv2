@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -6,6 +7,7 @@ import Link from "next/link";
 import AppShell from "@/components/AppShell";
 import Modal from "@/components/Modal";
 import { MenuItem, Order, orderTotal, money } from "@/lib/types";
+import { getMenuItemImage } from "@/lib/menu-images";
 import {
   Search,
   Flame,
@@ -530,70 +532,81 @@ export default function OrderPage() {
                     return (
                       <div
                         key={m.id}
-                        className={`group relative flex flex-col justify-between rounded-2xl border bg-white p-4 shadow-xs transition-all duration-200 ${
+                        className={`group relative flex flex-col justify-between rounded-2xl border bg-white overflow-hidden shadow-xs transition-all duration-200 ${
                           m.available
                             ? "border-zinc-200/90 hover:border-orange-300 hover:shadow-md hover:-translate-y-0.5"
                             : "border-zinc-200/50 bg-zinc-50/60 opacity-60"
                         }`}
                       >
-                        <div>
-                          {/* Top Row: Category & In-Stock Indicator */}
-                          <div className="flex items-center justify-between gap-2 mb-2">
-                            <span className="inline-block rounded-md bg-zinc-100 px-2 py-0.5 text-[11px] font-semibold text-zinc-600 uppercase tracking-wider">
+                        {/* Food Photography Image Banner */}
+                        <div className="relative h-36 w-full bg-zinc-100 overflow-hidden">
+                          <img
+                            src={getMenuItemImage(m)}
+                            alt={m.name}
+                            loading="lazy"
+                            decoding="async"
+                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                          <div className="absolute top-2.5 left-2.5">
+                            <span className="inline-block rounded-md bg-white/90 backdrop-blur-xs px-2 py-0.5 text-[10px] font-bold text-zinc-800 uppercase tracking-wider shadow-2xs border border-zinc-200/60">
                               {m.category}
                             </span>
+                          </div>
+                          <div className="absolute top-2.5 right-2.5">
                             {m.available ? (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700">
-                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/90 backdrop-blur-xs px-2 py-0.5 text-[10px] font-bold text-white shadow-2xs">
                                 Available
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-zinc-400">
-                                <span className="h-1.5 w-1.5 rounded-full bg-zinc-400"></span>
+                              <span className="inline-flex items-center gap-1 rounded-full bg-zinc-900/80 backdrop-blur-xs px-2 py-0.5 text-[10px] font-bold text-white shadow-2xs">
                                 Sold Out
                               </span>
                             )}
                           </div>
-
-                          {/* Dish Name */}
-                          <h3 className="text-base font-bold text-zinc-900 group-hover:text-orange-950 transition-colors leading-snug line-clamp-2">
-                            {m.name}
-                          </h3>
                         </div>
 
-                        <div className="mt-4 pt-3 border-t border-zinc-100 space-y-3">
-                          <div className="flex items-baseline justify-between">
-                            <span className="text-lg font-extrabold text-zinc-900">
-                              {money(m.price)}
-                            </span>
-                            {inDraftCount > 0 && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2 py-0.5 text-xs font-bold text-orange-700 border border-orange-200/80 animate-pop">
-                                <Check className="h-3 w-3 text-orange-600" />
-                                {inDraftCount} in ticket
-                              </span>
-                            )}
+                        <div className="p-4 flex-1 flex flex-col justify-between">
+                          <div>
+                            {/* Dish Name */}
+                            <h3 className="text-base font-bold text-zinc-900 group-hover:text-orange-950 transition-colors leading-snug line-clamp-2">
+                              {m.name}
+                            </h3>
                           </div>
 
-                          {/* Touch-Friendly + Add Button */}
-                          <button
-                            type="button"
-                            disabled={!canAdd}
-                            onClick={() => addItem(m)}
-                            className={`flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl py-2.5 px-4 text-sm font-bold shadow-2xs transition-all active:scale-[0.98] ${
-                              canAdd
-                                ? "bg-orange-600 text-white hover:bg-orange-700 hover:shadow-sm"
-                                : "bg-zinc-100 text-zinc-400 cursor-not-allowed"
-                            }`}
-                          >
-                            {isItemBusy ? (
-                              <RefreshCw className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <>
-                                <Plus className="h-4 w-4 stroke-[2.5]" />
-                                <span>{inDraftCount > 0 ? "Add Another" : "Add to Order"}</span>
-                              </>
-                            )}
-                          </button>
+                          <div className="mt-4 pt-3 border-t border-zinc-100 space-y-3">
+                            <div className="flex items-baseline justify-between">
+                              <span className="text-lg font-extrabold text-zinc-900">
+                                {money(m.price)}
+                              </span>
+                              {inDraftCount > 0 && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2 py-0.5 text-xs font-bold text-orange-700 border border-orange-200/80 animate-pop">
+                                  <Check className="h-3 w-3 text-orange-600" />
+                                  {inDraftCount} in ticket
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Touch-Friendly + Add Button */}
+                            <button
+                              type="button"
+                              disabled={!canAdd}
+                              onClick={() => addItem(m)}
+                              className={`flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl py-2.5 px-4 text-sm font-bold shadow-2xs transition-all active:scale-[0.98] ${
+                                canAdd
+                                  ? "bg-orange-600 text-white hover:bg-orange-700 hover:shadow-sm"
+                                  : "bg-zinc-100 text-zinc-400 cursor-not-allowed"
+                              }`}
+                            >
+                              {isItemBusy ? (
+                                <RefreshCw className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <>
+                                  <Plus className="h-4 w-4 stroke-[2.5]" />
+                                  <span>{inDraftCount > 0 ? "Add Another" : "Add to Order"}</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     );

@@ -1,9 +1,11 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
 import Modal from "@/components/Modal";
 import { TableInfo, MenuItem, orderTotal, money } from "@/lib/types";
+import { getMenuItemImage } from "@/lib/menu-images";
 import {
   LayoutGrid,
   Utensils,
@@ -745,23 +747,35 @@ function MenuTab() {
             {filteredItems.map((item) => (
               <div
                 key={item.id}
-                className={`flex flex-col justify-between rounded-2xl border bg-white p-4 shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${
+                className={`flex flex-col justify-between rounded-2xl border bg-white overflow-hidden shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${
                   item.available ? "border-zinc-200" : "border-zinc-200/60 opacity-70 bg-zinc-50/50"
                 }`}
               >
-                <div>
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="rounded-md bg-orange-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-orange-700">
+                {/* Food Image Banner */}
+                <div className="relative h-36 w-full bg-zinc-100 overflow-hidden">
+                  <img
+                    src={getMenuItemImage(item)}
+                    alt={item.name}
+                    loading="lazy"
+                    decoding="async"
+                    className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                  />
+                  <div className="absolute top-2.5 left-2.5">
+                    <span className="inline-block rounded-md bg-white/90 backdrop-blur-xs px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-orange-700 shadow-2xs border border-zinc-200/60">
                       {item.category || "General"}
                     </span>
-                    <span className="text-base font-black text-zinc-900">
+                  </div>
+                  <div className="absolute bottom-2.5 right-2.5">
+                    <span className="inline-block rounded-lg bg-zinc-900/85 backdrop-blur-xs px-2.5 py-0.5 text-xs font-black text-white shadow-2xs">
                       {money(item.price)}
                     </span>
                   </div>
-                  <h4 className="mt-2 text-base font-bold text-zinc-900 leading-snug">
+                </div>
+
+                <div className="p-4 flex-1 flex flex-col justify-between">
+                  <h4 className="text-base font-bold text-zinc-900 leading-snug">
                     {item.name}
                   </h4>
-                </div>
 
                 <div className="mt-5 pt-3 border-t border-zinc-100 flex items-center justify-between">
                   {/* Availability Toggle Switch */}
@@ -817,6 +831,7 @@ function MenuTab() {
                   </div>
                 </div>
               </div>
+            </div>
             ))}
           </div>
         )}
