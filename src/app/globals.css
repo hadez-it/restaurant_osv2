@@ -42,13 +42,121 @@
   background: rgba(161, 161, 170, 0.7);
 }
 
+/* =========================================================================
+   UI/UX Motion & Micro-Interactions System (Apple HIG & Material Design)
+   All animations use GPU composite layers (transform + opacity)
+   ========================================================================= */
+
 @keyframes pulse-subtle {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.85; transform: scale(1.02); }
 }
 
+@keyframes backdrop-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-enter-desktop {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modal-enter-mobile {
+  from {
+    opacity: 0.4;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toast-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes scale-pop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes card-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .animate-pulse-subtle {
   animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-backdrop {
+  animation: backdrop-fade-in 180ms ease-out forwards;
+}
+
+.animate-modal {
+  animation: modal-enter-mobile 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (min-width: 640px) {
+  .animate-modal {
+    animation: modal-enter-desktop 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+.animate-toast {
+  animation: toast-slide-down 240ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-pop {
+  animation: scale-pop 200ms cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.animate-card {
+  animation: card-fade-in 200ms ease-out forwards;
+}
+
+/* Reduced Motion Override for Accessibility (WCAG 2.1 AAA) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 @media print {

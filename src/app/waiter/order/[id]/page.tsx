@@ -316,7 +316,7 @@ export default function OrderPage() {
 
         {/* Global Notifications / Status Alerts */}
         {error && (
-          <div className="flex items-center justify-between rounded-xl border border-red-200 bg-red-50/90 p-4 text-sm text-red-700 shadow-xs animate-in fade-in">
+          <div className="flex items-center justify-between rounded-xl border border-red-200 bg-red-50/90 p-4 text-sm text-red-700 shadow-xs animate-toast">
             <div className="flex items-center gap-2.5">
               <AlertCircle className="h-5 w-5 shrink-0 text-red-600" />
               <span>{error}</span>
@@ -331,7 +331,7 @@ export default function OrderPage() {
         )}
 
         {successNotice && (
-          <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50/90 p-4 text-sm text-emerald-800 shadow-xs animate-in fade-in">
+          <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50/90 p-4 text-sm text-emerald-800 shadow-xs animate-toast">
             <div className="flex items-center gap-2.5">
               <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
               <span>{successNotice}</span>
@@ -567,7 +567,7 @@ export default function OrderPage() {
                               {money(m.price)}
                             </span>
                             {inDraftCount > 0 && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2 py-0.5 text-xs font-bold text-orange-700 border border-orange-200/80">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2 py-0.5 text-xs font-bold text-orange-700 border border-orange-200/80 animate-pop">
                                 <Check className="h-3 w-3 text-orange-600" />
                                 {inDraftCount} in ticket
                               </span>

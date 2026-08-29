@@ -260,7 +260,7 @@ function TablesTab() {
               return (
                 <div
                   key={table.id}
-                  className={`relative flex flex-col justify-between rounded-2xl border p-4 shadow-xs transition hover:shadow-md ${
+                  className={`relative flex flex-col justify-between rounded-2xl border p-4 shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${
                     isCheckout
                       ? "border-orange-500/80 bg-orange-50/20"
                       : isOccupied
@@ -745,7 +745,7 @@ function MenuTab() {
             {filteredItems.map((item) => (
               <div
                 key={item.id}
-                className={`flex flex-col justify-between rounded-2xl border bg-white p-4 shadow-xs transition hover:shadow-md ${
+                className={`flex flex-col justify-between rounded-2xl border bg-white p-4 shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${
                   item.available ? "border-zinc-200" : "border-zinc-200/60 opacity-70 bg-zinc-50/50"
                 }`}
               >
@@ -1180,7 +1180,7 @@ function UsersTab() {
             return (
               <div
                 key={u.id}
-                className={`flex flex-col justify-between rounded-2xl border bg-white p-5 shadow-xs transition hover:shadow-md ${
+                className={`flex flex-col justify-between rounded-2xl border bg-white p-5 shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${
                   u.active ? "border-zinc-200" : "border-zinc-200/60 opacity-60 bg-zinc-50"
                 }`}
               >

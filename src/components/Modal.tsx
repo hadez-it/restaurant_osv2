@@ -47,12 +47,12 @@ export default function Modal({
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-zinc-950/60 backdrop-blur-xs print:hidden animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-zinc-950/60 backdrop-blur-xs print:hidden animate-backdrop"
       aria-modal="true"
       role="dialog"
     >
       <div
-        className={`relative flex flex-col max-h-[92dvh] sm:max-h-[90vh] w-full ${maxWidth} overflow-hidden rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl border border-zinc-200 animate-in zoom-in-95 duration-150`}
+        className={`relative flex flex-col max-h-[92dvh] sm:max-h-[90vh] w-full ${maxWidth} overflow-hidden rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl border border-zinc-200 animate-modal`}
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-zinc-200/80 px-5 py-4 bg-zinc-50/80">

@@ -427,7 +427,7 @@ export default function WaiterPage() {
               return (
                 <div
                   key={t.id}
-                  className={`group relative flex flex-col justify-between rounded-2xl border p-5 shadow-xs transition-all hover:shadow-md ${
+                  className={`group relative flex flex-col justify-between rounded-2xl border p-5 shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${
                     isFree
                       ? "border-zinc-200/90 bg-white hover:border-emerald-300 hover:shadow-emerald-500/5"
                       : isOccupied

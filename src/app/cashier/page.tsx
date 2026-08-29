@@ -503,8 +503,8 @@ export default function CashierPage() {
 
       {/* PAYMENT MODAL / DRAWER */}
       {activePayment && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-zinc-950/60 backdrop-blur-xs print:hidden animate-in fade-in duration-150">
-          <div className="relative flex flex-col max-h-[92dvh] sm:max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl border border-zinc-200">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-zinc-950/60 backdrop-blur-xs print:hidden animate-backdrop">
+          <div className="relative flex flex-col max-h-[92dvh] sm:max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl border border-zinc-200 animate-modal">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-zinc-200 px-4 sm:px-6 py-4 bg-zinc-50/80">
               <div className="flex items-center gap-3">
