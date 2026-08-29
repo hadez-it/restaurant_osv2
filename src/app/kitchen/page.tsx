@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import AppShell from "@/components/AppShell";
+import Modal from "@/components/Modal";
 import { Ticket } from "@/lib/types";
 import {
   ChefHat,
@@ -93,6 +94,7 @@ function formatElapsedTime(createdAt: string, now: number): string {
 export default function KitchenPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [printTicket, setPrintTicket] = useState<Ticket | null>(null);
+  const [previewTicket, setPreviewTicket] = useState<Ticket | null>(null);
   const [autoPrint, setAutoPrint] = useState<boolean>(true);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [filter, setFilter] = useState<FilterStatus>("ACTIVE");
@@ -702,12 +704,12 @@ export default function KitchenPage() {
                           {/* Print Thermal Slip Button */}
                           <button
                             type="button"
-                            onClick={() => setPrintTicket(t)}
+                            onClick={() => setPreviewTicket(t)}
                             className="h-12 px-3.5 rounded-xl border border-zinc-300 bg-white hover:bg-zinc-100 hover:border-zinc-400 active:scale-95 text-zinc-700 font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-2xs"
-                            title="Print thermal kitchen slip"
+                            title="View slip details / print"
                           >
                             <Printer className="h-4 w-4 text-zinc-600" />
-                            <span className="hidden sm:inline">Print</span>
+                            <span className="hidden sm:inline">Slip</span>
                           </button>
 
                           {/* Mark Order Ready Button */}
@@ -834,9 +836,9 @@ export default function KitchenPage() {
                           {/* Re-print Slip */}
                           <button
                             type="button"
-                            onClick={() => setPrintTicket(t)}
+                            onClick={() => setPreviewTicket(t)}
                             className="flex-1 rounded-lg border border-zinc-200 bg-white py-1.5 text-xs font-bold text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900 transition-colors flex items-center justify-center gap-1 shadow-2xs"
-                            title="Re-print ticket slip"
+                            title="View / re-print ticket slip"
                           >
                             <Printer className="h-3.5 w-3.5 text-zinc-500" />
                             <span>Print</span>
@@ -928,6 +930,94 @@ export default function KitchenPage() {
             </div>
           </div>
         )}
+
+        {/* Ticket Slip Preview Modal */}
+        <Modal
+          isOpen={!!previewTicket}
+          onClose={() => setPreviewTicket(null)}
+          title={previewTicket ? `Expedite Slip #${previewTicket.id}` : "Ticket Slip"}
+          subtitle={
+            previewTicket
+              ? `Table: ${previewTicket.order.table.name} • Server: ${
+                  previewTicket.order.waiter?.name || "Staff"
+                }`
+              : undefined
+          }
+          maxWidth="max-w-md"
+        >
+          {previewTicket && (
+            <div className="space-y-4 font-mono">
+              <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 text-xs space-y-3">
+                <div className="flex justify-between font-bold border-b border-dashed border-zinc-300 pb-2 text-zinc-800">
+                  <span>SLIP #{previewTicket.id}</span>
+                  <span>ORDER #{previewTicket.order.id}</span>
+                </div>
+                <div className="text-sm font-black text-zinc-900 uppercase">
+                  TABLE: {previewTicket.order.table.name}
+                </div>
+                <div className="text-zinc-600">
+                  <div>Server: {previewTicket.order.waiter?.name || "Staff"}</div>
+                  <div>Time: {new Date(previewTicket.createdAt).toLocaleTimeString()}</div>
+                </div>
+
+                <div className="border-t border-dashed border-zinc-300 pt-2 space-y-2">
+                  {previewTicket.items.map((i) => (
+                    <div key={i.id} className="flex justify-between items-start">
+                      <div>
+                        <span className="font-black text-zinc-900">{i.qty}× </span>
+                        <span className="font-bold text-zinc-800">{i.menuItem.name}</span>
+                        {i.note && (
+                          <div className="text-[11px] text-amber-700 font-sans mt-0.5">
+                            * {i.note}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="border-t border-dashed border-zinc-300 pt-2 flex justify-between font-bold text-zinc-800">
+                  <span>Total Items:</span>
+                  <span>{previewTicket.items.reduce((s, i) => s + i.qty, 0)}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-1 font-sans">
+                <button
+                  type="button"
+                  onClick={() => setPreviewTicket(null)}
+                  className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPrintTicket(previewTicket);
+                    setPreviewTicket(null);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 px-4 py-2.5 text-xs font-bold text-white hover:bg-black active:scale-[0.99] transition shadow-xs"
+                >
+                  <Printer className="h-4 w-4" />
+                  Print Slip
+                </button>
+                {previewTicket.status === "NEW" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      markDone(previewTicket.id);
+                      setPreviewTicket(null);
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 active:scale-[0.99] transition shadow-xs"
+                  >
+                    <CheckCircle className="h-4 w-4" />
+                    Mark Ready
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </Modal>
       </div>
     </AppShell>
   );

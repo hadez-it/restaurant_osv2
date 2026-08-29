@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
+import Modal from "@/components/Modal";
 import { TableInfo, orderTotal, money } from "@/lib/types";
 import {
   Users,
@@ -17,6 +18,7 @@ import {
   X,
   LayoutGrid,
   AlertCircle,
+  Eye,
 } from "lucide-react";
 
 type FilterStatus = "ALL" | "FREE" | "OCCUPIED" | "CHECKOUT";
@@ -26,6 +28,7 @@ export default function WaiterPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<FilterStatus>("ALL");
   const [busyTableId, setBusyTableId] = useState<number | null>(null);
+  const [selectedTable, setSelectedTable] = useState<TableInfo | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [lastSyncTime, setLastSyncTime] = useState<Date>(new Date());
@@ -564,7 +567,15 @@ export default function WaiterPage() {
                   </div>
 
                   {/* Card Bottom: Quick Action Button */}
-                  <div className="pt-2">
+                  <div className="pt-2 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTable(t)}
+                      className="h-11 w-11 shrink-0 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-500 hover:text-zinc-900 transition flex items-center justify-center shadow-2xs"
+                      title="Quick overview"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
                     {isFree && (
                       <button
                         type="button"
@@ -668,6 +679,101 @@ export default function WaiterPage() {
             )}
           </div>
         )}
+
+        {/* Table Quick Overview Modal */}
+        <Modal
+          isOpen={!!selectedTable}
+          onClose={() => setSelectedTable(null)}
+          title={selectedTable?.name || "Table Details"}
+          subtitle={
+            selectedTable
+              ? `${selectedTable.seats} seats • Status: ${selectedTable.status}`
+              : undefined
+          }
+          maxWidth="max-w-md"
+        >
+          {selectedTable && (
+            <div className="space-y-4">
+              {/* If FREE */}
+              {selectedTable.status === "FREE" && (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-4 text-center space-y-2">
+                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                    <UtensilsCrossed className="h-5 w-5" />
+                  </div>
+                  <h4 className="text-sm font-bold text-emerald-950">Table Available</h4>
+                  <p className="text-xs text-emerald-800">
+                    This table has {selectedTable.seats} seats and is clean and ready for dining guests.
+                  </p>
+                </div>
+              )}
+
+              {/* If OCCUPIED or CHECKOUT */}
+              {selectedTable.orders && selectedTable.orders.length > 0 && (
+                <div className="space-y-3">
+                  <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-3.5 space-y-1.5 text-xs">
+                    <div className="flex justify-between font-bold text-zinc-900">
+                      <span>Order #{selectedTable.orders[0].id}</span>
+                      <span className="text-orange-600 font-black">
+                        {money(orderTotal(selectedTable.orders[0].items))}
+                      </span>
+                    </div>
+                    <div className="text-zinc-500">
+                      Server: {selectedTable.orders[0].waiter?.name || "Staff"}
+                    </div>
+                    <div className="text-zinc-400 text-[11px]">
+                      {selectedTable.status === "CHECKOUT" ? "Awaiting bill settlement at Cashier" : "Currently dining"}
+                    </div>
+                  </div>
+
+                  {/* Items summary */}
+                  <div className="rounded-xl border border-zinc-200 bg-white p-3.5 text-xs space-y-2 max-h-48 overflow-y-auto">
+                    <span className="font-bold text-zinc-700 uppercase tracking-wider text-[10px] block">
+                      Active Ordered Items ({selectedTable.orders[0].items.reduce((s, i) => s + i.qty, 0)})
+                    </span>
+                    <div className="divide-y divide-zinc-100">
+                      {selectedTable.orders[0].items.map((item) => (
+                        <div key={item.id} className="py-1.5 flex justify-between items-center">
+                          <span className="text-zinc-800 font-medium">
+                            {item.qty}× {item.menuItem?.name}
+                          </span>
+                          <span className="font-semibold text-zinc-600 tabular-nums">
+                            {money(item.qty * item.price)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedTable(null)}
+                  className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const t = selectedTable;
+                    setSelectedTable(null);
+                    openTable(t);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] transition"
+                >
+                  <span>
+                    {selectedTable.status === "FREE"
+                      ? "Open Table & Take Order"
+                      : "Go to POS Order Terminal"}
+                  </span>
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
+        </Modal>
       </div>
     </AppShell>
   );

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import AppShell from "@/components/AppShell";
+import Modal from "@/components/Modal";
 import { MenuItem, Order, orderTotal, money } from "@/lib/types";
 import {
   Search,
@@ -37,6 +38,8 @@ export default function OrderPage() {
   const [busy, setBusy] = useState(false);
   const [itemBusyId, setItemBusyId] = useState<number | null>(null);
   const [mobileTab, setMobileTab] = useState<"menu" | "ticket">("menu");
+  const [showFireModal, setShowFireModal] = useState(false);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
   const load = useCallback(
     async (showSilent = false) => {
@@ -818,7 +821,7 @@ export default function OrderPage() {
                     <button
                       type="button"
                       disabled={draft.length === 0 || busy}
-                      onClick={fireKitchen}
+                      onClick={() => setShowFireModal(true)}
                       className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-orange-600 py-3 px-4 text-sm sm:text-base font-bold text-white shadow-sm hover:bg-orange-700 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Flame className="h-5 w-5" />
@@ -831,7 +834,7 @@ export default function OrderPage() {
                     <button
                       type="button"
                       disabled={sent.length === 0 || draft.length > 0 || busy}
-                      onClick={requestCheckout}
+                      onClick={() => setShowCheckoutModal(true)}
                       title={
                         draft.length > 0
                           ? "Fire or remove unsent items before requesting checkout"
@@ -868,6 +871,132 @@ export default function OrderPage() {
           </div>
         </div>
       </div>
+
+        {/* Floating Mobile Ticket Bar */}
+        <div className="fixed bottom-4 left-4 right-4 z-30 lg:hidden print:hidden">
+          <button
+            type="button"
+            onClick={() => setMobileTab(mobileTab === "ticket" ? "menu" : "ticket")}
+            className="w-full flex items-center justify-between rounded-2xl bg-zinc-900 text-white p-3.5 shadow-xl border border-zinc-800 active:scale-[0.99] transition"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-orange-600 text-white font-bold text-xs">
+                {totalItemsCount}
+              </div>
+              <div className="text-left">
+                <span className="text-xs font-bold block">
+                  {mobileTab === "ticket" ? "Back to Menu Catalog" : "View Order Ticket"}
+                </span>
+                <span className="text-[11px] text-zinc-400">
+                  {draftItemsCount > 0 ? `${draftItemsCount} new to fire` : "All items sent"}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 font-black text-sm text-emerald-400">
+              <span>{money(total)}</span>
+              <Receipt className="h-4 w-4 text-white" />
+            </div>
+          </button>
+        </div>
+
+        {/* Fire to Kitchen Confirmation Modal */}
+        <Modal
+          isOpen={showFireModal}
+          onClose={() => setShowFireModal(false)}
+          title="Fire Order to Kitchen"
+          subtitle={`${order.table?.name || `Table #${order.tableId}`} • Order #${order.id}`}
+        >
+          <div className="space-y-4">
+            <div className="rounded-xl bg-orange-50/80 p-4 border border-orange-200/80">
+              <div className="flex items-center gap-2 text-sm font-bold text-orange-950 mb-2">
+                <Flame className="h-4 w-4 text-orange-600" />
+                <span>Items to Send to Kitchen ({draftItemsCount})</span>
+              </div>
+              <div className="divide-y divide-orange-100 text-xs">
+                {draft.map((item) => (
+                  <div key={item.id} className="py-2 flex justify-between items-center">
+                    <span className="font-semibold text-zinc-900">
+                      {item.qty}× {item.menuItem?.name}
+                    </span>
+                    <span className="font-bold text-zinc-700">
+                      {money(item.qty * item.price)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 pt-2 border-t border-orange-200 flex justify-between font-bold text-sm text-zinc-900">
+                <span>New Items Subtotal</span>
+                <span className="text-orange-700">{money(draftTotal)}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowFireModal(false)}
+                className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={async () => {
+                  setShowFireModal(false);
+                  await fireKitchen();
+                }}
+                className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] transition disabled:opacity-50"
+              >
+                <Flame className="h-4 w-4" />
+                {busy ? "Sending..." : "Confirm & Fire to Kitchen"}
+              </button>
+            </div>
+          </div>
+        </Modal>
+
+        {/* Request Checkout Confirmation Modal */}
+        <Modal
+          isOpen={showCheckoutModal}
+          onClose={() => setShowCheckoutModal(false)}
+          title="Request Checkout"
+          subtitle={`${order.table?.name || `Table #${order.tableId}`} • Order #${order.id}`}
+        >
+          <div className="space-y-4">
+            <div className="rounded-xl bg-zinc-50 p-4 border border-zinc-200">
+              <p className="text-xs text-zinc-600">
+                This will lock the order for editing and alert the cashier register that guests are ready to settle the bill.
+              </p>
+              <div className="mt-3 pt-3 border-t border-zinc-200 flex justify-between items-baseline">
+                <span className="text-xs font-bold uppercase text-zinc-500">
+                  Total Due ({totalItemsCount} items)
+                </span>
+                <span className="text-2xl font-black text-zinc-900">{money(total)}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowCheckoutModal(false)}
+                className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={async () => {
+                  setShowCheckoutModal(false);
+                  await requestCheckout();
+                }}
+                className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-xs hover:bg-black active:scale-[0.99] transition disabled:opacity-50"
+              >
+                <Receipt className="h-4 w-4" />
+                {busy ? "Submitting..." : "Send to Cashier"}
+              </button>
+            </div>
+          </div>
+        </Modal>
     </AppShell>
   );
 }

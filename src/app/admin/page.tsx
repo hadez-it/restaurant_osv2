@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
+import Modal from "@/components/Modal";
 import { TableInfo, MenuItem, orderTotal, money } from "@/lib/types";
 import {
   LayoutGrid,
@@ -17,6 +18,7 @@ import {
   EyeOff,
   Armchair,
   AlertCircle,
+  Pencil,
 } from "lucide-react";
 
 interface UserRow {
@@ -120,6 +122,14 @@ function TablesTab() {
   const [seats, setSeats] = useState("4");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  // Edit table state
+  const [editingTable, setEditingTable] = useState<TableInfo | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editSeats, setEditSeats] = useState("4");
+  const [editError, setEditError] = useState("");
+  const [editSubmitting, setEditSubmitting] = useState(false);
 
   async function addTable(e: React.FormEvent) {
     e.preventDefault();
@@ -135,6 +145,7 @@ function TablesTab() {
       if (res.ok) {
         setName("");
         setSeats("4");
+        setShowAddModal(false);
         loadTables();
       } else {
         const d = await res.json().catch(() => ({}));
@@ -147,9 +158,36 @@ function TablesTab() {
     }
   }
 
+  async function updateTable(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingTable || !editName.trim()) return;
+    setEditError("");
+    setEditSubmitting(true);
+    try {
+      const res = await fetch(`/api/tables/${editingTable.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editName.trim(),
+          seats: Number(editSeats) || 4,
+        }),
+      });
+      if (res.ok) {
+        setEditingTable(null);
+        loadTables();
+      } else {
+        const d = await res.json().catch(() => ({}));
+        setEditError(d.error || "Failed to update table");
+      }
+    } catch {
+      setEditError("Network error updating table");
+    } finally {
+      setEditSubmitting(false);
+    }
+  }
+
   async function removeTable(id: number, tableName: string) {
     if (!confirm(`Are you sure you want to delete ${tableName}?`)) return;
-    setError("");
     try {
       const res = await fetch(`/api/tables/${id}`, { method: "DELETE" });
       if (!res.ok) {
@@ -164,110 +202,51 @@ function TablesTab() {
 
   return (
     <div className="space-y-6">
-      {/* Quick Add Table Form */}
-      <div className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-xs">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-100 text-orange-600">
-              <Plus className="h-4 w-4" />
-            </div>
-            <h3 className="text-sm font-bold text-zinc-900">Add New Floor Table</h3>
+      {/* Floor Plan Header & Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 sm:p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
+        <div>
+          <h3 className="text-base font-bold text-zinc-900">
+            Floorplan Overview ({loading ? "..." : tables.length} Total Tables)
+          </h3>
+          <div className="flex items-center gap-3 text-xs mt-1">
+            <span className="flex items-center gap-1.5 text-zinc-600">
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Free (
+              {tables.filter((t) => t.status === "FREE").length})
+            </span>
+            <span className="flex items-center gap-1.5 text-zinc-600">
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-500" /> Occupied (
+              {tables.filter((t) => t.status === "OCCUPIED").length})
+            </span>
+            <span className="flex items-center gap-1.5 text-zinc-600">
+              <span className="h-2.5 w-2.5 rounded-full bg-orange-500" /> Checkout (
+              {tables.filter((t) => t.status === "CHECKOUT").length})
+            </span>
           </div>
-          <span className="text-xs text-zinc-500">Configure floorplan layout</span>
         </div>
 
-        <form onSubmit={addTable} className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div>
-              <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
-                Table Name / Code
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Table 7, Booth 3, Patio 2"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
-                Guest Capacity (Seats)
-              </label>
-              <div className="flex items-center gap-2">
-                {[2, 4, 6, 8].map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setSeats(s.toString())}
-                    className={`rounded-lg border px-2.5 py-1.5 text-xs font-bold transition ${
-                      seats === s.toString()
-                        ? "border-orange-500 bg-orange-50 text-orange-700"
-                        : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
-                    }`}
-                  >
-                    {s}P
-                  </button>
-                ))}
-                <input
-                  type="number"
-                  min="1"
-                  max="24"
-                  value={seats}
-                  onChange={(e) => setSeats(e.target.value)}
-                  className="w-16 rounded-lg border border-zinc-300 px-2.5 py-1.5 text-center text-xs font-bold text-zinc-900"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-end">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-orange-600 px-4 py-2.5 text-sm font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] disabled:opacity-50 transition"
-              >
-                <Plus className="h-4 w-4" />
-                Add Table
-              </button>
-            </div>
-          </div>
-
-          {error && (
-            <div className="flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-xs font-medium text-rose-700 border border-rose-200">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-        </form>
+        <button
+          type="button"
+          onClick={() => {
+            setName("");
+            setSeats("4");
+            setError("");
+            setShowAddModal(true);
+          }}
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-600 px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] transition shrink-0"
+        >
+          <Plus className="h-4 w-4" />
+          Add Table
+        </button>
       </div>
 
       {/* Visual Card Grid of Tables */}
       <div>
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-zinc-900">
-            Floorplan Overview ({loading ? "..." : tables.length} Total Tables)
-          </h3>
-          <div className="flex items-center gap-3 text-xs">
-            <span className="flex items-center gap-1.5 text-zinc-600">
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Free
-            </span>
-            <span className="flex items-center gap-1.5 text-zinc-600">
-              <span className="h-2.5 w-2.5 rounded-full bg-amber-500" /> Occupied
-            </span>
-            <span className="flex items-center gap-1.5 text-zinc-600">
-              <span className="h-2.5 w-2.5 rounded-full bg-orange-500" /> Checkout
-            </span>
-          </div>
-        </div>
-
         {tables.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-zinc-200 bg-white p-12 text-center">
             <Armchair className="mx-auto h-10 w-10 text-zinc-400" />
             <h4 className="mt-2 text-sm font-semibold text-zinc-800">No tables configured</h4>
             <p className="mt-1 text-xs text-zinc-500">
-              Use the form above to add your first restaurant table.
+              Click &quot;Add Table&quot; above to configure your first restaurant table.
             </p>
           </div>
         ) : (
@@ -343,14 +322,31 @@ function TablesTab() {
                   {/* Card Footer Actions */}
                   <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between">
                     <span className="text-[11px] text-zinc-400">ID #{table.id}</span>
-                    <button
-                      onClick={() => removeTable(table.id, table.name)}
-                      className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-rose-600 hover:bg-rose-50 transition"
-                      title="Delete table"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                      Delete
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingTable(table);
+                          setEditName(table.name);
+                          setEditSeats(table.seats.toString());
+                          setEditError("");
+                        }}
+                        className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-zinc-600 hover:bg-zinc-100 transition"
+                        title="Edit table"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeTable(table.id, table.name)}
+                        className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-rose-600 hover:bg-rose-50 transition"
+                        title="Delete table"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -358,6 +354,162 @@ function TablesTab() {
           </div>
         )}
       </div>
+
+      {/* Add Table Modal */}
+      <Modal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        title="Add New Floor Table"
+        subtitle="Configure table code and seating capacity"
+      >
+        <form onSubmit={addTable} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
+              Table Name / Code
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Table 7, Booth 3, Patio 2"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
+              Guest Capacity (Seats)
+            </label>
+            <div className="flex items-center gap-2">
+              {[2, 4, 6, 8].map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setSeats(s.toString())}
+                  className={`flex-1 rounded-xl border py-2 text-xs font-bold transition ${
+                    seats === s.toString()
+                      ? "border-orange-500 bg-orange-50 text-orange-700"
+                      : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
+                  }`}
+                >
+                  {s}P
+                </button>
+              ))}
+              <input
+                type="number"
+                min="1"
+                max="24"
+                value={seats}
+                onChange={(e) => setSeats(e.target.value)}
+                className="w-20 rounded-xl border border-zinc-300 px-3 py-2 text-center text-xs font-bold text-zinc-900"
+              />
+            </div>
+          </div>
+
+          {error && (
+            <div className="flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-xs font-medium text-rose-700 border border-rose-200">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setShowAddModal(false)}
+              className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] disabled:opacity-50 transition"
+            >
+              <Plus className="h-4 w-4" />
+              {submitting ? "Adding..." : "Add Table"}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Edit Table Modal */}
+      <Modal
+        isOpen={!!editingTable}
+        onClose={() => setEditingTable(null)}
+        title={`Edit ${editingTable?.name || "Table"}`}
+        subtitle="Update table name or seating capacity"
+      >
+        <form onSubmit={updateTable} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
+              Table Name / Code
+            </label>
+            <input
+              type="text"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              required
+              className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
+              Guest Capacity (Seats)
+            </label>
+            <div className="flex items-center gap-2">
+              {[2, 4, 6, 8].map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setEditSeats(s.toString())}
+                  className={`flex-1 rounded-xl border py-2 text-xs font-bold transition ${
+                    editSeats === s.toString()
+                      ? "border-orange-500 bg-orange-50 text-orange-700"
+                      : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
+                  }`}
+                >
+                  {s}P
+                </button>
+              ))}
+              <input
+                type="number"
+                min="1"
+                max="24"
+                value={editSeats}
+                onChange={(e) => setEditSeats(e.target.value)}
+                className="w-20 rounded-xl border border-zinc-300 px-3 py-2 text-center text-xs font-bold text-zinc-900"
+              />
+            </div>
+          </div>
+
+          {editError && (
+            <div className="flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-xs font-medium text-rose-700 border border-rose-200">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{editError}</span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setEditingTable(null)}
+              className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={editSubmitting}
+              className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] disabled:opacity-50 transition"
+            >
+              {editSubmitting ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
@@ -394,6 +546,16 @@ function MenuTab() {
   const [category, setCategory] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  // Edit Item State
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editPrice, setEditPrice] = useState("");
+  const [editCategory, setEditCategory] = useState("");
+  const [editAvailable, setEditAvailable] = useState(true);
+  const [editError, setEditError] = useState("");
+  const [editSubmitting, setEditSubmitting] = useState(false);
 
   // Extract all categories
   const categories = useMemo(() => {
@@ -437,6 +599,7 @@ function MenuTab() {
         setName("");
         setPrice("");
         setCategory("");
+        setShowAddModal(false);
         loadMenu();
       } else {
         const d = await res.json().catch(() => ({}));
@@ -446,6 +609,36 @@ function MenuTab() {
       setError("Network error adding menu item");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function updateItem(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingItem || !editName.trim() || !editPrice) return;
+    setEditError("");
+    setEditSubmitting(true);
+    try {
+      const res = await fetch(`/api/menu/${editingItem.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editName.trim(),
+          price: Number(editPrice),
+          category: editCategory.trim() || "General",
+          available: editAvailable,
+        }),
+      });
+      if (res.ok) {
+        setEditingItem(null);
+        loadMenu();
+      } else {
+        const d = await res.json().catch(() => ({}));
+        setEditError(d.error || "Failed to update item");
+      }
+    } catch {
+      setEditError("Network error updating item");
+    } finally {
+      setEditSubmitting(false);
     }
   }
 
@@ -471,116 +664,11 @@ function MenuTab() {
       alert("Failed to delete menu item");
     }
   }
-
   return (
     <div className="space-y-6">
-      {/* Add New Menu Item Form */}
-      <div className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-xs">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-100 text-orange-600">
-              <Plus className="h-4 w-4" />
-            </div>
-            <h3 className="text-sm font-bold text-zinc-900">Add Menu Item</h3>
-          </div>
-          <span className="text-xs text-zinc-500">Item catalog configuration</span>
-        </div>
-
-        <form onSubmit={addItem} className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
-                Item Name
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Wagyu Truffle Burger, Espresso, Tiramisu"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
-                Price ($)
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 font-bold text-sm">
-                  $
-                </span>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  required
-                  className="w-full rounded-xl border border-zinc-300 bg-white pl-7 pr-3 py-2 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
-                Category
-              </label>
-              <input
-                type="text"
-                placeholder="Mains, Starters, Drinks"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                list="category-suggestions"
-                className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
-              />
-              <datalist id="category-suggestions">
-                {categories.map((c) => (
-                  <option key={c} value={c} />
-                ))}
-              </datalist>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between pt-2">
-            {/* Quick Category Chips */}
-            <div className="flex flex-wrap items-center gap-1.5 text-xs text-zinc-500">
-              <span>Suggestions:</span>
-              {["Starters", "Mains", "Desserts", "Beverages", "Sides"].map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setCategory(c)}
-                  className="rounded-md bg-zinc-100 px-2 py-0.5 hover:bg-zinc-200 text-zinc-700"
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-2 text-sm font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] disabled:opacity-50 transition"
-            >
-              <Plus className="h-4 w-4" />
-              Add Item
-            </button>
-          </div>
-
-          {error && (
-            <div className="flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-xs font-medium text-rose-700 border border-rose-200">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-        </form>
-      </div>
-
-      {/* Filter and Search Bar */}
+      {/* Filter, Search & Actions Bar */}
       <div className="space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 sm:p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
           {/* Category Filter Pills */}
           <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto pb-1">
             <button
@@ -614,16 +702,32 @@ function MenuTab() {
             })}
           </div>
 
-          {/* Search Box */}
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-            <input
-              type="text"
-              placeholder="Search catalog items..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-zinc-300 bg-white pl-9 pr-3 py-1.5 text-xs text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
-            />
+          {/* Search Box & Add Button */}
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="relative w-full sm:w-56">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+              <input
+                type="text"
+                placeholder="Search catalog..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full rounded-xl border border-zinc-300 bg-white pl-9 pr-3 py-2 text-xs text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setName("");
+                setPrice("");
+                setCategory("");
+                setError("");
+                setShowAddModal(true);
+              }}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-orange-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] shrink-0 transition"
+            >
+              <Plus className="h-4 w-4" />
+              Add Item
+            </button>
           </div>
         </div>
 
@@ -633,7 +737,7 @@ function MenuTab() {
             <Utensils className="mx-auto h-10 w-10 text-zinc-400" />
             <h4 className="mt-2 text-sm font-semibold text-zinc-800">No menu items match</h4>
             <p className="mt-1 text-xs text-zinc-500">
-              Try adjusting your category filter or search query.
+              Try adjusting your category filter or click &quot;Add Item&quot; to add new dishes.
             </p>
           </div>
         ) : (
@@ -683,20 +787,240 @@ function MenuTab() {
                     </span>
                   </button>
 
-                  {/* Delete Button */}
-                  <button
-                    onClick={() => removeItem(item.id, item.name)}
-                    className="p-1 text-zinc-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition"
-                    title="Delete item"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    {/* Edit Button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingItem(item);
+                        setEditName(item.name);
+                        setEditPrice(item.price.toString());
+                        setEditCategory(item.category || "");
+                        setEditAvailable(item.available);
+                        setEditError("");
+                      }}
+                      className="p-1.5 text-zinc-400 hover:text-zinc-700 rounded-lg hover:bg-zinc-100 transition"
+                      title="Edit item"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+
+                    {/* Delete Button */}
+                    <button
+                      type="button"
+                      onClick={() => removeItem(item.id, item.name)}
+                      className="p-1.5 text-zinc-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition"
+                      title="Delete item"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Add Item Modal */}
+      <Modal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        title="Add Menu Item"
+        subtitle="Add a new dish or drink to the live POS catalog"
+      >
+        <form onSubmit={addItem} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
+              Item Name
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Wagyu Truffle Burger, Espresso, Tiramisu"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
+                Price ($)
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 font-bold text-sm">
+                  $
+                </span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  required
+                  className="w-full rounded-xl border border-zinc-300 bg-white pl-7 pr-3 py-2.5 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
+                Category
+              </label>
+              <input
+                type="text"
+                placeholder="Mains, Starters, Drinks"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                list="category-suggestions"
+                className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
+              />
+              <datalist id="category-suggestions">
+                {categories.map((c) => (
+                  <option key={c} value={c} />
+                ))}
+              </datalist>
+            </div>
+          </div>
+
+          {/* Category Suggestions */}
+          <div className="flex flex-wrap items-center gap-1.5 text-xs text-zinc-500">
+            <span>Suggestions:</span>
+            {["Starters", "Mains", "Desserts", "Beverages", "Sides"].map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setCategory(c)}
+                className="rounded-md bg-zinc-100 px-2 py-0.5 hover:bg-zinc-200 text-zinc-700 transition"
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+
+          {error && (
+            <div className="flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-xs font-medium text-rose-700 border border-rose-200">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setShowAddModal(false)}
+              className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] disabled:opacity-50 transition"
+            >
+              <Plus className="h-4 w-4" />
+              {submitting ? "Adding..." : "Add Item"}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Edit Item Modal */}
+      <Modal
+        isOpen={!!editingItem}
+        onClose={() => setEditingItem(null)}
+        title={`Edit ${editingItem?.name || "Item"}`}
+        subtitle="Update dish details, price, and category"
+      >
+        <form onSubmit={updateItem} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
+              Item Name
+            </label>
+            <input
+              type="text"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              required
+              className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
+                Price ($)
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 font-bold text-sm">
+                  $
+                </span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={editPrice}
+                  onChange={(e) => setEditPrice(e.target.value)}
+                  required
+                  className="w-full rounded-xl border border-zinc-300 bg-white pl-7 pr-3 py-2.5 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
+                Category
+              </label>
+              <input
+                type="text"
+                value={editCategory}
+                onChange={(e) => setEditCategory(e.target.value)}
+                list="category-suggestions"
+                className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="flex items-center gap-2.5 text-xs font-semibold text-zinc-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={editAvailable}
+                onChange={(e) => setEditAvailable(e.target.checked)}
+                className="h-4 w-4 rounded border-zinc-300 text-orange-600 focus:ring-orange-500"
+              />
+              <span>Available for ordering (In Stock)</span>
+            </label>
+          </div>
+
+          {editError && (
+            <div className="flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-xs font-medium text-rose-700 border border-rose-200">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{editError}</span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setEditingItem(null)}
+              className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={editSubmitting}
+              className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] disabled:opacity-50 transition"
+            >
+              {editSubmitting ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
@@ -730,6 +1054,7 @@ function UsersTab() {
   const [submitting, setSubmitting] = useState(false);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
+  const [showAddModal, setShowAddModal] = useState(false);
 
   async function addUser(e: React.FormEvent) {
     e.preventDefault();
@@ -743,6 +1068,7 @@ function UsersTab() {
       });
       if (res.ok) {
         setForm({ username: "", password: "", name: "", role: "WAITER" });
+        setShowAddModal(false);
         loadUsers();
       } else {
         const d = await res.json().catch(() => ({}));
@@ -791,111 +1117,9 @@ function UsersTab() {
 
   return (
     <div className="space-y-6">
-      {/* Add Staff Account Form */}
-      <div className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-xs">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-100 text-orange-600">
-              <Plus className="h-4 w-4" />
-            </div>
-            <h3 className="text-sm font-bold text-zinc-900">Add Staff Account</h3>
-          </div>
-          <span className="text-xs text-zinc-500">Security & role provisioning</span>
-        </div>
-
-        <form onSubmit={addUser} className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-            <div>
-              <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
-                Username
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. jdoe"
-                value={form.username}
-                onChange={(e) => setForm({ ...form, username: e.target.value.toLowerCase() })}
-                required
-                className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
-                Full Name
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. John Doe"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                required
-                className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  required
-                  className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2 pr-10 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
-                Role
-              </label>
-              <select
-                value={form.role}
-                onChange={(e) => setForm({ ...form, role: e.target.value })}
-                className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
-              >
-                <option value="WAITER">Waiter (Floor & Order)</option>
-                <option value="KITCHEN">Kitchen (Chef / KDS)</option>
-                <option value="CASHIER">Cashier (POS & Billing)</option>
-                <option value="ADMIN">Admin (Full Access)</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-end pt-1">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-2 text-sm font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] disabled:opacity-50 transition"
-            >
-              <Plus className="h-4 w-4" />
-              Create Staff Account
-            </button>
-          </div>
-
-          {error && (
-            <div className="flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-xs font-medium text-rose-700 border border-rose-200">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-        </form>
-      </div>
-
-      {/* Filter and User Directory */}
+      {/* Filter and User Directory Toolbar */}
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 sm:p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
           {/* Role Filter Pills */}
           <div className="flex flex-wrap items-center gap-1.5">
             {["ALL", "WAITER", "KITCHEN", "CASHIER", "ADMIN"].map((r) => (
@@ -914,16 +1138,30 @@ function UsersTab() {
             ))}
           </div>
 
-          {/* Search */}
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-            <input
-              type="text"
-              placeholder="Search by name or @user..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-zinc-300 bg-white pl-9 pr-3 py-1.5 text-xs text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
-            />
+          {/* Search & Add Button */}
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="relative w-full sm:w-56">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+              <input
+                type="text"
+                placeholder="Search staff..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full rounded-xl border border-zinc-300 bg-white pl-9 pr-3 py-2 text-xs text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setForm({ username: "", password: "", name: "", role: "WAITER" });
+                setError("");
+                setShowAddModal(true);
+              }}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-orange-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] shrink-0 transition"
+            >
+              <Plus className="h-4 w-4" />
+              Add Staff
+            </button>
           </div>
         </div>
 
@@ -1000,6 +1238,107 @@ function UsersTab() {
           })}
         </div>
       </div>
+      {/* Add Staff Account Modal */}
+      <Modal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        title="Add Staff Account"
+        subtitle="Security & role provisioning for team members"
+      >
+        <form onSubmit={addUser} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
+              Username
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. jdoe"
+              value={form.username}
+              onChange={(e) => setForm({ ...form, username: e.target.value.toLowerCase() })}
+              required
+              className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
+              Full Name
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. John Doe"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              required
+              className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
+              Password
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                required
+                className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 pr-10 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
+              Role
+            </label>
+            <select
+              value={form.role}
+              onChange={(e) => setForm({ ...form, role: e.target.value })}
+              className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+            >
+              <option value="WAITER">Waiter (Floor & Order)</option>
+              <option value="KITCHEN">Kitchen (Chef / KDS)</option>
+              <option value="CASHIER">Cashier (POS & Billing)</option>
+              <option value="ADMIN">Admin (Full Access)</option>
+            </select>
+          </div>
+
+          {error && (
+            <div className="flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-xs font-medium text-rose-700 border border-rose-200">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setShowAddModal(false)}
+              className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] disabled:opacity-50 transition"
+            >
+              <Plus className="h-4 w-4" />
+              {submitting ? "Creating..." : "Create Staff Account"}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
