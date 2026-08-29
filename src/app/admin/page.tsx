@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
 import Modal from "@/components/Modal";
-import { TableInfo, MenuItem, orderTotal, money } from "@/lib/types";
+import { TableInfo, MenuItem, Order, orderTotal, money } from "@/lib/types";
 import { getMenuItemImage } from "@/lib/menu-images";
 import {
   LayoutGrid,
@@ -21,6 +21,13 @@ import {
   Armchair,
   AlertCircle,
   Pencil,
+  TrendingUp,
+  CalendarDays,
+  DollarSign,
+  Clock,
+  ShoppingBag,
+  CheckCircle2,
+  Printer,
 } from "lucide-react";
 
 interface UserRow {
@@ -36,6 +43,7 @@ const TABS = [
   { id: "Tables", label: "Tables & Floorplan", icon: LayoutGrid },
   { id: "Menu", label: "Menu Catalog", icon: Utensils },
   { id: "Users", label: "Staff & Accounts", icon: Users },
+  { id: "Sales", label: "Sales & Revenue", icon: TrendingUp },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -91,6 +99,7 @@ export default function AdminPage() {
           {activeTab === "Tables" && <TablesTab />}
           {activeTab === "Menu" && <MenuTab />}
           {activeTab === "Users" && <UsersTab />}
+          {activeTab === "Sales" && <SalesTab />}
         </div>
       </div>
     </AppShell>
@@ -1353,6 +1362,552 @@ function UsersTab() {
             </button>
           </div>
         </form>
+      </Modal>
+    </div>
+  );
+}
+
+/* =========================================================================
+   TAB 4: SALES & REVENUE HISTORY
+   ========================================================================= */
+type FilterPeriod = "DAY" | "MONTH" | "CUSTOM" | "ALL";
+
+function SalesTab() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>("DAY");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+  const loadSales = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (statusFilter !== "ALL") {
+        params.set("status", statusFilter);
+      }
+
+      const now = new Date();
+
+      if (filterPeriod === "DAY") {
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+        params.set("from", startOfDay.toISOString());
+        params.set("to", endOfDay.toISOString());
+      } else if (filterPeriod === "MONTH") {
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+        params.set("from", startOfMonth.toISOString());
+        params.set("to", endOfMonth.toISOString());
+      } else if (filterPeriod === "CUSTOM") {
+        if (customFrom) params.set("from", customFrom);
+        if (customTo) params.set("to", customTo);
+      }
+
+      const res = await fetch(`/api/orders?${params.toString()}`);
+      if (res.ok) {
+        const data: Order[] = await res.json();
+        setOrders(data);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
+  }, [filterPeriod, customFrom, customTo, statusFilter]);
+
+  useEffect(() => {
+    loadSales();
+  }, [loadSales]);
+
+  // Search query filter
+  const filteredOrders = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return orders;
+    return orders.filter((o) => {
+      const matchId = `#${o.id}`.includes(q) || `${o.id}`.includes(q);
+      const matchTable = o.table?.name.toLowerCase().includes(q) || false;
+      const matchWaiter = o.waiter?.name.toLowerCase().includes(q) || false;
+      const matchItems = o.items.some((i) =>
+        i.menuItem?.name.toLowerCase().includes(q)
+      );
+      return matchId || matchTable || matchWaiter || matchItems;
+    });
+  }, [orders, searchQuery]);
+
+  // Summary Metrics calculations
+  const stats = useMemo(() => {
+    const paidOrders = filteredOrders.filter((o) => o.status === "PAID");
+    const totalRevenue = paidOrders.reduce((sum, o) => sum + orderTotal(o.items), 0);
+    const settledCount = paidOrders.length;
+    const totalItems = filteredOrders.reduce(
+      (sum, o) => sum + o.items.reduce((s, i) => s + i.qty, 0),
+      0
+    );
+    const aov = settledCount > 0 ? totalRevenue / settledCount : 0;
+    return {
+      totalRevenue,
+      settledCount,
+      totalOrders: filteredOrders.length,
+      totalItems,
+      aov,
+    };
+  }, [filteredOrders]);
+
+  return (
+    <div className="space-y-6">
+      {/* Top 4 KPI Summary Cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Card 1: Total Revenue */}
+        <div className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+              Total Revenue
+            </span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+              <TrendingUp className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-900">
+              {money(stats.totalRevenue)}
+            </span>
+          </div>
+          <p className="mt-2 text-xs text-zinc-500">
+            {filterPeriod === "DAY"
+              ? "Sales collected today"
+              : filterPeriod === "MONTH"
+              ? "Sales collected this month"
+              : filterPeriod === "CUSTOM"
+              ? "Selected custom date range"
+              : "All-time accumulated revenue"}
+          </p>
+          <div className="absolute top-0 right-0 h-1 w-full bg-emerald-500" />
+        </div>
+
+        {/* Card 2: Settled Orders */}
+        <div className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+              Settled Orders
+            </span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
+              <Receipt className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-900">
+              {stats.settledCount}
+            </span>
+            <span className="text-xs font-medium text-zinc-500">
+              of {stats.totalOrders} total
+            </span>
+          </div>
+          <p className="mt-2 text-xs text-zinc-500">
+            Completed & paid dining receipts
+          </p>
+          <div className="absolute top-0 right-0 h-1 w-full bg-orange-500" />
+        </div>
+
+        {/* Card 3: Average Order Value */}
+        <div className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+              Avg Order Value
+            </span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
+              <DollarSign className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-900">
+              {money(stats.aov)}
+            </span>
+          </div>
+          <p className="mt-2 text-xs text-zinc-500">
+            Average spend per dining table
+          </p>
+          <div className="absolute top-0 right-0 h-1 w-full bg-sky-500" />
+        </div>
+
+        {/* Card 4: Items Sold */}
+        <div className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+              Items Prepared & Sold
+            </span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
+              <ShoppingBag className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-900">
+              {stats.totalItems}
+            </span>
+            <span className="text-xs font-medium text-zinc-500">items</span>
+          </div>
+          <p className="mt-2 text-xs text-zinc-500">
+            Dishes and beverages served
+          </p>
+          <div className="absolute top-0 right-0 h-1 w-full bg-purple-500" />
+        </div>
+      </div>
+
+      {/* Filter and Range Toolbar */}
+      <div className="space-y-3">
+        <div className="flex flex-col gap-3 bg-white p-4 sm:p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            {/* Quick Period Filter Pills */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              {(
+                [
+                  { id: "DAY", label: "Today (Day)" },
+                  { id: "MONTH", label: "This Month" },
+                  { id: "CUSTOM", label: "Custom Range" },
+                  { id: "ALL", label: "All Time" },
+                ] as const
+              ).map((p) => {
+                const isSelected = filterPeriod === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setFilterPeriod(p.id)}
+                    className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition shrink-0 ${
+                      isSelected
+                        ? "bg-zinc-900 text-white shadow-xs"
+                        : "bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-50"
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Status Select & Search */}
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="rounded-xl border border-zinc-300 bg-white px-3 py-2 text-xs font-semibold text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+              >
+                <option value="ALL">All Statuses</option>
+                <option value="PAID">Paid Only</option>
+                <option value="OPEN">Open (Dining)</option>
+                <option value="CHECKOUT">In Checkout</option>
+              </select>
+
+              <div className="relative w-full sm:w-56">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                <input
+                  type="text"
+                  placeholder="Search order #, table, waiter..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full rounded-xl border border-zinc-300 bg-white pl-9 pr-3 py-2 text-xs text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Custom Date Range Picker (Conditional) */}
+          {filterPeriod === "CUSTOM" && (
+            <div className="pt-3 border-t border-zinc-100 flex flex-wrap items-center gap-3 animate-modal">
+              <div className="flex items-center gap-2 text-xs font-semibold text-zinc-700">
+                <CalendarDays className="h-4 w-4 text-orange-600" />
+                <span>Date Range:</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-zinc-500">From:</label>
+                <input
+                  type="date"
+                  value={customFrom}
+                  onChange={(e) => setCustomFrom(e.target.value)}
+                  className="rounded-xl border border-zinc-300 bg-white px-3 py-1.5 text-xs text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-zinc-500">To:</label>
+                <input
+                  type="date"
+                  value={customTo}
+                  onChange={(e) => setCustomTo(e.target.value)}
+                  className="rounded-xl border border-zinc-300 bg-white px-3 py-1.5 text-xs text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+                />
+              </div>
+              {(customFrom || customTo) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomFrom("");
+                    setCustomTo("");
+                  }}
+                  className="text-xs text-zinc-500 hover:text-zinc-800 underline"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Sales List / Table */}
+        {loading ? (
+          <div className="rounded-2xl border border-zinc-200/80 bg-white p-12 text-center shadow-xs">
+            <Clock className="mx-auto h-8 w-8 text-orange-500 animate-spin" />
+            <p className="mt-3 text-sm font-semibold text-zinc-800">
+              Loading sales records...
+            </p>
+          </div>
+        ) : filteredOrders.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-zinc-200 bg-white p-12 text-center shadow-xs">
+            <Receipt className="mx-auto h-10 w-10 text-zinc-400" />
+            <h4 className="mt-2 text-sm font-semibold text-zinc-800">
+              No sales history found
+            </h4>
+            <p className="mt-1 text-xs text-zinc-500">
+              {searchQuery
+                ? `No orders match "${searchQuery}".`
+                : "No sales records recorded for the selected filter criteria."}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filteredOrders.map((order) => {
+              const isPaid = order.status === "PAID";
+              const isCheckout = order.status === "CHECKOUT";
+              const total = orderTotal(order.items);
+              const itemCount = order.items.reduce((s, i) => s + i.qty, 0);
+              const createdDate = new Date(order.createdAt);
+
+              return (
+                <div
+                  key={order.id}
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-2xl border border-zinc-200/80 bg-white p-4 sm:p-5 shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                >
+                  {/* Left: Order Info & Metadata */}
+                  <div className="flex items-start gap-3.5">
+                    <div
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl font-black text-sm border ${
+                        isPaid
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : isCheckout
+                          ? "bg-indigo-50 text-indigo-700 border-indigo-200"
+                          : "bg-amber-50 text-amber-700 border-amber-200"
+                      }`}
+                    >
+                      <Receipt className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-extrabold text-zinc-900 text-sm sm:text-base">
+                          Order #{order.id}
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
+                          {order.table?.name || `Table #${order.tableId}`}
+                        </span>
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
+                            isPaid
+                              ? "bg-emerald-100 text-emerald-800"
+                              : isCheckout
+                              ? "bg-indigo-100 text-indigo-800"
+                              : "bg-amber-100 text-amber-800"
+                          }`}
+                        >
+                          {isPaid ? (
+                            <>
+                              <CheckCircle2 className="h-3 w-3" />
+                              Paid
+                            </>
+                          ) : (
+                            order.status
+                          )}
+                        </span>
+                      </div>
+
+                      <div className="mt-1 flex items-center gap-3 text-xs text-zinc-500">
+                        <span>
+                          {createdDate.toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                          {" • "}
+                          {createdDate.toLocaleTimeString(undefined, {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                        <span>•</span>
+                        <span>Server: {order.waiter?.name || "Staff"}</span>
+                      </div>
+
+                      {/* Ordered Items Preview */}
+                      <div className="mt-2 text-xs text-zinc-600 line-clamp-1">
+                        <span className="font-semibold text-zinc-800">
+                          {itemCount} {itemCount === 1 ? "item" : "items"}:
+                        </span>{" "}
+                        {order.items
+                          .slice(0, 3)
+                          .map((it) => `${it.qty}× ${it.menuItem?.name || "Item"}`)
+                          .join(", ")}
+                        {order.items.length > 3 && (
+                          <span className="text-zinc-400">
+                            {" "}
+                            +{order.items.length - 3} more
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: Total Amount & View Details Button */}
+                  <div className="flex items-center justify-between sm:justify-end gap-4 pt-2 sm:pt-0 border-t sm:border-t-0 border-zinc-100">
+                    <div className="text-left sm:text-right">
+                      <span className="text-[11px] font-semibold text-zinc-400 block uppercase tracking-wider">
+                        Amount
+                      </span>
+                      <span className="text-xl sm:text-2xl font-black text-zinc-900 tabular-nums tracking-tight">
+                        {money(total)}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedOrder(order)}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-200 bg-white px-3.5 py-2 text-xs font-bold text-zinc-700 shadow-2xs hover:border-zinc-300 hover:bg-zinc-50 active:scale-[0.99] transition shrink-0"
+                    >
+                      <Eye className="h-3.5 w-3.5 text-zinc-500" />
+                      <span>Receipt</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Order Itemized Receipt Modal */}
+      <Modal
+        isOpen={!!selectedOrder}
+        onClose={() => setSelectedOrder(null)}
+        title={selectedOrder ? `Order #${selectedOrder.id} Receipt` : "Order Receipt"}
+        subtitle={
+          selectedOrder
+            ? `${selectedOrder.table?.name || `Table #${selectedOrder.tableId}`} • Server: ${
+                selectedOrder.waiter?.name || "Staff"
+              }`
+            : undefined
+        }
+        maxWidth="max-w-xl"
+      >
+        {selectedOrder && (
+          <div className="space-y-4">
+            {/* Metadata Bar */}
+            <div className="rounded-xl bg-zinc-50 p-3.5 text-xs text-zinc-600 flex items-center justify-between border border-zinc-200/80">
+              <div>
+                <span className="text-zinc-400 block text-[10px] uppercase font-bold">
+                  Created At
+                </span>
+                <span className="font-semibold text-zinc-800">
+                  {new Date(selectedOrder.createdAt).toLocaleString()}
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="text-zinc-400 block text-[10px] uppercase font-bold">
+                  Status
+                </span>
+                <span className="font-bold text-emerald-700">
+                  {selectedOrder.status}
+                </span>
+              </div>
+            </div>
+
+            {/* Itemized Dish List */}
+            <div className="rounded-xl border border-zinc-200/80 bg-white overflow-hidden divide-y divide-zinc-100 max-h-72 overflow-y-auto">
+              {selectedOrder.items.map((item) => (
+                <div
+                  key={item.id}
+                  className="p-3 flex items-center justify-between gap-3 text-xs hover:bg-zinc-50/50"
+                >
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={getMenuItemImage(item.menuItem)}
+                      alt={item.menuItem?.name}
+                      loading="lazy"
+                      decoding="async"
+                      className="h-10 w-10 rounded-lg object-cover bg-zinc-100 shrink-0"
+                    />
+                    <div>
+                      <h5 className="font-bold text-zinc-900">
+                        {item.menuItem?.name || "Dish Item"}
+                      </h5>
+                      <span className="text-zinc-500 text-[11px]">
+                        {item.qty} × {money(item.price)}
+                      </span>
+                      {item.note && (
+                        <p className="text-[11px] text-amber-700 italic">
+                          Note: {item.note}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <span className="font-extrabold text-zinc-900 tabular-nums">
+                    {money(item.qty * item.price)}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Totals Breakdown */}
+            <div className="border-t-2 border-dashed border-zinc-200 pt-3 space-y-1.5 text-xs text-zinc-600">
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span className="font-semibold text-zinc-800">
+                  {money(orderTotal(selectedOrder.items))}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Tax & Service</span>
+                <span className="font-semibold text-emerald-600">Included</span>
+              </div>
+              <div className="border-t border-zinc-200/80 pt-2.5 flex items-baseline justify-between">
+                <span className="text-sm font-bold uppercase text-zinc-900">
+                  Total Due / Paid
+                </span>
+                <span className="text-2xl font-black text-zinc-900">
+                  {money(orderTotal(selectedOrder.items))}
+                </span>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setSelectedOrder(null)}
+                className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-zinc-900 px-4 py-2.5 text-xs font-bold text-white hover:bg-black active:scale-[0.99] transition shadow-xs"
+              >
+                <Printer className="h-4 w-4" />
+                <span>Print</span>
+              </button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );

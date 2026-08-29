@@ -5,6 +5,58 @@ import { handleError } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
+// List orders with status and date range filtering
+export async function GET(req: NextRequest) {
+  try {
+    requireRole("ADMIN", "CASHIER", "WAITER");
+    const { searchParams } = new URL(req.url);
+    const status = searchParams.get("status");
+    const from = searchParams.get("from");
+    const to = searchParams.get("to");
+
+    const where: {
+      status?: string;
+      createdAt?: { gte?: Date; lte?: Date };
+    } = {};
+
+    if (status && status !== "ALL") {
+      where.status = status;
+    }
+
+    if (from || to) {
+      where.createdAt = {};
+      if (from) {
+        where.createdAt.gte = new Date(from);
+      }
+      if (to) {
+        const toDate = new Date(to);
+        if (to.length <= 10) {
+          toDate.setHours(23, 59, 59, 999);
+        }
+        where.createdAt.lte = toDate;
+      }
+    }
+
+    const orders = await prisma.order.findMany({
+      where,
+      include: {
+        table: true,
+        waiter: { select: { id: true, name: true, username: true } },
+        items: {
+          include: {
+            menuItem: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return NextResponse.json(orders);
+  } catch (e) {
+    return handleError(e);
+  }
+}
+
 // Open a new order for a table
 export async function POST(req: NextRequest) {
   try {

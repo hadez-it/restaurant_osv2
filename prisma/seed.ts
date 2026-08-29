@@ -79,6 +79,97 @@ async function main() {
       await prisma.menuItem.create({ data: dish });
     }
   }
+
+  const orderCount = await prisma.order.count();
+  if (orderCount === 0) {
+    const waiter = await prisma.user.findFirst({ where: { role: "WAITER" } });
+    const tables = await prisma.table.findMany({ take: 6 });
+    const menuItems = await prisma.menuItem.findMany();
+
+    if (waiter && tables.length > 0 && menuItems.length >= 5) {
+      const now = new Date();
+      const mockSales = [
+        {
+          tableId: tables[0].id,
+          waiterId: waiter.id,
+          status: "PAID",
+          createdAt: new Date(now.getTime() - 2 * 60 * 60 * 1000),
+          paidAt: new Date(now.getTime() - 1.5 * 60 * 60 * 1000),
+          items: [
+            { menuItemId: menuItems[0].id, qty: 2, price: menuItems[0].price },
+            { menuItemId: menuItems[1].id, qty: 1, price: menuItems[1].price },
+            { menuItemId: menuItems[4].id, qty: 2, price: menuItems[4].price },
+          ],
+        },
+        {
+          tableId: tables[1 % tables.length].id,
+          waiterId: waiter.id,
+          status: "PAID",
+          createdAt: new Date(now.getTime() - 5 * 60 * 60 * 1000),
+          paidAt: new Date(now.getTime() - 4.2 * 60 * 60 * 1000),
+          items: [
+            { menuItemId: menuItems[2].id, qty: 1, price: menuItems[2].price },
+            { menuItemId: menuItems[3].id, qty: 1, price: menuItems[3].price },
+          ],
+        },
+        {
+          tableId: tables[2 % tables.length].id,
+          waiterId: waiter.id,
+          status: "PAID",
+          createdAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
+          paidAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000 + 45 * 60 * 1000),
+          items: [
+            { menuItemId: menuItems[0].id, qty: 3, price: menuItems[0].price },
+            { menuItemId: menuItems[5 % menuItems.length].id, qty: 2, price: menuItems[5 % menuItems.length].price },
+          ],
+        },
+        {
+          tableId: tables[3 % tables.length].id,
+          waiterId: waiter.id,
+          status: "PAID",
+          createdAt: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000),
+          paidAt: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000 + 50 * 60 * 1000),
+          items: [
+            { menuItemId: menuItems[1].id, qty: 2, price: menuItems[1].price },
+            { menuItemId: menuItems[2].id, qty: 2, price: menuItems[2].price },
+          ],
+        },
+        {
+          tableId: tables[4 % tables.length].id,
+          waiterId: waiter.id,
+          status: "PAID",
+          createdAt: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000),
+          paidAt: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000 + 60 * 60 * 1000),
+          items: [
+            { menuItemId: menuItems[3].id, qty: 4, price: menuItems[3].price },
+            { menuItemId: menuItems[4].id, qty: 4, price: menuItems[4].price },
+          ],
+        },
+      ];
+
+      for (const sale of mockSales) {
+        const order = await prisma.order.create({
+          data: {
+            tableId: sale.tableId,
+            waiterId: sale.waiterId,
+            status: sale.status,
+            createdAt: sale.createdAt,
+            paidAt: sale.paidAt,
+          },
+        });
+        for (const it of sale.items) {
+          await prisma.orderItem.create({
+            data: {
+              orderId: order.id,
+              menuItemId: it.menuItemId,
+              qty: it.qty,
+              price: it.price,
+            },
+          });
+        }
+      }
+    }
+  }
   console.log("Seed complete");
 }
 
