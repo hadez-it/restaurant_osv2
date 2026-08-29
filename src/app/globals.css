@@ -16,8 +16,12 @@
     --ring: 24 95% 53%;
   }
 
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
   body {
     @apply bg-zinc-50 text-zinc-900 antialiased selection:bg-orange-500 selection:text-white;
+    -webkit-tap-highlight-color: transparent;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }

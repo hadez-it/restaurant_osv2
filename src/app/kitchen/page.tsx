@@ -365,7 +365,7 @@ export default function KitchenPage() {
 
           {/* Status Filter Tabs */}
           <div className="mt-4 pt-3.5 border-t border-zinc-100 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-1.5 p-1 bg-zinc-100/90 rounded-xl border border-zinc-200/80">
+            <div className="flex items-center gap-1.5 p-1 bg-zinc-100/90 rounded-xl border border-zinc-200/80 min-w-0 overflow-x-auto">
               <button
                 type="button"
                 onClick={() => setFilter("ACTIVE")}

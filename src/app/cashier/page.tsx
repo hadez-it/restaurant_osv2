@@ -503,10 +503,10 @@ export default function CashierPage() {
 
       {/* PAYMENT MODAL / DRAWER */}
       {activePayment && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-xs print:hidden animate-in fade-in duration-150">
-          <div className="relative flex flex-col max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl border border-zinc-200">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-zinc-950/60 backdrop-blur-xs print:hidden animate-in fade-in duration-150">
+          <div className="relative flex flex-col max-h-[92dvh] sm:max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl border border-zinc-200">
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4 bg-zinc-50/80">
+            <div className="flex items-center justify-between border-b border-zinc-200 px-4 sm:px-6 py-4 bg-zinc-50/80">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-600 text-white font-bold">
                   <Receipt className="h-5 w-5" />
@@ -531,7 +531,7 @@ export default function CashierPage() {
             </div>
 
             {/* Modal Content */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
               {paymentSuccess ? (
                 /* Payment Success View */
                 <div className="flex flex-col items-center justify-center py-6 text-center">
@@ -574,7 +574,7 @@ export default function CashierPage() {
                         {activePayment.order.items.reduce((s, i) => s + i.qty, 0)} items total
                       </p>
                     </div>
-                    <span className="text-3xl font-black text-orange-600">
+                    <span className="text-2xl sm:text-3xl font-black text-orange-600">
                       {money(currentTotal)}
                     </span>
                   </div>
@@ -828,12 +828,12 @@ export default function CashierPage() {
 
             {/* Modal Footer / Primary Action */}
             {!paymentSuccess && (
-              <div className="flex items-center justify-end gap-3 border-t border-zinc-200 px-6 py-4 bg-zinc-50/80">
+              <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3 border-t border-zinc-200 px-4 sm:px-6 py-4 bg-zinc-50/80">
                 <button
                   type="button"
                   onClick={closePaymentModal}
                   disabled={busy}
-                  className="rounded-xl border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 transition"
+                  className="w-full sm:w-auto rounded-xl border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 transition"
                 >
                   Cancel
                 </button>
@@ -841,7 +841,7 @@ export default function CashierPage() {
                   type="button"
                   onClick={confirmPayment}
                   disabled={busy || (paymentMethod === "CASH" && !isSufficient)}
-                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-bold text-white shadow-xs hover:bg-emerald-700 active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none transition"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-bold text-white shadow-xs hover:bg-emerald-700 active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none transition"
                 >
                   {busy ? (
                     <>

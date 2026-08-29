@@ -62,7 +62,7 @@ export default function AdminPage() {
         </div>
 
         {/* Modern Tab Navigation */}
-        <div className="flex items-center gap-2 border-b border-zinc-200 pb-1">
+        <div className="flex items-center gap-2 border-b border-zinc-200 pb-1 overflow-x-auto w-full min-w-0">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -71,7 +71,7 @@ export default function AdminPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+                className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition shrink-0 whitespace-nowrap ${
                   isActive
                     ? "bg-orange-600 text-white shadow-xs"
                     : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
