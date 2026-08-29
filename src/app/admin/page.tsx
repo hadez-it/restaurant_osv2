@@ -41,57 +41,6 @@ type TabId = (typeof TABS)[number]["id"];
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<TabId>("Tables");
 
-  // Shared data loaders
-  const [tables, setTables] = useState<TableInfo[]>([]);
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [users, setUsers] = useState<UserRow[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // Collections recorded from cashier in localStorage
-  const [persistedRevenue, setPersistedRevenue] = useState<number>(0);
-
-  const loadAll = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [tRes, mRes, uRes] = await Promise.all([
-        fetch("/api/tables").then((r) => (r.ok ? r.json() : [])),
-        fetch("/api/menu").then((r) => (r.ok ? r.json() : [])),
-        fetch("/api/users").then((r) => (r.ok ? r.json() : [])),
-      ]);
-      setTables(tRes);
-      setMenuItems(mRes);
-      setUsers(uRes);
-    } catch {
-      // ignore
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadAll();
-    try {
-      const savedRev = localStorage.getItem("orange_pos_cashier_collections");
-      if (savedRev) setPersistedRevenue(parseFloat(savedRev) || 0);
-    } catch {
-      // ignore
-    }
-  }, [loadAll]);
-
-  // Derived Top Analytics KPI Metrics
-  const activeTablesCount = tables.filter(
-    (t) => (t.orders && t.orders.length > 0) || t.status !== "FREE"
-  ).length;
-
-  const currentActiveOrdersRevenue = tables.reduce((acc, t) => {
-    if (!t.orders || t.orders.length === 0) return acc;
-    return acc + orderTotal(t.orders[0].items);
-  }, 0);
-
-  const totalGrossSales = persistedRevenue + currentActiveOrdersRevenue;
-  const availableMenuItemsCount = menuItems.filter((i) => i.available).length;
-  const activeStaffCount = users.filter((u) => u.active).length;
-
   return (
     <AppShell>
       <div className="space-y-6">
@@ -110,111 +59,6 @@ export default function AdminPage() {
               Floorplan arrangement, menu catalog, staff roles, and restaurant operations
             </p>
           </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={loadAll}
-              disabled={loading}
-              className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-xs hover:bg-zinc-50 active:bg-zinc-100 disabled:opacity-60 transition"
-            >
-              <RefreshCw className={`h-4 w-4 text-zinc-500 ${loading ? "animate-spin" : ""}`} />
-              Refresh Data
-            </button>
-          </div>
-        </div>
-
-        {/* Top Analytics KPI Cards */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {/* KPI 1: Gross Sales */}
-          <div className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-xs transition hover:border-zinc-300">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                Gross Sales
-              </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                <DollarSign className="h-4 w-4" />
-              </div>
-            </div>
-            <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold tracking-tight text-emerald-700">
-                {money(totalGrossSales)}
-              </span>
-            </div>
-            <p className="mt-2 text-xs text-zinc-500">
-              {currentActiveOrdersRevenue > 0
-                ? `${money(currentActiveOrdersRevenue)} in active dining tabs`
-                : "Includes settled receipts today"}
-            </p>
-            <div className="absolute top-0 right-0 h-1 w-full bg-emerald-500" />
-          </div>
-
-          {/* KPI 2: Active Tables */}
-          <div className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-xs transition hover:border-zinc-300">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                Active Tables
-              </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                <LayoutGrid className="h-4 w-4" />
-              </div>
-            </div>
-            <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold tracking-tight text-zinc-900">
-                {activeTablesCount}
-              </span>
-              <span className="text-xs font-medium text-zinc-500">
-                of {tables.length} tables
-              </span>
-            </div>
-            <p className="mt-2 text-xs text-zinc-500">
-              {tables.length - activeTablesCount} vacant & available for seating
-            </p>
-            <div className="absolute top-0 right-0 h-1 w-full bg-blue-500" />
-          </div>
-
-          {/* KPI 3: Menu Catalog Items */}
-          <div className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-xs transition hover:border-zinc-300">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                Menu Catalog
-              </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
-                <Utensils className="h-4 w-4" />
-              </div>
-            </div>
-            <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold tracking-tight text-zinc-900">
-                {menuItems.length}
-              </span>
-              <span className="text-xs font-medium text-zinc-500">items</span>
-            </div>
-            <p className="mt-2 text-xs text-zinc-500">
-              {availableMenuItemsCount} in stock & orderable by waiters
-            </p>
-            <div className="absolute top-0 right-0 h-1 w-full bg-orange-500" />
-          </div>
-
-          {/* KPI 4: Staff Accounts */}
-          <div className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-xs transition hover:border-zinc-300">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                Staff Members
-              </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
-                <Users className="h-4 w-4" />
-              </div>
-            </div>
-            <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold tracking-tight text-zinc-900">
-                {users.length}
-              </span>
-              <span className="text-xs font-medium text-zinc-500">accounts</span>
-            </div>
-            <p className="mt-2 text-xs text-zinc-500">
-              {activeStaffCount} active across kitchen, floor, and register
-            </p>
-            <div className="absolute top-0 right-0 h-1 w-full bg-purple-500" />
-          </div>
         </div>
 
         {/* Modern Tab Navigation */}
@@ -222,12 +66,6 @@ export default function AdminPage() {
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
-            const count =
-              tab.id === "Tables"
-                ? tables.length
-                : tab.id === "Menu"
-                ? menuItems.length
-                : users.length;
 
             return (
               <button
@@ -241,13 +79,6 @@ export default function AdminPage() {
               >
                 <Icon className="h-4 w-4" />
                 <span>{tab.label}</span>
-                <span
-                  className={`rounded-full px-2 py-0.5 text-xs ${
-                    isActive ? "bg-orange-700 text-orange-100" : "bg-zinc-200 text-zinc-700"
-                  }`}
-                >
-                  {count}
-                </span>
               </button>
             );
           })}
@@ -255,9 +86,9 @@ export default function AdminPage() {
 
         {/* Tab Content */}
         <div>
-          {activeTab === "Tables" && <TablesTab tables={tables} onRefresh={loadAll} />}
-          {activeTab === "Menu" && <MenuTab items={menuItems} onRefresh={loadAll} />}
-          {activeTab === "Users" && <UsersTab users={users} onRefresh={loadAll} />}
+          {activeTab === "Tables" && <TablesTab />}
+          {activeTab === "Menu" && <MenuTab />}
+          {activeTab === "Users" && <UsersTab />}
         </div>
       </div>
     </AppShell>
@@ -267,13 +98,26 @@ export default function AdminPage() {
 /* =========================================================================
    TAB 1: TABLES & FLOORPLAN
    ========================================================================= */
-function TablesTab({
-  tables,
-  onRefresh,
-}: {
-  tables: TableInfo[];
-  onRefresh: () => void;
-}) {
+function TablesTab() {
+  const [tables, setTables] = useState<TableInfo[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadTables = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/tables").then((r) => (r.ok ? r.json() : []));
+      setTables(res);
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadTables();
+  }, [loadTables]);
+
   const [name, setName] = useState("");
   const [seats, setSeats] = useState("4");
   const [error, setError] = useState("");
@@ -293,7 +137,7 @@ function TablesTab({
       if (res.ok) {
         setName("");
         setSeats("4");
-        onRefresh();
+        loadTables();
       } else {
         const d = await res.json().catch(() => ({}));
         setError(d.error || "Failed to create table");
@@ -314,7 +158,7 @@ function TablesTab({
         const d = await res.json().catch(() => ({}));
         alert(d.error || "Cannot delete table (may have active orders or history)");
       }
-      onRefresh();
+      loadTables();
     } catch {
       alert("Network error removing table");
     }
@@ -405,7 +249,7 @@ function TablesTab({
       <div>
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-bold text-zinc-900">
-            Floorplan Overview ({tables.length} Total Tables)
+            Floorplan Overview ({loading ? "..." : tables.length} Total Tables)
           </h3>
           <div className="flex items-center gap-3 text-xs">
             <span className="flex items-center gap-1.5 text-zinc-600">
@@ -523,13 +367,26 @@ function TablesTab({
 /* =========================================================================
    TAB 2: MENU CATALOG
    ========================================================================= */
-function MenuTab({
-  items,
-  onRefresh,
-}: {
-  items: MenuItem[];
-  onRefresh: () => void;
-}) {
+function MenuTab() {
+  const [items, setItems] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadMenu = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/menu").then((r) => (r.ok ? r.json() : []));
+      setItems(res);
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadMenu();
+  }, [loadMenu]);
+
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
 
@@ -582,7 +439,7 @@ function MenuTab({
         setName("");
         setPrice("");
         setCategory("");
-        onRefresh();
+        loadMenu();
       } else {
         const d = await res.json().catch(() => ({}));
         setError(d.error || "Failed to add menu item");
@@ -601,7 +458,7 @@ function MenuTab({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ available: !item.available }),
       });
-      onRefresh();
+      loadMenu();
     } catch {
       alert("Failed to toggle availability");
     }
@@ -611,7 +468,7 @@ function MenuTab({
     if (!confirm(`Are you sure you want to remove "${itemName}"?`)) return;
     try {
       await fetch(`/api/menu/${id}`, { method: "DELETE" });
-      onRefresh();
+      loadMenu();
     } catch {
       alert("Failed to delete menu item");
     }
@@ -737,7 +594,7 @@ function MenuTab({
                   : "bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-50"
               }`}
             >
-              All Items ({items.length})
+              All Items ({loading ? "..." : items.length})
             </button>
             {categories.map((cat) => {
               const count = items.filter((i) => i.category === cat).length;
@@ -849,13 +706,26 @@ function MenuTab({
 /* =========================================================================
    TAB 3: STAFF & USER DIRECTORY
    ========================================================================= */
-function UsersTab({
-  users,
-  onRefresh,
-}: {
-  users: UserRow[];
-  onRefresh: () => void;
-}) {
+function UsersTab() {
+  const [users, setUsers] = useState<UserRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadUsers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/users").then((r) => (r.ok ? r.json() : []));
+      setUsers(res);
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
+
   const [form, setForm] = useState({
     username: "",
     password: "",
@@ -880,7 +750,7 @@ function UsersTab({
       });
       if (res.ok) {
         setForm({ username: "", password: "", name: "", role: "WAITER" });
-        onRefresh();
+        loadUsers();
       } else {
         const d = await res.json().catch(() => ({}));
         setError(d.error || "Failed to create user account");
@@ -899,7 +769,7 @@ function UsersTab({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ active: !u.active }),
       });
-      onRefresh();
+      loadUsers();
     } catch {
       alert("Failed to update user status");
     }

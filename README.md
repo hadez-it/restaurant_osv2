@@ -1,4 +1,4 @@
-# 🍊 OrangePOS — Restaurant Workflow
+# TCS — Restaurant Workflow
 
 A restaurant workflow web app: waiters take orders per table, confirmed orders print a kitchen slip, the cashier sees table bills and completes checkout to free the table, and the owner/admin manages tables, users, and the menu.
 

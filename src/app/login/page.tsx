@@ -206,10 +206,7 @@ export default function LoginPage() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xl font-black tracking-tight text-white">
-                  Orange<span className="text-orange-500">OS</span>
-                </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide uppercase bg-orange-500/10 text-orange-400 border border-orange-500/20">
-                  Suite 2.4
+                  TCS
                 </span>
               </div>
               <p className="text-xs text-zinc-400 font-medium">
@@ -310,10 +307,7 @@ export default function LoginPage() {
             <div className="text-left">
               <div className="flex items-center gap-1.5">
                 <span className="text-lg font-black tracking-tight text-zinc-900">
-                  Orange<span className="text-orange-600">OS</span>
-                </span>
-                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-orange-100 text-orange-700">
-                  v2.4
+                  TCS
                 </span>
               </div>
               <p className="text-[11px] text-zinc-500 font-medium">Restaurant Suite</p>

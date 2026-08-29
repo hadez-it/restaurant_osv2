@@ -98,7 +98,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 animate-spin rounded-full border-3 border-orange-500 border-t-transparent" />
-          <span className="text-sm font-medium text-zinc-600">Initializing Restaurant OS...</span>
+          <span className="text-sm font-medium text-zinc-600">Initializing TCS...</span>
         </div>
       </div>
     );
@@ -127,10 +127,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5 leading-none">
                   <span className="text-base font-extrabold tracking-tight text-zinc-900">
-                    Orange<span className="text-orange-600">OS</span>
-                  </span>
-                  <span className="rounded-full bg-orange-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-orange-700">
-                    v2
+                    TCS
                   </span>
                 </div>
                 <span className="text-[10px] font-medium text-zinc-400 mt-0.5">
