@@ -159,6 +159,25 @@
   }
 }
 
+/* Custom Date Input Styling */
+input[type="date"] {
+  color-scheme: light;
+  font-family: inherit;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.65;
+  padding: 4px;
+  border-radius: 6px;
+  transition: opacity 0.15s ease-in-out, background-color 0.15s ease-in-out;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  background-color: rgba(244, 244, 245, 0.9);
+}
+
 @media print {
   body * {
     visibility: hidden;

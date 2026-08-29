@@ -1378,10 +1378,50 @@ function SalesTab() {
   const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>("DAY");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
+  const [showDateRangeModal, setShowDateRangeModal] = useState(false);
+  const [tempFrom, setTempFrom] = useState("");
+  const [tempTo, setTempTo] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
+  function applyDateRange() {
+    setCustomFrom(tempFrom);
+    setCustomTo(tempTo);
+    setFilterPeriod("CUSTOM");
+    setShowDateRangeModal(false);
+  }
+
+  function applyPreset(type: "yesterday" | "last7" | "last30" | "thisMonth" | "lastMonth") {
+    const today = new Date();
+    const formatYMD = (d: Date) => d.toISOString().split("T")[0];
+
+    if (type === "yesterday") {
+      const y = new Date(today);
+      y.setDate(today.getDate() - 1);
+      setTempFrom(formatYMD(y));
+      setTempTo(formatYMD(y));
+    } else if (type === "last7") {
+      const s = new Date(today);
+      s.setDate(today.getDate() - 7);
+      setTempFrom(formatYMD(s));
+      setTempTo(formatYMD(today));
+    } else if (type === "last30") {
+      const s = new Date(today);
+      s.setDate(today.getDate() - 30);
+      setTempFrom(formatYMD(s));
+      setTempTo(formatYMD(today));
+    } else if (type === "thisMonth") {
+      const s = new Date(today.getFullYear(), today.getMonth(), 1);
+      setTempFrom(formatYMD(s));
+      setTempTo(formatYMD(today));
+    } else if (type === "lastMonth") {
+      const s = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const e = new Date(today.getFullYear(), today.getMonth(), 0);
+      setTempFrom(formatYMD(s));
+      setTempTo(formatYMD(e));
+    }
+  }
   const loadSales = useCallback(async () => {
     setLoading(true);
     try {
@@ -1562,30 +1602,64 @@ function SalesTab() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             {/* Quick Period Filter Pills */}
             <div className="flex flex-wrap items-center gap-1.5">
-              {(
-                [
-                  { id: "DAY", label: "Today (Day)" },
-                  { id: "MONTH", label: "This Month" },
-                  { id: "CUSTOM", label: "Custom Range" },
-                  { id: "ALL", label: "All Time" },
-                ] as const
-              ).map((p) => {
-                const isSelected = filterPeriod === p.id;
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => setFilterPeriod(p.id)}
-                    className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition shrink-0 ${
-                      isSelected
-                        ? "bg-zinc-900 text-white shadow-xs"
-                        : "bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-50"
-                    }`}
-                  >
-                    {p.label}
-                  </button>
-                );
-              })}
+              <button
+                type="button"
+                onClick={() => setFilterPeriod("DAY")}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition shrink-0 ${
+                  filterPeriod === "DAY"
+                    ? "bg-zinc-900 text-white shadow-xs"
+                    : "bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-50"
+                }`}
+              >
+                Today (Day)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setFilterPeriod("MONTH")}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition shrink-0 ${
+                  filterPeriod === "MONTH"
+                    ? "bg-zinc-900 text-white shadow-xs"
+                    : "bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-50"
+                }`}
+              >
+                This Month
+              </button>
+
+              {/* Custom Date Range Pill */}
+              <button
+                type="button"
+                onClick={() => {
+                  setTempFrom(customFrom);
+                  setTempTo(customTo);
+                  setShowDateRangeModal(true);
+                }}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition shrink-0 ${
+                  filterPeriod === "CUSTOM"
+                    ? "bg-orange-600 text-white shadow-xs hover:bg-orange-700"
+                    : "bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-50"
+                }`}
+              >
+                <CalendarDays className="h-3.5 w-3.5" />
+                <span>
+                  {filterPeriod === "CUSTOM" && (customFrom || customTo)
+                    ? `${customFrom || "Start"} → ${customTo || "Today"}`
+                    : "Custom Range"}
+                </span>
+                <Pencil className="h-3 w-3 opacity-75 ml-0.5" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setFilterPeriod("ALL")}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition shrink-0 ${
+                  filterPeriod === "ALL"
+                    ? "bg-zinc-900 text-white shadow-xs"
+                    : "bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-50"
+                }`}
+              >
+                All Time
+              </button>
             </div>
 
             {/* Status Select & Search */}
@@ -1614,45 +1688,6 @@ function SalesTab() {
             </div>
           </div>
 
-          {/* Custom Date Range Picker (Conditional) */}
-          {filterPeriod === "CUSTOM" && (
-            <div className="pt-3 border-t border-zinc-100 flex flex-wrap items-center gap-3 animate-modal">
-              <div className="flex items-center gap-2 text-xs font-semibold text-zinc-700">
-                <CalendarDays className="h-4 w-4 text-orange-600" />
-                <span>Date Range:</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="text-xs text-zinc-500">From:</label>
-                <input
-                  type="date"
-                  value={customFrom}
-                  onChange={(e) => setCustomFrom(e.target.value)}
-                  className="rounded-xl border border-zinc-300 bg-white px-3 py-1.5 text-xs text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="text-xs text-zinc-500">To:</label>
-                <input
-                  type="date"
-                  value={customTo}
-                  onChange={(e) => setCustomTo(e.target.value)}
-                  className="rounded-xl border border-zinc-300 bg-white px-3 py-1.5 text-xs text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
-                />
-              </div>
-              {(customFrom || customTo) && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCustomFrom("");
-                    setCustomTo("");
-                  }}
-                  className="text-xs text-zinc-500 hover:text-zinc-800 underline"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Sales List / Table */}
@@ -1908,6 +1943,164 @@ function SalesTab() {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Custom Date Range Modal */}
+      <Modal
+        isOpen={showDateRangeModal}
+        onClose={() => setShowDateRangeModal(false)}
+        title="Custom Sales Date Range"
+        subtitle="Filter records by date presets or select specific start and end dates"
+        maxWidth="max-w-lg"
+      >
+        <div className="space-y-5">
+          {/* Quick Presets Section */}
+          <div>
+            <span className="block text-[11px] font-bold uppercase tracking-wider text-zinc-500 mb-2">
+              Quick Range Presets
+            </span>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {(
+                [
+                  { id: "yesterday", label: "Yesterday" },
+                  { id: "last7", label: "Last 7 Days" },
+                  { id: "last30", label: "Last 30 Days" },
+                  { id: "thisMonth", label: "This Month" },
+                  { id: "lastMonth", label: "Last Month" },
+                ] as const
+              ).map((preset) => (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => applyPreset(preset.id)}
+                  className="rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-900 active:scale-95 transition-all shadow-2xs"
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Date Pickers Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+            {/* Start Date Card */}
+            <div className="rounded-2xl border border-zinc-200 bg-zinc-50/70 p-4 transition-all focus-within:border-orange-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-orange-500/20">
+              <label className="block text-[11px] font-bold text-zinc-600 uppercase tracking-wider mb-2">
+                Start Date (From)
+              </label>
+              <div className="relative flex items-center">
+                <CalendarDays className="pointer-events-none absolute left-3.5 h-4 w-4 text-zinc-400" />
+                <input
+                  type="date"
+                  value={tempFrom}
+                  onChange={(e) => setTempFrom(e.target.value)}
+                  className="w-full rounded-xl border border-zinc-300 bg-white pl-10 pr-3 py-2 text-sm font-semibold text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+                />
+              </div>
+              {tempFrom ? (
+                <span className="block text-[11px] text-zinc-500 font-medium mt-2">
+                  {new Date(tempFrom + "T00:00:00").toLocaleDateString(undefined, {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </span>
+              ) : (
+                <span className="block text-[11px] text-zinc-400 mt-2">
+                  No start date selected
+                </span>
+              )}
+            </div>
+
+            {/* End Date Card */}
+            <div className="rounded-2xl border border-zinc-200 bg-zinc-50/70 p-4 transition-all focus-within:border-orange-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-orange-500/20">
+              <label className="block text-[11px] font-bold text-zinc-600 uppercase tracking-wider mb-2">
+                End Date (To)
+              </label>
+              <div className="relative flex items-center">
+                <CalendarDays className="pointer-events-none absolute left-3.5 h-4 w-4 text-zinc-400" />
+                <input
+                  type="date"
+                  value={tempTo}
+                  onChange={(e) => setTempTo(e.target.value)}
+                  className="w-full rounded-xl border border-zinc-300 bg-white pl-10 pr-3 py-2 text-sm font-semibold text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+                />
+              </div>
+              {tempTo ? (
+                <span className="block text-[11px] text-zinc-500 font-medium mt-2">
+                  {new Date(tempTo + "T00:00:00").toLocaleDateString(undefined, {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </span>
+              ) : (
+                <span className="block text-[11px] text-zinc-400 mt-2">
+                  No end date selected
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Active Range Preview */}
+          {(tempFrom || tempTo) && (
+            <div className="rounded-xl border border-orange-200/90 bg-orange-50/80 p-3 text-xs text-orange-950 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CalendarDays className="h-4 w-4 text-orange-600 shrink-0" />
+                <span>
+                  Filtering: <strong>{tempFrom || "Any past date"}</strong> →{" "}
+                  <strong>{tempTo || "Today"}</strong>
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setTempFrom("");
+                  setTempTo("");
+                }}
+                className="text-xs text-orange-700 hover:text-orange-900 font-bold underline ml-2"
+              >
+                Clear
+              </button>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex items-center justify-between pt-2 border-t border-zinc-100">
+            <button
+              type="button"
+              onClick={() => {
+                setCustomFrom("");
+                setCustomTo("");
+                setFilterPeriod("DAY");
+                setShowDateRangeModal(false);
+              }}
+              className="text-xs font-semibold text-zinc-500 hover:text-rose-600 transition"
+            >
+              Reset to Today
+            </button>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowDateRangeModal(false)}
+                className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={applyDateRange}
+                className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] transition"
+              >
+                <CalendarDays className="h-4 w-4" />
+                <span>Apply Date Range</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </Modal>
     </div>
   );
