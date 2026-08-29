@@ -7,7 +7,6 @@ import {
   LayoutGrid,
   Utensils,
   Users,
-  DollarSign,
   Plus,
   Trash2,
   Search,
@@ -18,7 +17,6 @@ import {
   EyeOff,
   Armchair,
   AlertCircle,
-  RefreshCw,
 } from "lucide-react";
 
 interface UserRow {
@@ -708,17 +706,12 @@ function MenuTab() {
    ========================================================================= */
 function UsersTab() {
   const [users, setUsers] = useState<UserRow[]>([]);
-  const [loading, setLoading] = useState(true);
-
   const loadUsers = useCallback(async () => {
-    setLoading(true);
     try {
       const res = await fetch("/api/users").then((r) => (r.ok ? r.json() : []));
       setUsers(res);
     } catch {
       // ignore
-    } finally {
-      setLoading(false);
     }
   }, []);
 
