@@ -487,7 +487,7 @@ export default function OrderPage() {
                   )}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5">
+                <div className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-2.5 sm:gap-3.5">
                   {filteredMenu.map((m) => {
                     const inDraftCount = draftCountByMenuItemId.get(m.id) || 0;
                     const isItemBusy = itemBusyId === m.id;
@@ -503,7 +503,7 @@ export default function OrderPage() {
                         }`}
                       >
                         {/* Food Photography Image Banner */}
-                        <div className="relative h-36 w-full bg-obsidian-950 overflow-hidden">
+                        <div className="relative h-28 sm:h-36 w-full bg-obsidian-950 overflow-hidden">
                           <img
                             src={getMenuItemImage(m)}
                             alt={m.name}
@@ -538,13 +538,13 @@ export default function OrderPage() {
                         </div>
 
                         {/* Card Content & Action Button */}
-                        <div className="p-3.5 flex flex-col justify-between flex-1 gap-2.5">
+                        <div className="p-2.5 sm:p-3.5 flex flex-col justify-between flex-1 gap-2">
                           <div>
-                            <h3 className="font-bold text-sm text-white group-hover:text-amber-300 transition-colors line-clamp-1">
+                            <h3 className="font-bold text-xs sm:text-sm text-white group-hover:text-amber-300 transition-colors line-clamp-1">
                               {m.name}
                             </h3>
                             <div className="mt-1 flex items-baseline justify-between">
-                              <span className="text-base font-black text-white font-mono tabular-nums">
+                              <span className="text-sm sm:text-base font-black text-white font-mono tabular-nums">
                                 {money(m.price)}
                               </span>
                             </div>
@@ -554,7 +554,7 @@ export default function OrderPage() {
                             type="button"
                             disabled={!canAdd || isItemBusy}
                             onClick={() => addItem(m)}
-                            className={`w-full min-h-[38px] flex items-center justify-center gap-1.5 rounded-xl text-xs font-bold transition-all active:scale-[0.98] ${
+                            className={`w-full min-h-[34px] sm:min-h-[38px] flex items-center justify-center gap-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all active:scale-[0.98] ${
                               canAdd
                                 ? inDraftCount > 0
                                   ? "bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:bg-amber-500/30 hover:text-white"
@@ -563,11 +563,13 @@ export default function OrderPage() {
                             }`}
                           >
                             {isItemBusy ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
                             ) : (
                               <>
                                 <Plus className="h-3.5 w-3.5" />
-                                <span>{inDraftCount > 0 ? "Add Another" : "Add to Order"}</span>
+                                <span>
+                                  {inDraftCount > 0 ? "Add Another" : "Add to Order"}
+                                </span>
                               </>
                             )}
                           </button>

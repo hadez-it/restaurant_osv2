@@ -650,7 +650,7 @@ function MenuTab() {
           <h3 className="text-sm font-bold text-white">No dishes match your filter</h3>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredItems.map((item) => (
             <div
               key={item.id}
@@ -660,7 +660,7 @@ function MenuTab() {
                   : "border-white/[0.04] opacity-60 bg-obsidian-950/60"
               }`}
             >
-              <div className="relative h-36 w-full bg-obsidian-950 overflow-hidden">
+              <div className="relative h-28 sm:h-36 w-full bg-obsidian-950 overflow-hidden">
                 <img
                   src={getMenuItemImage(item)}
                   alt={item.name}
