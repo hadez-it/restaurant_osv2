@@ -1498,25 +1498,25 @@ function SalesTab() {
   }, [filteredOrders]);
 
   return (
-    <div className="space-y-6">
-      {/* Top 4 KPI Summary Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="space-y-3 sm:space-y-5">
+      {/* Top 4 KPI Summary Cards (Compact 2x2 on mobile, 4-col on desktop) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         {/* Card 1: Total Revenue */}
-        <div className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+        <div className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-3 sm:p-5 shadow-xs transition-all duration-200 hover:shadow-md">
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-zinc-500 truncate">
               Total Revenue
             </span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-              <TrendingUp className="h-4 w-4" />
+            <div className="flex h-6 w-6 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-emerald-50 text-emerald-600">
+              <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-900">
+          <div className="mt-1.5 sm:mt-3 flex items-baseline gap-1.5">
+            <span className="text-lg sm:text-3xl font-black tracking-tight text-zinc-900 truncate">
               {money(stats.totalRevenue)}
             </span>
           </div>
-          <p className="mt-2 text-xs text-zinc-500">
+          <p className="mt-1 sm:mt-2 hidden sm:block text-xs text-zinc-500 truncate">
             {filterPeriod === "DAY"
               ? "Sales collected today"
               : filterPeriod === "MONTH"
@@ -1529,67 +1529,67 @@ function SalesTab() {
         </div>
 
         {/* Card 2: Settled Orders */}
-        <div className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+        <div className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-3 sm:p-5 shadow-xs transition-all duration-200 hover:shadow-md">
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-zinc-500 truncate">
               Settled Orders
             </span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
-              <Receipt className="h-4 w-4" />
+            <div className="flex h-6 w-6 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-orange-50 text-orange-600">
+              <Receipt className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-900">
+          <div className="mt-1.5 sm:mt-3 flex items-baseline gap-1.5">
+            <span className="text-lg sm:text-3xl font-black tracking-tight text-zinc-900 truncate">
               {stats.settledCount}
             </span>
-            <span className="text-xs font-medium text-zinc-500">
-              of {stats.totalOrders} total
+            <span className="text-[11px] sm:text-xs font-medium text-zinc-500 truncate">
+              of {stats.totalOrders}
             </span>
           </div>
-          <p className="mt-2 text-xs text-zinc-500">
+          <p className="mt-1 sm:mt-2 hidden sm:block text-xs text-zinc-500 truncate">
             Completed & paid dining receipts
           </p>
           <div className="absolute top-0 right-0 h-1 w-full bg-orange-500" />
         </div>
 
         {/* Card 3: Average Order Value */}
-        <div className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+        <div className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-3 sm:p-5 shadow-xs transition-all duration-200 hover:shadow-md">
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-zinc-500 truncate">
               Avg Order Value
             </span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
-              <DollarSign className="h-4 w-4" />
+            <div className="flex h-6 w-6 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-sky-50 text-sky-600">
+              <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-900">
+          <div className="mt-1.5 sm:mt-3 flex items-baseline gap-1.5">
+            <span className="text-lg sm:text-3xl font-black tracking-tight text-zinc-900 truncate">
               {money(stats.aov)}
             </span>
           </div>
-          <p className="mt-2 text-xs text-zinc-500">
+          <p className="mt-1 sm:mt-2 hidden sm:block text-xs text-zinc-500 truncate">
             Average spend per dining table
           </p>
           <div className="absolute top-0 right-0 h-1 w-full bg-sky-500" />
         </div>
 
         {/* Card 4: Items Sold */}
-        <div className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-              Items Prepared & Sold
+        <div className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-3 sm:p-5 shadow-xs transition-all duration-200 hover:shadow-md">
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-zinc-500 truncate">
+              Items Sold
             </span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
-              <ShoppingBag className="h-4 w-4" />
+            <div className="flex h-6 w-6 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-purple-50 text-purple-600">
+              <ShoppingBag className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-900">
+          <div className="mt-1.5 sm:mt-3 flex items-baseline gap-1.5">
+            <span className="text-lg sm:text-3xl font-black tracking-tight text-zinc-900 truncate">
               {stats.totalItems}
             </span>
-            <span className="text-xs font-medium text-zinc-500">items</span>
+            <span className="text-[11px] sm:text-xs font-medium text-zinc-500 truncate">items</span>
           </div>
-          <p className="mt-2 text-xs text-zinc-500">
+          <p className="mt-1 sm:mt-2 hidden sm:block text-xs text-zinc-500 truncate">
             Dishes and beverages served
           </p>
           <div className="absolute top-0 right-0 h-1 w-full bg-purple-500" />
@@ -1597,156 +1597,157 @@ function SalesTab() {
       </div>
 
       {/* Filter and Range Toolbar */}
-      <div className="space-y-3">
-        <div className="flex flex-col gap-3 bg-white p-4 sm:p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            {/* Quick Period Filter Pills */}
-            <div className="flex flex-wrap items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => setFilterPeriod("DAY")}
-                className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition shrink-0 ${
-                  filterPeriod === "DAY"
-                    ? "bg-zinc-900 text-white shadow-xs"
-                    : "bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-50"
-                }`}
-              >
-                Today (Day)
-              </button>
+      <div className="flex flex-col gap-2 sm:gap-3 bg-white p-2.5 sm:p-4 rounded-2xl border border-zinc-200/80 shadow-2xs">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2.5">
+          {/* Quick Period Filter Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+            <button
+              type="button"
+              onClick={() => setFilterPeriod("DAY")}
+              className={`rounded-xl px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition shrink-0 ${
+                filterPeriod === "DAY"
+                  ? "bg-zinc-900 text-white shadow-xs"
+                  : "bg-zinc-50 text-zinc-600 border border-zinc-200/80 hover:bg-zinc-100"
+              }`}
+            >
+              Today
+            </button>
 
-              <button
-                type="button"
-                onClick={() => setFilterPeriod("MONTH")}
-                className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition shrink-0 ${
-                  filterPeriod === "MONTH"
-                    ? "bg-zinc-900 text-white shadow-xs"
-                    : "bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-50"
-                }`}
-              >
-                This Month
-              </button>
+            <button
+              type="button"
+              onClick={() => setFilterPeriod("MONTH")}
+              className={`rounded-xl px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition shrink-0 ${
+                filterPeriod === "MONTH"
+                  ? "bg-zinc-900 text-white shadow-xs"
+                  : "bg-zinc-50 text-zinc-600 border border-zinc-200/80 hover:bg-zinc-100"
+              }`}
+            >
+              This Month
+            </button>
 
-              {/* Custom Date Range Pill */}
-              <button
-                type="button"
-                onClick={() => {
-                  setTempFrom(customFrom);
-                  setTempTo(customTo);
-                  setShowDateRangeModal(true);
-                }}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition shrink-0 ${
-                  filterPeriod === "CUSTOM"
-                    ? "bg-orange-600 text-white shadow-xs hover:bg-orange-700"
-                    : "bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-50"
-                }`}
-              >
-                <CalendarDays className="h-3.5 w-3.5" />
-                <span>
-                  {filterPeriod === "CUSTOM" && (customFrom || customTo)
-                    ? `${customFrom || "Start"} → ${customTo || "Today"}`
-                    : "Custom Range"}
-                </span>
-                <Pencil className="h-3 w-3 opacity-75 ml-0.5" />
-              </button>
+            {/* Custom Date Range Pill */}
+            <button
+              type="button"
+              onClick={() => {
+                setTempFrom(customFrom);
+                setTempTo(customTo);
+                setShowDateRangeModal(true);
+              }}
+              className={`inline-flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition shrink-0 ${
+                filterPeriod === "CUSTOM"
+                  ? "bg-orange-600 text-white shadow-xs hover:bg-orange-700"
+                  : "bg-zinc-50 text-zinc-600 border border-zinc-200/80 hover:bg-zinc-100"
+              }`}
+            >
+              <CalendarDays className="h-3.5 w-3.5" />
+              <span>
+                {filterPeriod === "CUSTOM" && (customFrom || customTo)
+                  ? `${customFrom || "Start"} → ${customTo || "Today"}`
+                  : "Custom Range"}
+              </span>
+              <Pencil className="h-3 w-3 opacity-75 ml-0.5" />
+            </button>
 
-              <button
-                type="button"
-                onClick={() => setFilterPeriod("ALL")}
-                className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition shrink-0 ${
-                  filterPeriod === "ALL"
-                    ? "bg-zinc-900 text-white shadow-xs"
-                    : "bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-50"
-                }`}
-              >
-                All Time
-              </button>
-            </div>
-
-            {/* Status Select & Search */}
-            <div className="flex flex-wrap items-center gap-2">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="rounded-xl border border-zinc-300 bg-white px-3 py-2 text-xs font-semibold text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
-              >
-                <option value="ALL">All Statuses</option>
-                <option value="PAID">Paid Only</option>
-                <option value="OPEN">Open (Dining)</option>
-                <option value="CHECKOUT">In Checkout</option>
-              </select>
-
-              <div className="relative w-full sm:w-56">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-                <input
-                  type="text"
-                  placeholder="Search order #, table, waiter..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-300 bg-white pl-9 pr-3 py-2 text-xs text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
-                />
-              </div>
-            </div>
+            <button
+              type="button"
+              onClick={() => setFilterPeriod("ALL")}
+              className={`rounded-xl px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition shrink-0 ${
+                filterPeriod === "ALL"
+                  ? "bg-zinc-900 text-white shadow-xs"
+                  : "bg-zinc-50 text-zinc-600 border border-zinc-200/80 hover:bg-zinc-100"
+              }`}
+            >
+              All Time
+            </button>
           </div>
 
+          {/* Status Select & Search */}
+          <div className="flex items-center gap-2">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-9 rounded-xl border border-zinc-200 bg-zinc-50/50 px-2.5 text-xs font-medium text-zinc-800 shadow-2xs focus:border-zinc-400 focus:bg-white focus:outline-hidden shrink-0"
+            >
+              <option value="ALL">All Status</option>
+              <option value="PAID">Paid Only</option>
+              <option value="OPEN">Dining</option>
+              <option value="CHECKOUT">Checkout</option>
+            </select>
+
+            <div className="relative flex-1 md:w-60">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
+              <input
+                type="text"
+                placeholder="Search order, table..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-9 w-full rounded-xl border border-zinc-200 bg-zinc-50/50 pl-8 pr-2.5 text-xs text-zinc-900 placeholder:text-zinc-400 shadow-2xs focus:border-zinc-400 focus:bg-white focus:outline-hidden"
+              />
+            </div>
+          </div>
         </div>
+      </div>
 
-        {/* Sales List / Table */}
-        {loading ? (
-          <div className="rounded-2xl border border-zinc-200/80 bg-white p-12 text-center shadow-xs">
-            <Clock className="mx-auto h-8 w-8 text-orange-500 animate-spin" />
-            <p className="mt-3 text-sm font-semibold text-zinc-800">
-              Loading sales records...
-            </p>
-          </div>
-        ) : filteredOrders.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-zinc-200 bg-white p-12 text-center shadow-xs">
-            <Receipt className="mx-auto h-10 w-10 text-zinc-400" />
-            <h4 className="mt-2 text-sm font-semibold text-zinc-800">
-              No sales history found
-            </h4>
-            <p className="mt-1 text-xs text-zinc-500">
-              {searchQuery
-                ? `No orders match "${searchQuery}".`
-                : "No sales records recorded for the selected filter criteria."}
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {filteredOrders.map((order) => {
-              const isPaid = order.status === "PAID";
-              const isCheckout = order.status === "CHECKOUT";
-              const total = orderTotal(order.items);
-              const itemCount = order.items.reduce((s, i) => s + i.qty, 0);
-              const createdDate = new Date(order.createdAt);
+      {/* Sales List / Table */}
+      {loading ? (
+        <div className="rounded-2xl border border-zinc-200/80 bg-white p-8 text-center shadow-xs">
+          <Clock className="mx-auto h-7 w-7 text-orange-500 animate-spin" />
+          <p className="mt-2 text-xs font-semibold text-zinc-800">
+            Loading sales records...
+          </p>
+        </div>
+      ) : filteredOrders.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-zinc-200 bg-white p-8 text-center shadow-xs">
+          <Receipt className="mx-auto h-8 w-8 text-zinc-400" />
+          <h4 className="mt-2 text-sm font-semibold text-zinc-800">
+            No sales history found
+          </h4>
+          <p className="mt-0.5 text-xs text-zinc-500">
+            {searchQuery
+              ? `No orders match "${searchQuery}".`
+              : "No sales records recorded for the selected filter criteria."}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2.5 sm:space-y-3">
+          {filteredOrders.map((order) => {
+            const isPaid = order.status === "PAID";
+            const isCheckout = order.status === "CHECKOUT";
+            const total = orderTotal(order.items);
+            const itemCount = order.items.reduce((s, i) => s + i.qty, 0);
+            const createdDate = new Date(order.createdAt);
 
-              return (
-                <div
-                  key={order.id}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-2xl border border-zinc-200/80 bg-white p-4 sm:p-5 shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
-                >
-                  {/* Left: Order Info & Metadata */}
-                  <div className="flex items-start gap-3.5">
-                    <div
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl font-black text-sm border ${
-                        isPaid
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                          : isCheckout
-                          ? "bg-indigo-50 text-indigo-700 border-indigo-200"
-                          : "bg-amber-50 text-amber-700 border-amber-200"
-                      }`}
-                    >
-                      <Receipt className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-extrabold text-zinc-900 text-sm sm:text-base">
+            return (
+              <div
+                key={order.id}
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-4 rounded-2xl border border-zinc-200/80 bg-white p-3 sm:p-4 shadow-xs transition-all duration-200 hover:shadow-md"
+              >
+                {/* Order Info */}
+                <div className="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
+                  <div
+                    className={`hidden xs:flex sm:flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl font-black text-xs sm:text-sm border ${
+                      isPaid
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : isCheckout
+                        ? "bg-indigo-50 text-indigo-700 border-indigo-200"
+                        : "bg-amber-50 text-amber-700 border-amber-200"
+                    }`}
+                  >
+                    <Receipt className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    {/* Title row */}
+                    <div className="flex items-center justify-between sm:justify-start gap-2">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-bold text-zinc-900 text-sm">
                           Order #{order.id}
                         </span>
-                        <span className="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
-                          {order.table?.name || `Table #${order.tableId}`}
+                        <span className="inline-flex items-center rounded-md bg-zinc-100 px-1.5 py-0.5 text-[11px] font-medium text-zinc-700">
+                          {order.table?.name || `T#${order.tableId}`}
                         </span>
                         <span
-                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
                             isPaid
                               ? "bg-emerald-100 text-emerald-800"
                               : isCheckout
@@ -1756,7 +1757,7 @@ function SalesTab() {
                         >
                           {isPaid ? (
                             <>
-                              <CheckCircle2 className="h-3 w-3" />
+                              <CheckCircle2 className="h-2.5 w-2.5" />
                               Paid
                             </>
                           ) : (
@@ -1765,68 +1766,73 @@ function SalesTab() {
                         </span>
                       </div>
 
-                      <div className="mt-1 flex items-center gap-3 text-xs text-zinc-500">
-                        <span>
-                          {createdDate.toLocaleDateString(undefined, {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
-                          {" • "}
-                          {createdDate.toLocaleTimeString(undefined, {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                        <span>•</span>
-                        <span>Server: {order.waiter?.name || "Staff"}</span>
-                      </div>
-
-                      {/* Ordered Items Preview */}
-                      <div className="mt-2 text-xs text-zinc-600 line-clamp-1">
-                        <span className="font-semibold text-zinc-800">
-                          {itemCount} {itemCount === 1 ? "item" : "items"}:
-                        </span>{" "}
-                        {order.items
-                          .slice(0, 3)
-                          .map((it) => `${it.qty}× ${it.menuItem?.name || "Item"}`)
-                          .join(", ")}
-                        {order.items.length > 3 && (
-                          <span className="text-zinc-400">
-                            {" "}
-                            +{order.items.length - 3} more
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right: Total Amount & View Details Button */}
-                  <div className="flex items-center justify-between sm:justify-end gap-4 pt-2 sm:pt-0 border-t sm:border-t-0 border-zinc-100">
-                    <div className="text-left sm:text-right">
-                      <span className="text-[11px] font-semibold text-zinc-400 block uppercase tracking-wider">
-                        Amount
-                      </span>
-                      <span className="text-xl sm:text-2xl font-black text-zinc-900 tabular-nums tracking-tight">
+                      {/* Total Amount on Mobile (inline in header) */}
+                      <span className="sm:hidden text-base font-black text-zinc-900 tabular-nums">
                         {money(total)}
                       </span>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => setSelectedOrder(order)}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-200 bg-white px-3.5 py-2 text-xs font-bold text-zinc-700 shadow-2xs hover:border-zinc-300 hover:bg-zinc-50 active:scale-[0.99] transition shrink-0"
-                    >
-                      <Eye className="h-3.5 w-3.5 text-zinc-500" />
-                      <span>Receipt</span>
-                    </button>
+                    {/* Metadata: Date & Server */}
+                    <div className="mt-0.5 flex items-center gap-2 text-[11px] text-zinc-500 flex-wrap">
+                      <span>
+                        {createdDate.toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                        {" • "}
+                        {createdDate.toLocaleTimeString(undefined, {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                      <span>•</span>
+                      <span className="truncate">Server: {order.waiter?.name || "Staff"}</span>
+                    </div>
+
+                    {/* Ordered Items Preview */}
+                    <div className="mt-1 text-xs text-zinc-600 line-clamp-1">
+                      <span className="font-medium text-zinc-700">
+                        {itemCount} {itemCount === 1 ? "item" : "items"}:
+                      </span>{" "}
+                      {order.items
+                        .slice(0, 3)
+                        .map((it) => `${it.qty}× ${it.menuItem?.name || "Item"}`)
+                        .join(", ")}
+                      {order.items.length > 3 && (
+                        <span className="text-zinc-400">
+                          {" "}
+                          +{order.items.length - 3} more
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+
+                {/* Action / Desktop Amount */}
+                <div className="flex items-center justify-between sm:justify-end gap-3 pt-1.5 sm:pt-0 border-t sm:border-t-0 border-zinc-100">
+                  <div className="hidden sm:block text-right shrink-0">
+                    <span className="text-[10px] font-semibold text-zinc-400 block uppercase tracking-wider">
+                      Amount
+                    </span>
+                    <span className="text-xl font-black text-zinc-900 tabular-nums tracking-tight">
+                      {money(total)}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedOrder(order)}
+                    className="w-full sm:w-auto inline-flex min-h-[36px] items-center justify-center gap-1.5 rounded-xl border border-zinc-200 bg-zinc-50 sm:bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 shadow-2xs hover:border-zinc-300 hover:bg-zinc-100 transition shrink-0"
+                  >
+                    <Eye className="h-3.5 w-3.5 text-zinc-500" />
+                    <span>Receipt</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Order Itemized Receipt Modal */}
       <Modal
