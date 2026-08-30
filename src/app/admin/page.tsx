@@ -62,9 +62,6 @@ export default function AdminPage() {
                 OPERATIONS CONTROL
               </span>
             </div>
-            <p className="mt-1 text-xs text-zinc-400">
-              Floorplan arrangement, menu catalog, staff roles, and restaurant financial telemetry
-            </p>
           </div>
         </div>
 
