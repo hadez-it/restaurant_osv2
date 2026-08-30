@@ -11,8 +11,6 @@ import {
   Plus,
   ArrowRight,
   Receipt,
-  ShoppingBag,
-  UtensilsCrossed,
   RefreshCw,
   Loader2,
   X,
@@ -22,6 +20,35 @@ import {
 } from "lucide-react";
 
 type FilterStatus = "ALL" | "FREE" | "OCCUPIED" | "CHECKOUT";
+
+const STATUS_CONFIG: Record<
+  string,
+  {
+    label: string;
+    badge: string;
+    dot: string;
+    border: string;
+  }
+> = {
+  FREE: {
+    label: "Available",
+    badge: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    dot: "bg-emerald-500",
+    border: "border-zinc-200 hover:border-emerald-300 hover:shadow-emerald-500/5",
+  },
+  OCCUPIED: {
+    label: "Dining",
+    badge: "bg-amber-50 text-amber-800 border-amber-200",
+    dot: "bg-amber-500",
+    border: "border-amber-200/90 bg-amber-50/10 hover:border-amber-300 hover:shadow-amber-500/5",
+  },
+  CHECKOUT: {
+    label: "Checkout",
+    badge: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    dot: "bg-indigo-500",
+    border: "border-indigo-200/90 bg-indigo-50/10 hover:border-indigo-300 hover:shadow-indigo-500/5",
+  },
+};
 
 export default function WaiterPage() {
   const [tables, setTables] = useState<TableInfo[]>([]);
@@ -95,7 +122,7 @@ export default function WaiterPage() {
     }
   }
 
-  // Calculate live KPI statistics
+  // Calculate live statistics
   const stats = useMemo(() => {
     const total = tables.length;
     const free = tables.filter((t) => t.status === "FREE").length;
@@ -107,12 +134,10 @@ export default function WaiterPage() {
   // Filter tables by search query and selected filter tab
   const filteredTables = useMemo(() => {
     return tables.filter((table) => {
-      // Filter by status tab
       if (statusFilter !== "ALL" && table.status !== statusFilter) {
         return false;
       }
 
-      // Filter by search query
       if (!searchQuery.trim()) return true;
 
       const query = searchQuery.toLowerCase().trim();
@@ -129,281 +154,112 @@ export default function WaiterPage() {
 
   return (
     <AppShell>
-      <div className="space-y-6">
-        {/* Error Alert if any */}
+      <div className="space-y-4 sm:space-y-5">
+        {/* Error Alert */}
         {errorMessage && (
-          <div className="flex items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 shadow-2xs">
-            <div className="flex items-center gap-2.5">
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 p-3 text-xs sm:text-sm text-red-700 shadow-2xs">
+            <div className="flex items-center gap-2">
               <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
               <span>{errorMessage}</span>
             </div>
             <button
               onClick={() => setErrorMessage(null)}
               className="rounded-lg p-1 text-red-500 hover:bg-red-100 hover:text-red-700"
+              title="Dismiss error"
             >
-              <X className="h-4 w-4" />
+              <X className="h-3.5 w-3.5" />
             </button>
           </div>
         )}
 
-        {/* Top Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* Clean Header */}
+        <div className="flex items-start sm:items-center justify-between gap-3">
           <div>
-            <div className="flex items-center gap-2.5">
-              <h1 className="text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">
-                Floor &amp; Seating Plan
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900">
+                Floor Plan
               </h1>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
-                </span>
-                Live Sync
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                Live
               </span>
             </div>
-            <p className="mt-1 text-sm text-zinc-500">
-              Real-time table occupancy, active orders, and guest dining turnover
+            <p className="mt-0.5 text-xs sm:text-sm text-zinc-500">
+              {stats.total} tables • {stats.free} available • {stats.occupied} dining
+              {stats.checkout > 0 ? ` • ${stats.checkout} ready to pay` : ""}
             </p>
           </div>
 
-          {/* Quick Refresh Button */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 shrink-0">
             <button
+              type="button"
               onClick={() => load(true)}
               disabled={isRefreshing}
-              title="Refresh floor status now"
-              className="inline-flex h-10 items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3.5 text-xs font-semibold text-zinc-700 shadow-2xs transition hover:border-zinc-300 hover:bg-zinc-50 active:scale-98 disabled:opacity-60"
+              className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-zinc-200 bg-white px-3 text-xs font-medium text-zinc-700 shadow-2xs hover:bg-zinc-50 transition active:scale-95 disabled:opacity-60"
+              title="Refresh floor status"
             >
               <RefreshCw
                 className={`h-3.5 w-3.5 text-zinc-500 ${isRefreshing ? "animate-spin text-orange-600" : ""}`}
               />
-              <span className="hidden sm:inline">Refresh Floor</span>
-              <span className="text-[10px] text-zinc-400 font-normal">
-                {lastSyncTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+              <span>Refresh</span>
+              <span className="hidden sm:inline text-[11px] text-zinc-400">
+                {lastSyncTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
               </span>
             </button>
           </div>
         </div>
 
-        {/* KPI Stat Bar */}
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-          {/* Total Tables */}
-          <button
-            type="button"
-            onClick={() => setStatusFilter("ALL")}
-            className={`rounded-2xl border p-4 text-left shadow-xs transition-all ${
-              statusFilter === "ALL"
-                ? "border-zinc-900 bg-zinc-900 text-white ring-2 ring-zinc-900/10 shadow-sm"
-                : "border-zinc-200/90 bg-white text-zinc-900 hover:border-zinc-300 hover:bg-zinc-50/50"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span
-                className={`text-xs font-semibold uppercase tracking-wider ${
-                  statusFilter === "ALL" ? "text-zinc-300" : "text-zinc-500"
-                }`}
-              >
-                Total Tables
-              </span>
-              <div
-                className={`h-2.5 w-2.5 rounded-full ${
-                  statusFilter === "ALL" ? "bg-zinc-400" : "bg-zinc-300"
-                }`}
-              />
-            </div>
-            <div className="mt-3 flex items-baseline justify-between">
-              <span className="text-3xl font-extrabold tracking-tight">{stats.total}</span>
-              <span
-                className={`text-xs font-medium ${
-                  statusFilter === "ALL" ? "text-zinc-300" : "text-zinc-500"
-                }`}
-              >
-                All stations
-              </span>
-            </div>
-          </button>
-
-          {/* Available (Free) */}
-          <button
-            type="button"
-            onClick={() => setStatusFilter("FREE")}
-            className={`rounded-2xl border p-4 text-left shadow-xs transition-all ${
-              statusFilter === "FREE"
-                ? "border-emerald-600 bg-emerald-50/90 ring-2 ring-emerald-500/20 shadow-sm"
-                : "border-zinc-200/90 bg-white hover:border-emerald-200 hover:bg-emerald-50/30"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-emerald-800">
-                Available (Free)
-              </span>
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
-              </span>
-            </div>
-            <div className="mt-3 flex items-baseline justify-between">
-              <span className="text-3xl font-extrabold tracking-tight text-emerald-950">
-                {stats.free}
-              </span>
-              <span className="text-xs font-medium text-emerald-700">Ready to seat</span>
-            </div>
-          </button>
-
-          {/* Dining (Occupied) */}
-          <button
-            type="button"
-            onClick={() => setStatusFilter("OCCUPIED")}
-            className={`rounded-2xl border p-4 text-left shadow-xs transition-all ${
-              statusFilter === "OCCUPIED"
-                ? "border-amber-600 bg-amber-50/90 ring-2 ring-amber-500/20 shadow-sm"
-                : "border-zinc-200/90 bg-white hover:border-amber-200 hover:bg-amber-50/30"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-amber-800">
-                Dining (Occupied)
-              </span>
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-500"></span>
-              </span>
-            </div>
-            <div className="mt-3 flex items-baseline justify-between">
-              <span className="text-3xl font-extrabold tracking-tight text-amber-950">
-                {stats.occupied}
-              </span>
-              <span className="text-xs font-medium text-amber-700">In service</span>
-            </div>
-          </button>
-
-          {/* Ready to Pay (Checkout) */}
-          <button
-            type="button"
-            onClick={() => setStatusFilter("CHECKOUT")}
-            className={`rounded-2xl border p-4 text-left shadow-xs transition-all ${
-              statusFilter === "CHECKOUT"
-                ? "border-indigo-600 bg-indigo-50/90 ring-2 ring-indigo-500/20 shadow-sm"
-                : "border-zinc-200/90 bg-white hover:border-indigo-200 hover:bg-indigo-50/30"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-indigo-800">
-                Ready to Pay (Checkout)
-              </span>
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75"></span>
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-indigo-500"></span>
-              </span>
-            </div>
-            <div className="mt-3 flex items-baseline justify-between">
-              <span className="text-3xl font-extrabold tracking-tight text-indigo-950">
-                {stats.checkout}
-              </span>
-              <span className="text-xs font-medium text-indigo-700">Awaiting bill</span>
-            </div>
-          </button>
-        </div>
-
-        {/* Search Bar + Filter Tabs Control Bar */}
-        <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/90 bg-white p-3 shadow-2xs md:flex-row md:items-center md:justify-between">
-          {/* Filter Tabs */}
-          <div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-zinc-100/90 p-1">
-            <button
-              onClick={() => setStatusFilter("ALL")}
-              className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all ${
-                statusFilter === "ALL"
-                  ? "bg-white text-zinc-900 shadow-xs"
-                  : "text-zinc-600 hover:text-zinc-900"
-              }`}
-            >
-              <span>All Tables</span>
-              <span
-                className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
-                  statusFilter === "ALL"
-                    ? "bg-zinc-900 text-white"
-                    : "bg-zinc-200 text-zinc-700"
-                }`}
-              >
-                {stats.total}
-              </span>
-            </button>
-
-            <button
-              onClick={() => setStatusFilter("FREE")}
-              className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all ${
-                statusFilter === "FREE"
-                  ? "bg-white text-emerald-800 shadow-xs"
-                  : "text-zinc-600 hover:text-emerald-700"
-              }`}
-            >
-              <span>Available</span>
-              <span
-                className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
-                  statusFilter === "FREE"
-                    ? "bg-emerald-600 text-white"
-                    : "bg-emerald-100 text-emerald-800"
-                }`}
-              >
-                {stats.free}
-              </span>
-            </button>
-
-            <button
-              onClick={() => setStatusFilter("OCCUPIED")}
-              className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all ${
-                statusFilter === "OCCUPIED"
-                  ? "bg-white text-amber-900 shadow-xs"
-                  : "text-zinc-600 hover:text-amber-800"
-              }`}
-            >
-              <span>Dining</span>
-              <span
-                className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
-                  statusFilter === "OCCUPIED"
-                    ? "bg-amber-600 text-white"
-                    : "bg-amber-100 text-amber-900"
-                }`}
-              >
-                {stats.occupied}
-              </span>
-            </button>
-
-            <button
-              onClick={() => setStatusFilter("CHECKOUT")}
-              className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all ${
-                statusFilter === "CHECKOUT"
-                  ? "bg-white text-indigo-900 shadow-xs"
-                  : "text-zinc-600 hover:text-indigo-800"
-              }`}
-            >
-              <span>Checkout</span>
-              <span
-                className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
-                  statusFilter === "CHECKOUT"
-                    ? "bg-indigo-600 text-white"
-                    : "bg-indigo-100 text-indigo-900"
-                }`}
-              >
-                {stats.checkout}
-              </span>
-            </button>
+        {/* Unified Filter Tabs & Search Toolbar */}
+        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between rounded-2xl border border-zinc-200/80 bg-white p-2 sm:p-2.5 shadow-2xs">
+          {/* Segmented Filter Pills */}
+          <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+            {[
+              { id: "ALL", label: "All", count: stats.total, badge: "bg-zinc-100 text-zinc-700" },
+              { id: "FREE", label: "Available", count: stats.free, badge: "bg-emerald-100 text-emerald-800" },
+              { id: "OCCUPIED", label: "Dining", count: stats.occupied, badge: "bg-amber-100 text-amber-800" },
+              { id: "CHECKOUT", label: "Checkout", count: stats.checkout, badge: "bg-indigo-100 text-indigo-800" },
+            ].map((tab) => {
+              const active = statusFilter === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setStatusFilter(tab.id as FilterStatus)}
+                  className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-all ${
+                    active
+                      ? "bg-zinc-900 text-white shadow-xs"
+                      : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  <span
+                    className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
+                      active ? "bg-white/20 text-white" : tab.badge
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
-          {/* Search Bar */}
-          <div className="relative w-full md:max-w-xs">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+          {/* Search Input */}
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search table, seats, server..."
-              className="h-10 w-full rounded-xl border border-zinc-200/90 bg-zinc-50/50 pl-9 pr-8 text-xs font-medium text-zinc-900 placeholder:text-zinc-400 focus:border-orange-500 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
+              placeholder="Search table, server, order..."
+              className="h-9 w-full rounded-xl border border-zinc-200 bg-zinc-50/50 pl-8 pr-7 text-xs text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-400 focus:bg-white focus:outline-hidden transition"
             />
             {searchQuery && (
               <button
+                type="button"
                 onClick={() => setSearchQuery("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-0.5 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-700"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                title="Clear search"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -411,153 +267,71 @@ export default function WaiterPage() {
           </div>
         </div>
 
-        {/* Table Grid */}
+        {/* Table Cards Grid */}
         {filteredTables.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:gap-5">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:gap-4">
             {filteredTables.map((t) => {
               const active = t.orders?.[0];
               const total = active ? orderTotal(active.items) : 0;
               const isBusy = busyTableId === t.id;
-
-              // Determine status badge and styling
+              const cfg = STATUS_CONFIG[t.status] || STATUS_CONFIG.FREE;
               const isFree = t.status === "FREE";
               const isOccupied = t.status === "OCCUPIED";
               const isCheckout = t.status === "CHECKOUT";
+              const itemCount = active?.items.reduce((sum, item) => sum + item.qty, 0) || 0;
 
               return (
                 <div
                   key={t.id}
-                  className={`group relative flex flex-col justify-between rounded-2xl border p-5 shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${
-                    isFree
-                      ? "border-zinc-200/90 bg-white hover:border-emerald-300 hover:shadow-emerald-500/5"
-                      : isOccupied
-                      ? "border-amber-200/90 bg-gradient-to-b from-amber-50/20 via-white to-white hover:border-amber-400 hover:shadow-amber-500/5"
-                      : "border-indigo-200/90 bg-gradient-to-b from-indigo-50/20 via-white to-white hover:border-indigo-400 hover:shadow-indigo-500/5"
-                  }`}
+                  className={`group flex flex-col justify-between rounded-2xl border bg-white p-4 shadow-xs transition-all duration-150 hover:shadow-md ${cfg.border}`}
                 >
-                  {/* Card Top: Table Name & Status Badge */}
+                  {/* Top: Name, seats, and status badge */}
                   <div>
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h2 className="text-lg font-bold tracking-tight text-zinc-900">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-base font-bold text-zinc-900 tracking-tight">
                           {t.name}
                         </h2>
-                        <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                          {/* Capacity Chip */}
-                          <span className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200/80 bg-zinc-100/70 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
-                            <Users className="h-3.5 w-3.5 text-zinc-500" />
-                            <span>{t.seats} seats</span>
-                          </span>
-
-                          {/* Server Name if active */}
-                          {active?.waiter && (
-                            <span
-                              className="inline-flex max-w-[130px] items-center gap-1 truncate text-xs text-zinc-500"
-                              title={`Server: ${active.waiter.name}`}
-                            >
-                              <span className="h-1.5 w-1.5 rounded-full bg-zinc-300"></span>
-                              <span className="truncate">{active.waiter.name}</span>
-                            </span>
-                          )}
-                        </div>
+                        <span className="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-600">
+                          <Users className="h-3 w-3 text-zinc-400" />
+                          {t.seats}
+                        </span>
                       </div>
-
-                      {/* Status Badge with Pulsing Ring */}
-                      <div>
-                        {isFree && (
-                          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                            <span className="relative flex h-2 w-2">
-                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
-                            </span>
-                            Available
-                          </span>
-                        )}
-
-                        {isOccupied && (
-                          <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200/80 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">
-                            <span className="relative flex h-2 w-2">
-                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
-                              <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500"></span>
-                            </span>
-                            Dining
-                          </span>
-                        )}
-
-                        {isCheckout && (
-                          <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200/80 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">
-                            <span className="relative flex h-2 w-2">
-                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75"></span>
-                              <span className="relative inline-flex h-2 w-2 rounded-full bg-indigo-500"></span>
-                            </span>
-                            Awaiting Bill
-                          </span>
-                        )}
-                      </div>
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${cfg.badge}`}
+                      >
+                        <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
+                        {cfg.label}
+                      </span>
                     </div>
 
-                    {/* Card Middle: Active Order Details or Free Table Placeholder */}
-                    <div className="my-4 min-h-[64px] flex flex-col justify-center">
+                    {/* Middle: Order / Seating Info */}
+                    <div className="my-3 min-h-[52px] flex flex-col justify-center">
                       {isFree && (
-                        <div className="flex items-center gap-3 rounded-xl border border-dashed border-zinc-200/90 bg-zinc-50/70 p-3">
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100/60 text-emerald-600">
-                            <UtensilsCrossed className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <p className="text-xs font-medium text-zinc-800">Clean &amp; Ready</p>
-                            <p className="text-[11px] text-zinc-500">Ready to seat new guests</p>
-                          </div>
+                        <div className="rounded-xl border border-zinc-100 bg-zinc-50/70 px-3 py-2 text-xs text-zinc-500">
+                          <span>Ready to seat guests ({t.seats} chairs)</span>
                         </div>
                       )}
 
-                      {isOccupied && (
-                        <div className="flex items-center justify-between rounded-xl border border-amber-200/60 bg-amber-50/40 p-3">
-                          <div className="flex items-center gap-2.5">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
-                              <ShoppingBag className="h-4 w-4" />
+                      {(isOccupied || isCheckout) && (
+                        <div className="flex items-center justify-between rounded-xl border border-zinc-100 bg-zinc-50/80 px-3 py-2 text-xs">
+                          <div className="min-w-0 pr-2">
+                            <div className="flex items-center gap-1.5 font-semibold text-zinc-800 truncate">
+                              <span>Order #{active?.id}</span>
+                              {active?.waiter && (
+                                <span className="text-[11px] font-normal text-zinc-500 truncate">
+                                  • {active.waiter.name}
+                                </span>
+                              )}
                             </div>
-                            <div>
-                              <p className="text-xs font-semibold text-zinc-800">
-                                {active?.items.length || 0}{" "}
-                                {(active?.items.length || 0) === 1 ? "item" : "items"}
-                              </p>
-                              <p className="text-[11px] font-medium text-amber-700">
-                                Order #{active?.id}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <span className="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
-                              Running Total
-                            </span>
-                            <span className="text-base font-bold tracking-tight text-amber-900">
-                              {money(total)}
+                            <span className="block text-[11px] text-zinc-500">
+                              {itemCount} {itemCount === 1 ? "item" : "items"}
+                              {isCheckout ? " • Bill requested" : ""}
                             </span>
                           </div>
-                        </div>
-                      )}
-
-                      {isCheckout && (
-                        <div className="flex items-center justify-between rounded-xl border border-indigo-200/60 bg-indigo-50/40 p-3">
-                          <div className="flex items-center gap-2.5">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700">
-                              <Receipt className="h-4 w-4" />
-                            </div>
-                            <div>
-                              <p className="text-xs font-semibold text-indigo-950">
-                                {active?.items.length || 0}{" "}
-                                {(active?.items.length || 0) === 1 ? "item" : "items"}
-                              </p>
-                              <p className="text-[11px] font-medium text-indigo-600">
-                                Bill Printed · Order #{active?.id}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <span className="block text-[10px] font-semibold uppercase tracking-wider text-indigo-400">
-                              Final Total
-                            </span>
-                            <span className="text-base font-bold tracking-tight text-indigo-950">
+                          <div className="text-right shrink-0">
+                            <span className="block text-[10px] uppercase font-medium text-zinc-400">Total</span>
+                            <span className="text-sm font-bold text-zinc-900 tabular-nums">
                               {money(total)}
                             </span>
                           </div>
@@ -566,27 +340,19 @@ export default function WaiterPage() {
                     </div>
                   </div>
 
-                  {/* Card Bottom: Quick Action Button */}
-                  <div className="pt-2 flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedTable(t)}
-                      className="h-11 w-11 shrink-0 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-500 hover:text-zinc-900 transition flex items-center justify-center shadow-2xs"
-                      title="Quick overview"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </button>
+                  {/* Bottom: Action Buttons */}
+                  <div className="flex items-center gap-2 pt-1">
                     {isFree && (
                       <button
                         type="button"
                         onClick={() => openTable(t)}
                         disabled={isBusy}
-                        className="inline-flex h-11 min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-4 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-orange-600 active:bg-orange-700 disabled:opacity-50"
+                        className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-4 text-xs font-semibold text-white shadow-xs transition hover:bg-orange-600 active:scale-[0.99] disabled:opacity-50"
                       >
                         {isBusy ? (
                           <>
                             <Loader2 className="h-4 w-4 animate-spin" />
-                            <span>Opening Table...</span>
+                            <span>Opening...</span>
                           </>
                         ) : (
                           <>
@@ -598,46 +364,60 @@ export default function WaiterPage() {
                     )}
 
                     {isOccupied && (
-                      <button
-                        type="button"
-                        onClick={() => openTable(t)}
-                        disabled={isBusy}
-                        className="inline-flex h-11 min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-amber-600 active:bg-amber-700 disabled:opacity-50"
-                      >
-                        {isBusy ? (
-                          <>
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedTable(t)}
+                          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800 shadow-2xs transition"
+                          title="View order summary"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openTable(t)}
+                          disabled={isBusy}
+                          className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-xl bg-amber-500 px-3 text-xs font-semibold text-white shadow-xs transition hover:bg-amber-600 active:scale-[0.99] disabled:opacity-50"
+                        >
+                          {isBusy ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
-                            <span>Loading Order...</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>View Order #{active?.id}</span>
-                            <ArrowRight className="h-4 w-4" />
-                          </>
-                        )}
-                      </button>
+                          ) : (
+                            <>
+                              <span>Manage Order</span>
+                              <ArrowRight className="h-4 w-4" />
+                            </>
+                          )}
+                        </button>
+                      </>
                     )}
 
                     {isCheckout && (
-                      <button
-                        type="button"
-                        onClick={() => openTable(t)}
-                        disabled={isBusy}
-                        className="inline-flex h-11 min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-50"
-                      >
-                        {isBusy ? (
-                          <>
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedTable(t)}
+                          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800 shadow-2xs transition"
+                          title="View bill summary"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openTable(t)}
+                          disabled={isBusy}
+                          className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-3 text-xs font-semibold text-white shadow-xs transition hover:bg-indigo-700 active:scale-[0.99] disabled:opacity-50"
+                        >
+                          {isBusy ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
-                            <span>Loading Order...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Receipt className="h-4 w-4" />
-                            <span>View Order #{active?.id}</span>
-                            <ArrowRight className="h-4 w-4" />
-                          </>
-                        )}
-                      </button>
+                          ) : (
+                            <>
+                              <Receipt className="h-4 w-4" />
+                              <span>View Bill</span>
+                              <ArrowRight className="h-4 w-4" />
+                            </>
+                          )}
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -645,24 +425,24 @@ export default function WaiterPage() {
             })}
           </div>
         ) : (
-          /* Polished Empty State */
-          <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-zinc-300 bg-white px-6 py-16 text-center shadow-xs">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-100 text-zinc-500 shadow-inner">
+          /* Clean Empty State */
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-200 bg-white px-4 py-12 text-center shadow-2xs">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-100 text-zinc-400">
               {tables.length === 0 ? (
-                <LayoutGrid className="h-7 w-7 text-zinc-400" />
+                <LayoutGrid className="h-6 w-6" />
               ) : (
-                <Search className="h-7 w-7 text-zinc-400" />
+                <Search className="h-6 w-6" />
               )}
             </div>
-            <h3 className="mt-4 text-base font-bold text-zinc-900">
+            <h3 className="mt-3 text-sm font-bold text-zinc-900">
               {tables.length === 0
-                ? "No dining tables configured"
+                ? "No tables configured"
                 : "No matching tables found"}
             </h3>
-            <p className="mt-1.5 max-w-sm text-xs text-zinc-500 leading-relaxed">
+            <p className="mt-1 max-w-xs text-xs text-zinc-500">
               {tables.length === 0
-                ? "No tables have been set up in the database. Please contact a manager or administrator to configure the restaurant floor."
-                : `No tables matched "${searchQuery || statusFilter}". Try adjusting your search query or switching the status filter.`}
+                ? "No tables found in database. Contact a manager to configure floor plan."
+                : `No tables match "${searchQuery || statusFilter}". Try adjusting your search query or filter.`}
             </p>
             {tables.length > 0 && (
               <button
@@ -671,10 +451,10 @@ export default function WaiterPage() {
                   setSearchQuery("");
                   setStatusFilter("ALL");
                 }}
-                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-zinc-900 px-4 py-2.5 text-xs font-semibold text-white shadow-xs transition hover:bg-orange-600"
+                className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-zinc-900 px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-orange-600"
               >
-                <RefreshCw className="h-3.5 w-3.5" />
-                <span>Reset All Filters</span>
+                <RefreshCw className="h-3 w-3" />
+                <span>Reset Filters</span>
               </button>
             )}
           </div>
@@ -684,11 +464,27 @@ export default function WaiterPage() {
         <Modal
           isOpen={!!selectedTable}
           onClose={() => setSelectedTable(null)}
-          title={selectedTable?.name || "Table Details"}
+          title={
+            <div className="flex items-center gap-2">
+              <span>{selectedTable?.name}</span>
+              {selectedTable && (
+                <span
+                  className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${
+                    STATUS_CONFIG[selectedTable.status]?.badge || ""
+                  }`}
+                >
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      STATUS_CONFIG[selectedTable.status]?.dot || ""
+                    }`}
+                  />
+                  {STATUS_CONFIG[selectedTable.status]?.label}
+                </span>
+              )}
+            </div>
+          }
           subtitle={
-            selectedTable
-              ? `${selectedTable.seats} seats • Status: ${selectedTable.status}`
-              : undefined
+            selectedTable ? `${selectedTable.seats} seats capacity` : undefined
           }
           maxWidth="max-w-md"
         >
@@ -696,13 +492,9 @@ export default function WaiterPage() {
             <div className="space-y-4">
               {/* If FREE */}
               {selectedTable.status === "FREE" && (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-4 text-center space-y-2">
-                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
-                    <UtensilsCrossed className="h-5 w-5" />
-                  </div>
-                  <h4 className="text-sm font-bold text-emerald-950">Table Available</h4>
-                  <p className="text-xs text-emerald-800">
-                    This table has {selectedTable.seats} seats and is clean and ready for dining guests.
+                <div className="rounded-xl border border-zinc-100 bg-zinc-50 p-4 text-center">
+                  <p className="text-xs text-zinc-600">
+                    Table is clean and ready to seat guests.
                   </p>
                 </div>
               )}
@@ -710,47 +502,58 @@ export default function WaiterPage() {
               {/* If OCCUPIED or CHECKOUT */}
               {selectedTable.orders && selectedTable.orders.length > 0 && (
                 <div className="space-y-3">
-                  <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-3.5 space-y-1.5 text-xs">
-                    <div className="flex justify-between font-bold text-zinc-900">
+                  <div className="rounded-xl border border-zinc-200/80 bg-zinc-50/80 p-3 text-xs">
+                    <div className="flex items-center justify-between font-bold text-zinc-900">
                       <span>Order #{selectedTable.orders[0].id}</span>
-                      <span className="text-orange-600 font-black">
+                      <span className="text-sm text-zinc-900 font-extrabold tabular-nums">
                         {money(orderTotal(selectedTable.orders[0].items))}
                       </span>
                     </div>
-                    <div className="text-zinc-500">
-                      Server: {selectedTable.orders[0].waiter?.name || "Staff"}
-                    </div>
-                    <div className="text-zinc-400 text-[11px]">
-                      {selectedTable.status === "CHECKOUT" ? "Awaiting bill settlement at Cashier" : "Currently dining"}
+                    <div className="mt-1 flex items-center justify-between text-[11px] text-zinc-500">
+                      <span>Server: {selectedTable.orders[0].waiter?.name || "Unassigned"}</span>
+                      <span>
+                        {selectedTable.status === "CHECKOUT"
+                          ? "Awaiting bill payment"
+                          : "Currently dining"}
+                      </span>
                     </div>
                   </div>
 
-                  {/* Items summary */}
-                  <div className="rounded-xl border border-zinc-200 bg-white p-3.5 text-xs space-y-2 max-h-48 overflow-y-auto">
-                    <span className="font-bold text-zinc-700 uppercase tracking-wider text-[10px] block">
-                      Active Ordered Items ({selectedTable.orders[0].items.reduce((s, i) => s + i.qty, 0)})
-                    </span>
-                    <div className="divide-y divide-zinc-100">
-                      {selectedTable.orders[0].items.map((item) => (
-                        <div key={item.id} className="py-1.5 flex justify-between items-center">
-                          <span className="text-zinc-800 font-medium">
-                            {item.qty}× {item.menuItem?.name}
-                          </span>
-                          <span className="font-semibold text-zinc-600 tabular-nums">
-                            {money(item.qty * item.price)}
-                          </span>
-                        </div>
-                      ))}
+                  {/* Items list */}
+                  <div className="rounded-xl border border-zinc-200/80 bg-white p-3 text-xs">
+                    <div className="flex items-center justify-between pb-2 border-b border-zinc-100 font-semibold text-[11px] text-zinc-400 uppercase tracking-wider">
+                      <span>Item</span>
+                      <span>Subtotal</span>
+                    </div>
+                    <div className="divide-y divide-zinc-100 max-h-56 overflow-y-auto">
+                      {selectedTable.orders[0].items.length > 0 ? (
+                        selectedTable.orders[0].items.map((item) => (
+                          <div key={item.id} className="py-2 flex justify-between items-center">
+                            <span className="text-zinc-800">
+                              <span className="font-semibold text-zinc-900">{item.qty}×</span>{" "}
+                              {item.menuItem?.name}
+                            </span>
+                            <span className="font-medium text-zinc-600 tabular-nums">
+                              {money(item.qty * item.price)}
+                            </span>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="py-3 text-center text-xs text-zinc-400">
+                          No items ordered yet
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
               )}
 
-              <div className="flex items-center justify-end gap-2 pt-2">
+              {/* Modal Actions */}
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100">
                 <button
                   type="button"
                   onClick={() => setSelectedTable(null)}
-                  className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition"
+                  className="min-h-[44px] rounded-xl border border-zinc-200 bg-white px-4 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 transition"
                 >
                   Close
                 </button>
@@ -761,12 +564,12 @@ export default function WaiterPage() {
                     setSelectedTable(null);
                     openTable(t);
                   }}
-                  className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] transition"
+                  className="min-h-[44px] inline-flex items-center gap-1.5 rounded-xl bg-zinc-900 px-4 text-xs font-semibold text-white shadow-xs hover:bg-orange-600 transition"
                 >
                   <span>
                     {selectedTable.status === "FREE"
-                      ? "Open Table & Take Order"
-                      : "Go to POS Order Terminal"}
+                      ? "Open Table"
+                      : "Open Order Details"}
                   </span>
                   <ArrowRight className="h-4 w-4" />
                 </button>
