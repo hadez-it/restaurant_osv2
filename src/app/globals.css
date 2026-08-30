@@ -4,67 +4,117 @@
 
 @layer base {
   :root {
-    --background: 240 10% 98%;
-    --foreground: 240 10% 9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 9%;
-    --primary: 24 95% 53%;
-    --primary-foreground: 0 0% 100%;
-    --muted: 240 5% 94%;
-    --muted-foreground: 240 4% 46%;
-    --border: 240 6% 90%;
-    --ring: 24 95% 53%;
+    --background: 220 28% 5%;
+    --foreground: 210 20% 98%;
+    --card: 222 25% 8%;
+    --card-foreground: 210 20% 98%;
+    --primary: 38 92% 50%;
+    --primary-foreground: 220 30% 6%;
+    --muted: 222 20% 14%;
+    --muted-foreground: 217 14% 65%;
+    --border: 220 18% 16%;
+    --ring: 38 92% 50%;
   }
 
   html {
     -webkit-text-size-adjust: 100%;
+    color-scheme: dark;
   }
+
   body {
-    @apply bg-zinc-50 text-zinc-900 antialiased selection:bg-orange-500 selection:text-white;
+    background-color: #07080a;
+    color: #f4f4f5;
+    @apply antialiased;
     -webkit-tap-highlight-color: transparent;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum";
+  }
+
+  /* Standardize tabular figures for all data & numbers */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
   }
 }
 
-/* Modern subtle scrollbar */
+/* =========================================================================
+   Luxury Hospitality Glass & Ambient Lighting
+   ========================================================================= */
+
+.glass-panel {
+  background: rgba(16, 20, 28, 0.72);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.55);
+}
+
+.glass-dock {
+  background: rgba(12, 15, 21, 0.82);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.7);
+}
+
+.glass-card {
+  background: linear-gradient(180deg, rgba(24, 29, 39, 0.75) 0%, rgba(16, 20, 27, 0.75) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.glass-card:hover {
+  border-color: rgba(245, 158, 11, 0.28);
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.ambient-glow-amber {
+  background: radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.12) 0%, transparent 65%);
+}
+
+.ambient-glow-emerald {
+  background: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.12) 0%, transparent 65%);
+}
+
+/* Subtle luxury dark scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(11, 13, 17, 0.6);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(161, 161, 170, 0.4);
+  background: rgba(82, 92, 112, 0.4);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(161, 161, 170, 0.7);
+  background: rgba(245, 158, 11, 0.5);
 }
 
 /* =========================================================================
-   UI/UX Motion & Micro-Interactions System (Apple HIG & Material Design)
-   All animations use GPU composite layers (transform + opacity)
+   Tactile Micro-Interactions & Animation
    ========================================================================= */
 
 @keyframes pulse-subtle {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.85; transform: scale(1.02); }
+  50% { opacity: 0.82; transform: scale(1.02); }
 }
 
 @keyframes backdrop-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes modal-enter-desktop {
   from {
     opacity: 0;
-    transform: scale(0.96) translateY(8px);
+    transform: scale(0.95) translateY(12px);
   }
   to {
     opacity: 1;
@@ -74,7 +124,7 @@
 
 @keyframes modal-enter-mobile {
   from {
-    opacity: 0.4;
+    opacity: 0.2;
     transform: translateY(100%);
   }
   to {
@@ -86,7 +136,7 @@
 @keyframes toast-slide-down {
   from {
     opacity: 0;
-    transform: translateY(-8px) scale(0.98);
+    transform: translateY(-10px) scale(0.96);
   }
   to {
     opacity: 1;
@@ -94,22 +144,10 @@
   }
 }
 
-@keyframes scale-pop {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.15);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
 @keyframes card-fade-in {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -117,21 +155,30 @@
   }
 }
 
+@keyframes ticket-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+}
+
 .animate-pulse-subtle {
-  animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: pulse-subtle 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .animate-backdrop {
-  animation: backdrop-fade-in 180ms ease-out forwards;
+  animation: backdrop-fade-in 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-modal {
-  animation: modal-enter-mobile 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: modal-enter-mobile 240ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @media (min-width: 640px) {
   .animate-modal {
-    animation: modal-enter-desktop 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: modal-enter-desktop 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 }
 
@@ -139,12 +186,12 @@
   animation: toast-slide-down 240ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.animate-pop {
-  animation: scale-pop 200ms cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+.animate-card {
+  animation: card-fade-in 220ms ease-out forwards;
 }
 
-.animate-card {
-  animation: card-fade-in 200ms ease-out forwards;
+.urgent-ticket-glow {
+  animation: ticket-pulse 2s infinite;
 }
 
 /* Reduced Motion Override for Accessibility (WCAG 2.1 AAA) */
@@ -159,25 +206,27 @@
   }
 }
 
-/* Custom Date Input Styling */
+/* Custom Date Input Styling in Dark Mode */
 input[type="date"] {
-  color-scheme: light;
+  color-scheme: dark;
   font-family: inherit;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
-  opacity: 0.65;
+  opacity: 0.7;
   padding: 4px;
   border-radius: 6px;
+  filter: invert(0.85);
   transition: opacity 0.15s ease-in-out, background-color 0.15s ease-in-out;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator:hover {
   opacity: 1;
-  background-color: rgba(244, 244, 245, 0.9);
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
+/* Printable Thermal Receipt & Kitchen Order Styling */
 @media print {
   body * {
     visibility: hidden;
@@ -195,5 +244,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     padding: 16px;
     background: white !important;
     color: black !important;
+    font-family: monospace !important;
   }
 }

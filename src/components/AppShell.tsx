@@ -23,43 +23,39 @@ interface Me {
 
 const NAV_CONFIG: Record<
   string,
-  { href: string; label: string; icon: React.ComponentType<{ className?: string }> }[]
+  { href: string; label: string; stationCode: string; icon: React.ComponentType<{ className?: string }> }[]
 > = {
   ADMIN: [
-    { href: "/waiter", label: "Floor & Tables", icon: LayoutGrid },
-    { href: "/kitchen", label: "Kitchen KDS", icon: Flame },
-    { href: "/cashier", label: "Cashier Register", icon: Receipt },
-    { href: "/admin", label: "Admin Console", icon: ShieldCheck },
+    { href: "/waiter", label: "Floor & Tables", stationCode: "FLR", icon: LayoutGrid },
+    { href: "/kitchen", label: "Kitchen KDS", stationCode: "KDS", icon: Flame },
+    { href: "/cashier", label: "Cashier Register", stationCode: "POS", icon: Receipt },
+    { href: "/admin", label: "Admin Console", stationCode: "OPS", icon: ShieldCheck },
   ],
-  WAITER: [{ href: "/waiter", label: "Floor & Tables", icon: LayoutGrid }],
-  KITCHEN: [{ href: "/kitchen", label: "Kitchen KDS", icon: Flame }],
-  CASHIER: [{ href: "/cashier", label: "Cashier Register", icon: Receipt }],
+  WAITER: [{ href: "/waiter", label: "Floor & Tables", stationCode: "FLR", icon: LayoutGrid }],
+  KITCHEN: [{ href: "/kitchen", label: "Kitchen KDS", stationCode: "KDS", icon: Flame }],
+  CASHIER: [{ href: "/cashier", label: "Cashier Register", stationCode: "POS", icon: Receipt }],
 };
 
-const ROLE_STYLES: Record<string, { bg: string; text: string; border: string; label: string }> = {
+const ROLE_STYLES: Record<string, { badge: string; label: string; dot: string }> = {
   ADMIN: {
-    bg: "bg-purple-50",
-    text: "text-purple-700",
-    border: "border-purple-200",
-    label: "Administrator",
+    badge: "border-purple-500/30 bg-purple-500/10 text-purple-300",
+    label: "Executive Admin",
+    dot: "bg-purple-400",
   },
   WAITER: {
-    bg: "bg-amber-50",
-    text: "text-amber-700",
-    border: "border-amber-200",
-    label: "Floor Staff",
+    badge: "border-amber-500/30 bg-amber-500/10 text-amber-300",
+    label: "Floor Captain",
+    dot: "bg-amber-400",
   },
   KITCHEN: {
-    bg: "bg-rose-50",
-    text: "text-rose-700",
-    border: "border-rose-200",
-    label: "Kitchen Station",
+    badge: "border-rose-500/30 bg-rose-500/10 text-rose-300",
+    label: "Chef Station",
+    dot: "bg-rose-400",
   },
   CASHIER: {
-    bg: "bg-emerald-50",
-    text: "text-emerald-700",
-    border: "border-emerald-200",
-    label: "Register POS",
+    badge: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+    label: "Cashier POS",
+    dot: "bg-emerald-400",
   },
 };
 
@@ -71,127 +67,168 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     fetch("/api/me")
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then(setMe)
-      .catch(() => router.replace("/login"));
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data) router.push("/login");
+        else setMe(data);
+      })
+      .catch(() => router.push("/login"));
   }, [router]);
 
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
       setCurrentTime(
-        now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        now.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: true,
+        })
       );
     };
     updateTime();
-    const interval = setInterval(updateTime, 10000);
+    const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
   }, []);
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
-    router.replace("/login");
+    router.push("/login");
   }
 
   if (!me) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50">
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-3 border-orange-500 border-t-transparent" />
-          <span className="text-sm font-medium text-zinc-600">Initializing TCS...</span>
+      <div className="min-h-screen bg-obsidian-950 flex flex-col items-center justify-center text-zinc-400">
+        <div className="relative flex items-center justify-center mb-4">
+          <div className="absolute h-16 w-16 rounded-full bg-amber-500/10 animate-ping" />
+          <div className="h-12 w-12 rounded-2xl bg-obsidian-850 border border-white/10 flex items-center justify-center text-amber-400 shadow-glow-copper">
+            <Sparkles className="h-6 w-6 animate-pulse" />
+          </div>
         </div>
+        <p className="text-sm font-medium tracking-wide text-zinc-400">Initializing Terminal...</p>
       </div>
     );
   }
 
-  const roleStyle = ROLE_STYLES[me.role] || {
-    bg: "bg-zinc-100",
-    text: "text-zinc-700",
-    border: "border-zinc-200",
+  const roleMeta = ROLE_STYLES[me.role] || {
+    badge: "border-zinc-700 bg-zinc-800 text-zinc-300",
     label: me.role,
+    dot: "bg-zinc-400",
   };
 
   const navItems = NAV_CONFIG[me.role] ?? [];
 
   return (
-    <div className="min-h-screen bg-zinc-50/60 flex flex-col">
-      {/* Top Bar Header */}
-      <header className="sticky top-0 z-40 border-b border-zinc-200/80 bg-white/95 backdrop-blur-md shadow-xs print:hidden">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 py-2.5">
-          {/* Logo & Main Nav */}
-          <div className="flex items-center gap-2.5 md:gap-8 min-w-0 flex-1">
-            <Link href="/" className="group flex items-center gap-2.5 transition">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 text-white shadow-sm shadow-orange-500/20 group-hover:scale-105 transition-transform">
-                <Sparkles className="h-5 w-5" />
+    <div className="min-h-screen bg-obsidian-950 text-zinc-100 flex flex-col relative selection:bg-amber-500/25 selection:text-amber-200">
+      {/* Top subtle ambient warmth overlay */}
+      <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(217,119,6,0.08),transparent)]" />
+
+      {/* Top Command Bar */}
+      <header className="sticky top-0 z-40 border-b border-white/[0.07] bg-obsidian-950/85 backdrop-blur-2xl shadow-2xl print:hidden">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-3 sm:px-6 py-2.5">
+          {/* Left: Brand Crest & Primary Stations */}
+          <div className="flex items-center gap-2 sm:gap-6 min-w-0 flex-1">
+            <Link
+              href="/"
+              className="group flex items-center gap-2.5 transition-transform active:scale-95 shrink-0"
+            >
+              <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 via-amber-600 to-copper-700 text-obsidian-950 font-black shadow-glow-copper transition-transform group-hover:scale-105">
+                <Sparkles className="h-5 w-5 text-obsidian-950" />
+                <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-300" />
+                </span>
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5 leading-none">
-                  <span className="text-base font-extrabold tracking-tight text-zinc-900">
+                  <span className="text-sm font-black tracking-tight text-white group-hover:text-amber-300 transition-colors">
                     TCS
                   </span>
+                  <span className="hidden sm:inline-block text-[10px] font-bold uppercase tracking-widest text-amber-500/90 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 font-mono">
+                    OS v2
+                  </span>
                 </div>
-                <span className="text-[10px] font-medium text-zinc-400 mt-0.5">
-                  TCS RestaurantOS
+                <span className="text-[10px] font-medium text-zinc-400 tracking-tight mt-0.5">
+                  Restaurant System
                 </span>
               </div>
             </Link>
 
-            {/* Navigation Tabs */}
-            <nav className="flex items-center gap-1">
+            {/* Station Nav Pill Matrix */}
+            <nav className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
               {navItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = pathname.startsWith(item.href);
+                const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
                     title={item.label}
-                    className={`flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium transition-all ${
+                    className={`group relative flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold tracking-tight transition-all duration-200 shrink-0 ${
                       isActive
-                        ? "bg-zinc-900 text-white shadow-xs"
-                        : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                        ? "bg-white/[0.08] text-white border border-amber-500/35 shadow-glow-copper shadow-xs"
+                        : "text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04] border border-transparent"
                     }`}
                   >
-                    <Icon className={`h-4 w-4 ${isActive ? "text-orange-400" : "text-zinc-400"}`} />
+                    <Icon
+                      className={`h-4 w-4 transition-colors ${
+                        isActive ? "text-amber-400" : "text-zinc-400 group-hover:text-zinc-300"
+                      }`}
+                    />
                     <span className="hidden md:inline">{item.label}</span>
+                    <span className="md:hidden text-[11px] font-mono text-zinc-400">
+                      {item.stationCode}
+                    </span>
+                    {isActive && (
+                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] w-6 bg-gradient-to-r from-amber-400 to-copper-500 rounded-full" />
+                    )}
                   </Link>
                 );
               })}
             </nav>
           </div>
 
-          {/* Right Meta & Profile */}
-          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
-            {/* Live Clock Chip */}
+          {/* Right: Telemetry, User Badge & Shift Sign-Out */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            {/* Live Clock & Pulse Indicator */}
             {currentTime && (
-              <div className="hidden md:flex items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-100/60 px-3 py-1 text-xs font-semibold text-zinc-600">
-                <Clock className="h-3.5 w-3.5 text-zinc-400" />
-                <span>{currentTime}</span>
+              <div className="hidden lg:flex items-center gap-2 rounded-xl border border-white/[0.08] bg-obsidian-900/90 px-3 py-1.5 text-xs font-mono font-medium text-zinc-300 shadow-2xs">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                </span>
+                <Clock className="h-3.5 w-3.5 text-zinc-500" />
+                <span className="tabular-nums font-semibold tracking-tight text-zinc-200">
+                  {currentTime}
+                </span>
               </div>
             )}
 
-            {/* User Chip with Role Badge */}
-            <div className="flex items-center gap-2.5 rounded-lg border border-zinc-200/80 bg-white p-1 pl-2.5 shadow-2xs">
+            {/* Operator Card */}
+            <div className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-obsidian-900/90 p-1 pl-2.5 shadow-2xs">
               <div className="hidden sm:flex flex-col text-right">
-                <span className="text-xs font-bold text-zinc-900 leading-tight">
+                <span className="text-xs font-bold text-zinc-100 leading-tight">
                   {me.name}
                 </span>
                 <span
-                  className={`inline-block text-[10px] font-semibold px-1.5 py-0.2 rounded border ${roleStyle.bg} ${roleStyle.text} ${roleStyle.border}`}
+                  className={`inline-flex items-center justify-end gap-1 text-[10px] font-mono font-medium px-1.5 py-0.5 rounded border ${roleMeta.badge} mt-0.5`}
                 >
-                  {roleStyle.label}
+                  <span className={`h-1.5 w-1.5 rounded-full ${roleMeta.dot}`} />
+                  {roleMeta.label}
                 </span>
               </div>
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-100 text-zinc-600">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/[0.06] border border-white/[0.08] text-amber-400">
                 <User className="h-3.5 w-3.5" />
               </div>
             </div>
 
-            {/* Logout Button */}
+            {/* Shift Sign-Out */}
             <button
               onClick={logout}
               title="Sign out of current shift"
-              className="flex h-8 items-center gap-1.5 rounded-lg border border-zinc-200/80 bg-white px-3 text-xs font-semibold text-zinc-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-colors shadow-2xs"
+              className="flex h-8 items-center gap-1.5 rounded-xl border border-white/[0.08] bg-obsidian-900/80 px-2.5 sm:px-3 text-xs font-medium text-zinc-400 hover:text-rose-300 hover:border-rose-500/30 hover:bg-rose-500/10 transition-all duration-200 active:scale-95 shadow-2xs"
             >
               <LogOut className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Logout</span>
@@ -200,8 +237,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      {/* Main Page Content */}
-      <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 py-6">
+      {/* Main Screen Layout Container */}
+      <main className="relative z-10 flex-1 mx-auto w-full max-w-7xl px-3 sm:px-6 py-5 sm:py-6">
         {children}
       </main>
     </div>

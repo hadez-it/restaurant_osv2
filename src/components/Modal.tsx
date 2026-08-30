@@ -9,7 +9,7 @@ interface ModalProps {
   title: React.ReactNode;
   subtitle?: string;
   children: React.ReactNode;
-  maxWidth?: string; // e.g. "max-w-md", "max-w-lg", "max-w-xl", "max-w-2xl"
+  maxWidth?: string; // e.g. "max-w-md", "max-w-lg", "max-w-xl", "max-w-2xl", "max-w-3xl"
 }
 
 export default function Modal({
@@ -47,35 +47,35 @@ export default function Modal({
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-zinc-950/60 backdrop-blur-xs print:hidden animate-backdrop"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-obsidian-950/80 backdrop-blur-md print:hidden animate-backdrop"
       aria-modal="true"
       role="dialog"
     >
       <div
-        className={`relative flex flex-col max-h-[92dvh] sm:max-h-[90vh] w-full ${maxWidth} overflow-hidden rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl border border-zinc-200 animate-modal`}
+        className={`relative flex flex-col max-h-[92dvh] sm:max-h-[90vh] w-full ${maxWidth} overflow-hidden rounded-t-2xl sm:rounded-2xl bg-obsidian-900 shadow-2xl border border-white/[0.12] animate-modal shadow-card-dark`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-zinc-200/80 px-5 py-4 bg-zinc-50/80">
+        <div className="flex items-center justify-between border-b border-white/[0.08] px-5 py-4 bg-obsidian-850/90 backdrop-blur-xl">
           <div>
-            <h3 className="font-bold text-zinc-900 text-base flex items-center gap-2">
+            <div className="font-bold text-white text-base flex items-center gap-2">
               {title}
-            </h3>
+            </div>
             {subtitle && (
-              <p className="text-xs text-zinc-500 mt-0.5">{subtitle}</p>
+              <p className="text-xs text-zinc-400 mt-0.5">{subtitle}</p>
             )}
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close modal"
-            className="rounded-xl p-1.5 text-zinc-400 hover:bg-zinc-200/70 hover:text-zinc-700 transition"
+            className="rounded-xl p-1.5 text-zinc-400 hover:bg-white/10 hover:text-white transition duration-150 active:scale-95"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-5 overflow-y-auto">{children}</div>
+        <div className="p-5 overflow-y-auto text-zinc-200">{children}</div>
       </div>
     </div>
   );

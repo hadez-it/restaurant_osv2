@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
+import Modal from "@/components/Modal";
 import { TableInfo, Order, orderTotal, money } from "@/lib/types";
 import {
   Receipt,
@@ -13,12 +14,8 @@ import {
   Clock,
   Users,
   TrendingUp,
-  AlertCircle,
-  X,
-  ArrowRight,
   RefreshCw,
   Armchair,
-  Check,
 } from "lucide-react";
 
 type PaymentMethod = "CASH" | "CARD" | "QR";
@@ -77,7 +74,7 @@ export default function CashierPage() {
 
   useEffect(() => {
     load();
-    const timer = setInterval(load, 4000);
+    const timer = setInterval(load, 3500);
     return () => clearInterval(timer);
   }, [load]);
 
@@ -171,20 +168,24 @@ export default function CashierPage() {
 
   return (
     <AppShell>
-      {/* Top Header & Context */}
-      <div className="print:hidden space-y-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="space-y-6">
+        {/* Top Control Header */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500/10 text-orange-600">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
                 <Receipt className="h-5 w-5" />
               </div>
-              <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
-                Cashier Terminal
+              <h1 className="text-2xl font-bold tracking-tight text-white">
+                Cashier Settlement Terminal
               </h1>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-mono font-medium text-emerald-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                REGISTER READY
+              </span>
             </div>
-            <p className="mt-1 text-sm text-zinc-500">
-              Live settlement queue, tender calculations, and table release management
+            <p className="mt-1 text-xs text-zinc-400">
+              Live settlement queue, tender calculations, itemized receipts, and table turnover
             </p>
           </div>
 
@@ -192,126 +193,126 @@ export default function CashierPage() {
             <button
               onClick={load}
               disabled={loading}
-              className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-xs hover:bg-zinc-50 active:bg-zinc-100 disabled:opacity-60 transition"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/[0.12] bg-obsidian-900 px-3.5 py-2 text-xs font-semibold text-zinc-300 shadow-xs hover:border-white/[0.2] hover:text-white active:scale-95 disabled:opacity-60 transition"
             >
-              <RefreshCw className={`h-4 w-4 text-zinc-500 ${loading ? "animate-spin" : ""}`} />
-              Sync Floor
+              <RefreshCw className={`h-3.5 w-3.5 text-zinc-400 ${loading ? "animate-spin text-amber-400" : ""}`} />
+              <span>Sync Floor</span>
             </button>
           </div>
         </div>
 
-        {/* Top KPI Metrics */}
+        {/* Top KPI Metrics Cards */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {/* Card 1: Pending Bills */}
-          <div className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-xs transition hover:border-zinc-300">
+          <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-obsidian-900/90 p-5 shadow-2xl backdrop-blur-xl transition hover:border-amber-500/30">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                Pending Checkout
+              <span className="text-[11px] font-mono uppercase tracking-wider text-zinc-400">
+                Pending Settlement
               </span>
               <div
-                className={`flex h-8 w-8 items-center justify-center rounded-xl ${
+                className={`flex h-8 w-8 items-center justify-center rounded-xl border ${
                   pendingBillsCount > 0
-                    ? "bg-amber-100 text-amber-600 animate-pulse"
-                    : "bg-zinc-100 text-zinc-500"
+                    ? "bg-amber-500/20 text-amber-400 border-amber-500/30 animate-pulse"
+                    : "bg-white/[0.04] text-zinc-500 border-white/[0.06]"
                 }`}
               >
                 <Clock className="h-4 w-4" />
               </div>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold tracking-tight text-zinc-900">
+              <span className="text-3xl font-black tracking-tight text-white font-mono">
                 {pendingBillsCount}
               </span>
-              <span className="text-xs font-medium text-zinc-500">tables waiting</span>
+              <span className="text-xs font-mono text-zinc-400">parties awaiting bill</span>
             </div>
-            <p className="mt-2 text-xs text-zinc-500">
+            <p className="mt-2 text-xs text-zinc-400">
               {pendingBillsCount === 0
                 ? "All active tables currently dining"
                 : "Requires immediate cashier processing"}
             </p>
             {pendingBillsCount > 0 && (
-              <div className="absolute top-0 right-0 h-1 w-full bg-amber-500" />
+              <div className="absolute top-0 right-0 h-1 w-full bg-gradient-to-r from-amber-500 to-copper-500" />
             )}
           </div>
 
           {/* Card 2: Total Diners */}
-          <div className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-xs transition hover:border-zinc-300">
+          <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-obsidian-900/90 p-5 shadow-2xl backdrop-blur-xl transition hover:border-white/[0.14]">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                Total Diners Seated
+              <span className="text-[11px] font-mono uppercase tracking-wider text-zinc-400">
+                Seated Guests
               </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/[0.05] border border-white/[0.08] text-zinc-300">
                 <Users className="h-4 w-4" />
               </div>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold tracking-tight text-zinc-900">
+              <span className="text-3xl font-black tracking-tight text-white font-mono">
                 {totalDiners}
               </span>
-              <span className="text-xs font-medium text-zinc-500">
+              <span className="text-xs font-mono text-zinc-400">
                 guests across {withOrders.length} tables
               </span>
             </div>
-            <p className="mt-2 text-xs text-zinc-500">
+            <p className="mt-2 text-xs text-zinc-400 font-mono">
               {tables.length > 0
-                ? `${tables.length - withOrders.length} tables currently open & clean`
+                ? `${tables.length - withOrders.length} tables clean & available`
                 : "Floor capacity ready"}
             </p>
           </div>
 
           {/* Card 3: Today's Collections */}
-          <div className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-xs transition hover:border-zinc-300">
+          <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-obsidian-900/90 p-5 shadow-2xl backdrop-blur-xl transition hover:border-emerald-500/30">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                Today&apos;s Collections
+              <span className="text-[11px] font-mono uppercase tracking-wider text-zinc-400">
+                Today&apos;s Gross Revenue
               </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
                 <TrendingUp className="h-4 w-4" />
               </div>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold tracking-tight text-emerald-700">
+              <span className="text-3xl font-black tracking-tight text-emerald-400 font-mono tabular-nums">
                 {money(todayCollections)}
               </span>
-              <span className="text-xs font-medium text-zinc-500">
+              <span className="text-xs font-mono text-zinc-400">
                 ({todayCount} settled)
               </span>
             </div>
-            <p className="mt-2 text-xs text-zinc-500">
-              Total revenue processed through this terminal today
+            <p className="mt-2 text-xs text-zinc-400">
+              Total sales settled through this register shift
             </p>
-            <div className="absolute top-0 right-0 h-1 w-full bg-emerald-500" />
+            <div className="absolute top-0 right-0 h-1 w-full bg-gradient-to-r from-emerald-500 to-teal-500" />
           </div>
         </div>
 
         {/* Dual Queues Section */}
         <div className="space-y-8">
-          {/* QUEUE 1: Ready for Payment (Prominent) */}
+          {/* QUEUE 1: Ready for Payment */}
           <div>
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-600 text-white">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500 text-obsidian-950 shadow-glow-copper font-black">
                   <Receipt className="h-4 w-4" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold tracking-tight text-zinc-900">
-                    Ready for Payment
+                  <h2 className="text-lg font-bold tracking-tight text-white">
+                    Awaiting Settlement
                   </h2>
-                  <p className="text-xs text-zinc-500">
-                    Tables that requested checkout and are waiting for final bill settlement
+                  <p className="text-xs text-zinc-400">
+                    Tables that requested checkout and are ready for bill settlement and release
                   </p>
                 </div>
               </div>
               <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-mono font-bold ${
                   checkoutQueue.length > 0
-                    ? "bg-amber-100 text-amber-800 border border-amber-200"
-                    : "bg-zinc-100 text-zinc-600"
+                    ? "bg-amber-500/15 text-amber-300 border border-amber-500/30"
+                    : "bg-white/[0.04] text-zinc-500 border border-white/[0.06]"
                 }`}
               >
                 <span
                   className={`h-2 w-2 rounded-full ${
-                    checkoutQueue.length > 0 ? "bg-amber-500 animate-ping" : "bg-zinc-400"
+                    checkoutQueue.length > 0 ? "bg-amber-400 animate-ping" : "bg-zinc-500"
                   }`}
                 />
                 {checkoutQueue.length} Ready
@@ -319,16 +320,15 @@ export default function CashierPage() {
             </div>
 
             {checkoutQueue.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-200 bg-white/60 p-10 text-center shadow-xs">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-100 text-zinc-400">
+              <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-white/[0.12] bg-obsidian-900/40 p-10 text-center shadow-xs">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.04] text-zinc-500 mb-3">
                   <CheckCircle2 className="h-6 w-6 text-zinc-400" />
                 </div>
-                <h3 className="mt-3 text-sm font-semibold text-zinc-800">
-                  No tables waiting to pay
+                <h3 className="text-sm font-bold text-white">
+                  No tables waiting to settle
                 </h3>
-                <p className="mt-1 max-w-sm text-xs text-zinc-500">
-                  When a server initiates checkout on the floor, the table will appear here
-                  for immediate settlement.
+                <p className="mt-1 max-w-sm text-xs text-zinc-400">
+                  When a server initiates checkout on the floor, the table will appear here for instant settlement.
                 </p>
               </div>
             ) : (
@@ -341,82 +341,64 @@ export default function CashierPage() {
                   return (
                     <div
                       key={table.id}
-                      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border-2 border-orange-500/80 bg-white p-5 shadow-sm transition hover:shadow-md hover:border-orange-600"
+                      className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-amber-500/40 bg-obsidian-900 p-5 shadow-glow-copper transition hover:border-amber-500"
                     >
-                      {/* Top ribbon / status */}
+                      {/* Top status */}
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-xl font-black text-zinc-900">
+                            <span className="text-xl font-black text-white">
                               {table.name}
                             </span>
-                            <span className="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
-                              <Armchair className="h-3 w-3" />
+                            <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.06] border border-white/[0.08] px-2 py-0.5 text-xs font-mono text-zinc-300">
+                              <Armchair className="h-3 w-3 text-zinc-400" />
                               {table.seats} seats
                             </span>
                           </div>
-                          <p className="mt-1 text-xs text-zinc-500">
-                            Order #{order.id} · Waiter:{" "}
-                            <span className="font-semibold text-zinc-700">
-                              {order.waiter?.name || "Server"}
-                            </span>
-                          </p>
+                          <div className="mt-1 text-xs font-mono text-zinc-400">
+                            <span>Order #{order.id}</span>
+                            {order.waiter && <span> • {order.waiter.name}</span>}
+                          </div>
                         </div>
-                        <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-1 text-xs font-bold text-orange-700">
-                          <span className="h-1.5 w-1.5 rounded-full bg-orange-600" />
-                          CHECKOUT
+
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 text-[10px] font-mono font-bold text-amber-300">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                          BILL READY
                         </span>
                       </div>
 
-                      {/* Items Preview */}
-                      <div className="mt-4 rounded-xl bg-zinc-50 p-3 border border-zinc-100">
-                        <div className="mb-2 flex items-center justify-between text-xs font-medium text-zinc-500">
-                          <span>Items Ordered ({itemCount})</span>
-                          <span>Price</span>
+                      {/* Middle Items Summary */}
+                      <div className="my-4 rounded-2xl border border-white/[0.08] bg-obsidian-950/80 p-3.5 text-xs font-mono space-y-1.5">
+                        <div className="flex justify-between text-zinc-400">
+                          <span>Items Ordered:</span>
+                          <span className="text-white font-bold">{itemCount} items</span>
                         </div>
-                        <ul className="max-h-36 space-y-1.5 overflow-y-auto text-xs divide-y divide-zinc-100">
-                          {order.items.slice(0, 4).map((item) => (
-                            <li
-                              key={item.id}
-                              className="flex items-center justify-between pt-1 first:pt-0"
-                            >
-                              <span className="truncate pr-2 text-zinc-700">
-                                <span className="font-semibold text-zinc-900">{item.qty}×</span>{" "}
-                                {item.menuItem.name}
-                              </span>
-                              <span className="shrink-0 font-medium text-zinc-900">
-                                {money(item.qty * item.price)}
-                              </span>
-                            </li>
-                          ))}
-                          {order.items.length > 4 && (
-                            <li className="pt-1 text-center text-xs font-medium text-orange-600">
-                              +{order.items.length - 4} more items
-                            </li>
-                          )}
-                        </ul>
-                      </div>
-
-                      {/* Total & Action */}
-                      <div className="mt-4 pt-3 border-t border-zinc-100">
-                        <div className="flex items-baseline justify-between mb-3">
-                          <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                            Total Due
+                        <div className="flex justify-between text-zinc-400">
+                          <span>Elapsed:</span>
+                          <span className="text-zinc-300">
+                            {new Date(order.createdAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
                           </span>
-                          <span className="text-2xl font-black text-orange-600">
+                        </div>
+                        <div className="flex justify-between items-baseline pt-2 border-t border-white/[0.08]">
+                          <span className="text-zinc-300 font-sans font-semibold">Total Amount:</span>
+                          <span className="text-xl font-black text-amber-400 tabular-nums">
                             {money(total)}
                           </span>
                         </div>
-
-                        <button
-                          onClick={() => openPaymentModal(table)}
-                          className="w-full flex items-center justify-center gap-2 rounded-xl bg-orange-600 py-3 text-sm font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] transition"
-                        >
-                          <CreditCard className="h-4 w-4" />
-                          Process Payment
-                          <ArrowRight className="h-4 w-4" />
-                        </button>
                       </div>
+
+                      {/* Action Button */}
+                      <button
+                        type="button"
+                        onClick={() => openPaymentModal(table)}
+                        className="w-full min-h-[44px] flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-copper-600 text-obsidian-950 font-black text-xs shadow-glow-copper hover:brightness-110 active:scale-[0.98] transition"
+                      >
+                        <Receipt className="h-4 w-4" />
+                        <span>Settle Bill & Release Table</span>
+                      </button>
                     </div>
                   );
                 })}
@@ -424,33 +406,30 @@ export default function CashierPage() {
             )}
           </div>
 
-          {/* QUEUE 2: Active Dining Tables (Secondary) */}
+          {/* QUEUE 2: Active Dining Tables */}
           <div>
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-zinc-200 text-zinc-700">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/[0.06] border border-white/[0.08] text-zinc-300">
                   <Armchair className="h-4 w-4" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold tracking-tight text-zinc-900">
-                    Active Dining Tables
+                  <h2 className="text-lg font-bold tracking-tight text-white">
+                    Currently Dining ({diningQueue.length})
                   </h2>
-                  <p className="text-xs text-zinc-500">
-                    Guests currently dining with active tabs open
+                  <p className="text-xs text-zinc-400">
+                    Tables with active parties who haven&apos;t requested checkout yet
                   </p>
                 </div>
               </div>
-              <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-semibold text-zinc-600">
-                {diningQueue.length} Dining
-              </span>
             </div>
 
             {diningQueue.length === 0 ? (
-              <div className="rounded-xl border border-zinc-200/80 bg-white p-6 text-center text-xs text-zinc-400">
-                No active dining tables at the moment.
+              <div className="rounded-2xl border border-white/[0.06] bg-obsidian-900/40 p-8 text-center text-xs text-zinc-400">
+                No active dining parties right now.
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {diningQueue.map((table) => {
                   const order = table.orders![0];
                   const total = orderTotal(order.items);
@@ -459,39 +438,37 @@ export default function CashierPage() {
                   return (
                     <div
                       key={table.id}
-                      className="flex flex-col justify-between rounded-xl border border-zinc-200/80 bg-white p-4 shadow-2xs hover:border-zinc-300 transition"
+                      className="rounded-2xl border border-white/[0.08] bg-obsidian-900/80 p-4 space-y-3 shadow-sm hover:border-white/[0.14] transition"
                     >
-                      <div>
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-zinc-900">{table.name}</span>
-                          <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
-                            DINING
-                          </span>
-                        </div>
-                        <p className="mt-1 text-xs text-zinc-500">
-                          Waiter: {order.waiter?.name || "Server"}
-                        </p>
-                        <p className="text-xs text-zinc-500">
-                          {itemCount} items ordered
-                        </p>
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-white">{table.name}</span>
+                        <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-mono font-bold text-emerald-400">
+                          DINING
+                        </span>
                       </div>
 
-                      <div className="mt-3 pt-2 border-t border-zinc-100 flex items-center justify-between">
-                        <div>
-                          <span className="text-[10px] uppercase font-semibold text-zinc-400 block">
-                            Subtotal
-                          </span>
-                          <span className="font-bold text-zinc-800 text-sm">
-                            {money(total)}
-                          </span>
+                      <div className="text-xs font-mono space-y-1 text-zinc-400">
+                        <div className="flex justify-between">
+                          <span>Order:</span>
+                          <span className="text-zinc-200">#{order.id}</span>
                         </div>
-                        <button
-                          onClick={() => openPaymentModal(table)}
-                          className="rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 transition"
-                        >
-                          Settle Early
-                        </button>
+                        <div className="flex justify-between">
+                          <span>Items:</span>
+                          <span className="text-zinc-200">{itemCount}</span>
+                        </div>
+                        <div className="flex justify-between pt-1 border-t border-white/[0.06] font-bold text-white">
+                          <span>Running Tab:</span>
+                          <span className="text-amber-400 tabular-nums">{money(total)}</span>
+                        </div>
                       </div>
+
+                      <button
+                        type="button"
+                        onClick={() => openPaymentModal(table)}
+                        className="w-full py-2 text-xs font-semibold rounded-xl border border-white/[0.12] bg-white/[0.04] text-zinc-200 hover:bg-white/[0.08] hover:text-white transition"
+                      >
+                        Open Settlement
+                      </button>
                     </div>
                   );
                 })}
@@ -499,446 +476,241 @@ export default function CashierPage() {
             )}
           </div>
         </div>
-      </div>
 
-      {/* PAYMENT MODAL / DRAWER */}
-      {activePayment && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-zinc-950/60 backdrop-blur-xs print:hidden animate-backdrop">
-          <div className="relative flex flex-col max-h-[92dvh] sm:max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl border border-zinc-200 animate-modal">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-zinc-200 px-4 sm:px-6 py-4 bg-zinc-50/80">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-600 text-white font-bold">
-                  <Receipt className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-zinc-900">
-                    Settle Bill — {activePayment.table.name}
-                  </h3>
-                  <p className="text-xs text-zinc-500">
-                    Order #{activePayment.order.id} · Waiter:{" "}
-                    {activePayment.order.waiter?.name || "Server"}
-                  </p>
+        {/* Modal: Payment Settlement Drawer */}
+        <Modal
+          isOpen={!!activePayment && !paymentSuccess}
+          onClose={closePaymentModal}
+          title={
+            activePayment
+              ? `Checkout: ${activePayment.table.name} (Order #${activePayment.order.id})`
+              : "Checkout"
+          }
+          subtitle="Select tender method and enter payment amount"
+          maxWidth="max-w-lg"
+        >
+          {activePayment && (
+            <div className="space-y-5">
+              {/* Payment Method Selector */}
+              <div>
+                <label className="block text-xs font-mono uppercase tracking-wider text-zinc-400 mb-2">
+                  Payment Method
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: "CASH", label: "Cash Tender", icon: Banknote },
+                    { id: "CARD", label: "Credit Card", icon: CreditCard },
+                    { id: "QR", label: "Digital QR", icon: QrCode },
+                  ].map((m) => {
+                    const Icon = m.icon;
+                    const isSelected = paymentMethod === m.id;
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => {
+                          setPaymentMethod(m.id as PaymentMethod);
+                          if (m.id !== "CASH") {
+                            setTenderedAmount(currentTotal.toFixed(2));
+                          }
+                        }}
+                        className={`flex flex-col items-center justify-center p-3 rounded-2xl border text-xs font-bold transition-all active:scale-[0.98] ${
+                          isSelected
+                            ? "bg-amber-500/15 border-amber-500 text-amber-300 shadow-glow-copper"
+                            : "bg-obsidian-950/80 border-white/[0.08] text-zinc-400 hover:text-zinc-200"
+                        }`}
+                      >
+                        <Icon className="h-5 w-5 mb-1.5" />
+                        <span>{m.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-              <button
-                onClick={closePaymentModal}
-                disabled={busy}
-                className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-200/60 hover:text-zinc-700 transition"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
 
-            {/* Modal Content */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
-              {paymentSuccess ? (
-                /* Payment Success View */
-                <div className="flex flex-col items-center justify-center py-6 text-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 mb-4">
-                    <Check className="h-8 w-8 stroke-[3]" />
+              {/* Cash Quick Tender Shortcuts */}
+              {paymentMethod === "CASH" && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-mono uppercase tracking-wider text-zinc-400">
+                      Quick Cash Presets
+                    </label>
+                    <span className="text-[10px] font-mono text-amber-400">1-Tap Tender</span>
                   </div>
-                  <h4 className="text-2xl font-black text-zinc-900">
-                    Payment Succeeded!
-                  </h4>
-                  <p className="mt-1 text-sm text-zinc-500 max-w-sm">
-                    {activePayment.table.name} has been settled and released as FREE.
-                    Receipt recorded.
-                  </p>
-
-                  <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-                    <button
-                      onClick={handlePrintReceipt}
-                      className="inline-flex items-center gap-2 rounded-xl border border-zinc-300 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-800 shadow-xs hover:bg-zinc-50 transition"
-                    >
-                      <Printer className="h-4 w-4 text-zinc-600" />
-                      Print Thermal Receipt
-                    </button>
-                    <button
-                      onClick={closePaymentModal}
-                      className="rounded-xl bg-orange-600 px-6 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-orange-700 transition"
-                    >
-                      Close & Return to Queue
-                    </button>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[
+                      { label: "Exact", val: currentTotal },
+                      { label: "$20", val: 20 },
+                      { label: "$50", val: 50 },
+                      { label: "$100", val: 100 },
+                    ].map((btn) => (
+                      <button
+                        key={btn.label}
+                        type="button"
+                        onClick={() => setTenderedAmount(btn.val.toFixed(2))}
+                        className="py-2 px-2 text-xs font-mono font-bold rounded-xl border border-white/[0.12] bg-white/[0.04] text-zinc-200 hover:bg-white/[0.08] active:scale-95 transition"
+                      >
+                        {btn.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
-              ) : (
-                <>
-                  {/* Bill Total Highlight */}
-                  <div className="flex items-center justify-between rounded-2xl bg-orange-50/60 p-4 border border-orange-200">
-                    <div>
-                      <span className="text-xs font-semibold text-orange-800 uppercase tracking-wider">
-                        Amount Payable
-                      </span>
-                      <p className="text-xs text-orange-600">
-                        {activePayment.order.items.reduce((s, i) => s + i.qty, 0)} items total
-                      </p>
-                    </div>
-                    <span className="text-2xl sm:text-3xl font-black text-orange-600">
-                      {money(currentTotal)}
-                    </span>
-                  </div>
-
-                  {/* Payment Method Selector */}
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-zinc-600 mb-2">
-                      Select Payment Method
-                    </label>
-                    <div className="grid grid-cols-3 gap-3">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPaymentMethod("CASH");
-                          setTenderedAmount(currentTotal.toFixed(2));
-                        }}
-                        className={`flex flex-col items-center justify-center gap-2 rounded-xl p-3.5 border-2 transition ${
-                          paymentMethod === "CASH"
-                            ? "border-orange-600 bg-orange-50/50 text-orange-700 font-bold shadow-xs"
-                            : "border-zinc-200 hover:border-zinc-300 text-zinc-600"
-                        }`}
-                      >
-                        <Banknote className="h-6 w-6" />
-                        <span className="text-xs font-medium">Cash</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPaymentMethod("CARD");
-                          setTenderedAmount(currentTotal.toFixed(2));
-                        }}
-                        className={`flex flex-col items-center justify-center gap-2 rounded-xl p-3.5 border-2 transition ${
-                          paymentMethod === "CARD"
-                            ? "border-orange-600 bg-orange-50/50 text-orange-700 font-bold shadow-xs"
-                            : "border-zinc-200 hover:border-zinc-300 text-zinc-600"
-                        }`}
-                      >
-                        <CreditCard className="h-6 w-6" />
-                        <span className="text-xs font-medium">Credit / Debit</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPaymentMethod("QR");
-                          setTenderedAmount(currentTotal.toFixed(2));
-                        }}
-                        className={`flex flex-col items-center justify-center gap-2 rounded-xl p-3.5 border-2 transition ${
-                          paymentMethod === "QR"
-                            ? "border-orange-600 bg-orange-50/50 text-orange-700 font-bold shadow-xs"
-                            : "border-zinc-200 hover:border-zinc-300 text-zinc-600"
-                        }`}
-                      >
-                        <QrCode className="h-6 w-6" />
-                        <span className="text-xs font-medium">Mobile / QR</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Cash Change Calculator Section */}
-                  {paymentMethod === "CASH" && (
-                    <div className="rounded-2xl border border-zinc-200 bg-zinc-50/50 p-4 space-y-4">
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="text-xs font-bold text-zinc-700 uppercase">
-                            Cash Tendered ($)
-                          </label>
-                          <span className="text-xs font-medium text-zinc-500">
-                            Required: {money(currentTotal)}
-                          </span>
-                        </div>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 font-bold text-lg">
-                            $
-                          </span>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={tenderedAmount}
-                            onChange={(e) => setTenderedAmount(e.target.value)}
-                            placeholder="0.00"
-                            className="w-full rounded-xl border border-zinc-300 bg-white py-3 pl-8 pr-4 text-xl font-bold text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Quick Tender Preset Buttons */}
-                      <div>
-                        <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block mb-2">
-                          Quick Presets
-                        </span>
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setTenderedAmount(currentTotal.toFixed(2))}
-                            className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-bold text-zinc-800 hover:bg-zinc-100 transition shadow-2xs"
-                          >
-                            Exact ({money(currentTotal)})
-                          </button>
-                          {[10, 20, 50, 100].map((preset) => (
-                            <button
-                              key={preset}
-                              type="button"
-                              onClick={() => setTenderedAmount(preset.toFixed(2))}
-                              className={`rounded-lg border px-3 py-1.5 text-xs font-bold transition shadow-2xs ${
-                                currentTendered === preset
-                                  ? "border-orange-500 bg-orange-50 text-orange-700"
-                                  : "border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-100"
-                              }`}
-                            >
-                              ${preset}
-                            </button>
-                          ))}
-                          {currentTotal > 10 && currentTotal % 10 !== 0 && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const rounded = Math.ceil(currentTotal / 10) * 10;
-                                setTenderedAmount(rounded.toFixed(2));
-                              }}
-                              className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-bold text-zinc-800 hover:bg-zinc-100 transition shadow-2xs"
-                            >
-                              ${Math.ceil(currentTotal / 10) * 10} (Round Up)
-                            </button>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Change / Due Display */}
-                      <div className="pt-2">
-                        {isSufficient ? (
-                          <div className="flex items-center justify-between rounded-xl bg-emerald-50 p-3.5 border border-emerald-200 text-emerald-800">
-                            <div className="flex items-center gap-2">
-                              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                              <div>
-                                <span className="text-xs font-bold uppercase tracking-wider block">
-                                  Change to Return
-                                </span>
-                                <span className="text-xs text-emerald-700">
-                                  Return to customer
-                                </span>
-                              </div>
-                            </div>
-                            <span className="text-2xl font-black text-emerald-700">
-                              {money(changeDue)}
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-between rounded-xl bg-amber-50 p-3.5 border border-amber-200 text-amber-800">
-                            <div className="flex items-center gap-2">
-                              <AlertCircle className="h-5 w-5 text-amber-600" />
-                              <div>
-                                <span className="text-xs font-bold uppercase tracking-wider block">
-                                  Shortage
-                                </span>
-                                <span className="text-xs text-amber-700">
-                                  Additional cash needed
-                                </span>
-                              </div>
-                            </div>
-                            <span className="text-xl font-black text-amber-700">
-                              {money(remainingDue)}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Card Terminal Preview */}
-                  {paymentMethod === "CARD" && (
-                    <div className="rounded-2xl border border-zinc-200 bg-zinc-50/50 p-5 text-center space-y-3">
-                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
-                        <CreditCard className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-zinc-900">
-                          External Terminal Ready
-                        </h4>
-                        <p className="mt-1 text-xs text-zinc-500 max-w-sm mx-auto">
-                          Instruct customer to insert chip, tap contactless (Apple Pay / Google Pay),
-                          or swipe on the countertop terminal.
-                        </p>
-                      </div>
-                      <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-                        <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                        Device Connected & Listening
-                      </div>
-                    </div>
-                  )}
-
-                  {/* QR Code Preview */}
-                  {paymentMethod === "QR" && (
-                    <div className="rounded-2xl border border-zinc-200 bg-zinc-50/50 p-5 text-center space-y-3">
-                      <div className="mx-auto flex h-32 w-32 items-center justify-center rounded-2xl bg-white border-2 border-zinc-300 p-2 shadow-xs">
-                        <QrCode className="h-24 w-24 text-zinc-800" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-zinc-900">
-                          Dynamic Payment QR
-                        </h4>
-                        <p className="mt-1 text-xs text-zinc-500">
-                          Customer scans with mobile banking or wallet app to pay {money(currentTotal)}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Itemized Receipt Preview Drawer */}
-                  <div className="rounded-2xl border border-zinc-200 bg-white p-4 font-mono text-xs text-zinc-800">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-bold text-[11px] text-zinc-500 uppercase tracking-widest">
-                        Itemized Receipt Preview
-                      </span>
-                      <button
-                        onClick={handlePrintReceipt}
-                        type="button"
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 px-2.5 py-1 text-[11px] font-sans font-semibold text-zinc-700 hover:bg-zinc-50"
-                      >
-                        <Printer className="h-3 w-3" />
-                        Print Thermal Receipt
-                      </button>
-                    </div>
-
-                    <div className="rounded-xl border border-zinc-100 bg-zinc-50/50 p-3 space-y-1">
-                      <div className="text-center font-bold">🍊 TCS RestaurantOS</div>
-                      <div className="text-center text-[10px] text-zinc-500">
-                        Table: {activePayment.table.name} · Order #{activePayment.order.id}
-                      </div>
-                      <div className="my-1 border-t border-dashed border-zinc-300" />
-                      {activePayment.order.items.map((i) => (
-                        <div key={i.id} className="flex justify-between">
-                          <span>
-                            {i.qty}× {i.menuItem.name}
-                          </span>
-                          <span>{money(i.qty * i.price)}</span>
-                        </div>
-                      ))}
-                      <div className="my-1 border-t border-dashed border-zinc-300" />
-                      <div className="flex justify-between font-bold text-sm text-zinc-900 pt-1">
-                        <span>TOTAL</span>
-                        <span>{money(currentTotal)}</span>
-                      </div>
-                    </div>
-                  </div>
-                </>
               )}
-            </div>
 
-            {/* Modal Footer / Primary Action */}
-            {!paymentSuccess && (
-              <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3 border-t border-zinc-200 px-4 sm:px-6 py-4 bg-zinc-50/80">
+              {/* Amount Due vs Tendered Calculation */}
+              <div className="rounded-2xl border border-white/[0.08] bg-obsidian-950/90 p-4 space-y-3 font-mono">
+                <div className="flex justify-between text-xs text-zinc-400">
+                  <span>Total Bill:</span>
+                  <span className="text-base font-black text-white">{money(currentTotal)}</span>
+                </div>
+
+                <div className="flex items-center justify-between gap-4 pt-2 border-t border-white/[0.08]">
+                  <label htmlFor="tendered" className="text-xs text-zinc-400">
+                    Amount Tendered:
+                  </label>
+                  <div className="relative w-40">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 font-mono">
+                      $
+                    </span>
+                    <input
+                      id="tendered"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={tenderedAmount}
+                      onChange={(e) => setTenderedAmount(e.target.value)}
+                      className="w-full text-right h-10 pl-7 pr-3 rounded-xl border border-white/[0.14] bg-obsidian-900 text-base font-bold text-white font-mono focus:border-amber-500 focus:outline-hidden"
+                    />
+                  </div>
+                </div>
+
+                {/* Change Due / Balance Due */}
+                <div className="pt-3 border-t border-white/[0.08] flex justify-between items-baseline">
+                  <span className="text-xs font-sans font-bold text-zinc-300">
+                    {isSufficient ? "Change Due to Customer:" : "Remaining Balance Due:"}
+                  </span>
+                  <span
+                    className={`text-xl font-black tabular-nums ${
+                      isSufficient ? "text-emerald-400" : "text-rose-400"
+                    }`}
+                  >
+                    {money(isSufficient ? changeDue : remainingDue)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Modal Actions */}
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-white/[0.08]">
                 <button
                   type="button"
                   onClick={closePaymentModal}
                   disabled={busy}
-                  className="w-full sm:w-auto rounded-xl border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 transition"
+                  className="min-h-[44px] rounded-xl border border-white/[0.12] bg-white/[0.04] px-4 text-xs font-semibold text-zinc-300 hover:text-white"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
+                  disabled={!isSufficient || busy}
                   onClick={confirmPayment}
-                  disabled={busy || (paymentMethod === "CASH" && !isSufficient)}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-bold text-white shadow-xs hover:bg-emerald-700 active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none transition"
+                  className="min-h-[44px] inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-5 text-xs font-black text-obsidian-950 shadow-glow-emerald hover:brightness-110 active:scale-[0.98] transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {busy ? (
-                    <>
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                      Processing...
-                    </>
+                    <span>Processing Settlement...</span>
                   ) : (
                     <>
-                      <CheckCircle2 className="h-4 w-4" />
-                      Confirm Payment & Release Table
+                      <CheckCircle2 className="h-4 w-4 stroke-[2.5]" />
+                      <span>Complete Settlement & Release Table</span>
                     </>
                   )}
                 </button>
               </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* PRINTABLE RECEIPT TEMPLATE (visible only during window.print()) */}
-      <div className="hidden print:block print:w-72 print:mx-auto print:font-mono print:text-black print:text-xs print:leading-tight">
-        {printedReceipt ? (
-          <div>
-            <div className="text-center font-bold text-sm">🍊 TCS RestaurantOS</div>
-            <div className="text-center text-[10px]">RESTAURANT MANAGEMENT OS</div>
-            <div className="text-center text-[10px]">123 Gourmet Ave, Suite 100</div>
-            <div className="text-center text-[10px]">Tel: (555) 019-2834</div>
-            <div className="my-2 border-t border-dashed border-black" />
-
-            <div>TABLE: {printedReceipt.table.name}</div>
-            <div>ORDER: #{printedReceipt.order.id}</div>
-            <div>SERVER: {printedReceipt.order.waiter?.name || "Staff"}</div>
-            <div>DATE: {printedReceipt.timestamp}</div>
-            <div className="my-2 border-t border-dashed border-black" />
-
-            {printedReceipt.order.items.map((i) => (
-              <div key={i.id} className="flex justify-between py-0.5">
-                <span>
-                  {i.qty}× {i.menuItem.name}
-                </span>
-                <span>{money(i.qty * i.price)}</span>
-              </div>
-            ))}
-
-            <div className="my-2 border-t border-dashed border-black" />
-            <div className="flex justify-between font-bold text-sm">
-              <span>TOTAL</span>
-              <span>{money(orderTotal(printedReceipt.order.items))}</span>
             </div>
+          )}
+        </Modal>
 
-            <div className="my-1 border-t border-dashed border-black" />
-            <div className="flex justify-between text-[11px]">
-              <span>METHOD</span>
-              <span>{printedReceipt.method}</span>
-            </div>
-            {printedReceipt.method === "CASH" && (
-              <>
-                <div className="flex justify-between text-[11px]">
-                  <span>TENDERED</span>
-                  <span>{money(printedReceipt.tendered)}</span>
+        {/* Modal: Payment Success & Receipt Print */}
+        <Modal
+          isOpen={paymentSuccess && !!printedReceipt}
+          onClose={() => {
+            setPaymentSuccess(false);
+            setActivePayment(null);
+          }}
+          title="Payment Settled Successfully"
+          subtitle="Table released and ready for new guests"
+          maxWidth="max-w-md"
+        >
+          {printedReceipt && (
+            <div className="space-y-4">
+              {/* Thermal Receipt Paper Visual */}
+              <div className="rounded-2xl border border-white/[0.12] bg-white text-zinc-950 p-6 font-mono text-xs shadow-2xl">
+                <div className="text-center pb-3 border-b-2 border-dashed border-zinc-300">
+                  <h3 className="font-black text-base uppercase">TCS RestaurantOS</h3>
+                  <p className="text-[10px] text-zinc-600">OFFICIAL FISCAL RECEIPT</p>
+                  <p className="text-[11px] text-zinc-600 mt-1">{printedReceipt.timestamp}</p>
+                  <p className="text-xs font-bold mt-0.5">
+                    {printedReceipt.table.name} • Order #{printedReceipt.order.id}
+                  </p>
                 </div>
-                <div className="flex justify-between text-[11px] font-bold">
-                  <span>CHANGE</span>
-                  <span>{money(printedReceipt.change)}</span>
-                </div>
-              </>
-            )}
 
-            <div className="my-4 text-center text-[10px]">
-              <div>*** PAID IN FULL ***</div>
-              <div className="mt-1">Thank you for dining with us!</div>
-              <div>Please come again</div>
-            </div>
-          </div>
-        ) : activePayment ? (
-          <div>
-            <div className="text-center font-bold text-sm">🍊 TCS RestaurantOS</div>
-            <div className="text-center text-[10px]">TABLE BILL ESTIMATE</div>
-            <div className="my-2 border-t border-dashed border-black" />
-            <div>TABLE: {activePayment.table.name}</div>
-            <div>ORDER: #{activePayment.order.id}</div>
-            <div className="my-2 border-t border-dashed border-black" />
-            {activePayment.order.items.map((i) => (
-              <div key={i.id} className="flex justify-between py-0.5">
-                <span>
-                  {i.qty}× {i.menuItem.name}
-                </span>
-                <span>{money(i.qty * i.price)}</span>
+                <div className="py-3 space-y-1.5 border-b border-zinc-200">
+                  {printedReceipt.order.items.map((item) => (
+                    <div key={item.id} className="flex justify-between">
+                      <span>
+                        {item.qty}× {item.menuItem?.name}
+                      </span>
+                      <span className="font-bold">{money(item.qty * item.price)}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="py-2.5 space-y-1 border-b border-zinc-200">
+                  <div className="flex justify-between font-black text-sm">
+                    <span>TOTAL AMOUNT:</span>
+                    <span>{money(orderTotal(printedReceipt.order.items))}</span>
+                  </div>
+                  <div className="flex justify-between text-zinc-600 text-[11px]">
+                    <span>Method:</span>
+                    <span className="font-bold">{printedReceipt.method}</span>
+                  </div>
+                  <div className="flex justify-between text-zinc-600 text-[11px]">
+                    <span>Tendered:</span>
+                    <span>{money(printedReceipt.tendered)}</span>
+                  </div>
+                  <div className="flex justify-between text-zinc-600 text-[11px]">
+                    <span>Change Returned:</span>
+                    <span className="font-bold text-zinc-950">{money(printedReceipt.change)}</span>
+                  </div>
+                </div>
+
+                <div className="pt-3 text-center text-[10px] text-zinc-500">
+                  THANK YOU FOR DINING WITH US
+                </div>
               </div>
-            ))}
-            <div className="my-2 border-t border-dashed border-black" />
-            <div className="flex justify-between font-bold text-sm">
-              <span>TOTAL DUE</span>
-              <span>{money(orderTotal(activePayment.order.items))}</span>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/[0.08]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPaymentSuccess(false);
+                    setActivePayment(null);
+                  }}
+                  className="min-h-[40px] rounded-xl border border-white/[0.12] bg-white/[0.04] px-4 text-xs font-semibold text-zinc-300 hover:text-white"
+                >
+                  Done
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePrintReceipt}
+                  className="min-h-[40px] inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-copper-600 px-4 text-xs font-bold text-obsidian-950 shadow-glow-copper hover:brightness-110"
+                >
+                  <Printer className="h-4 w-4" />
+                  <span>Print Receipt</span>
+                </button>
+              </div>
             </div>
-          </div>
-        ) : null}
+          )}
+        </Modal>
       </div>
     </AppShell>
   );

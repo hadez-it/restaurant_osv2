@@ -15,19 +15,12 @@ import {
   Search,
   ShieldCheck,
   ChefHat,
-  Receipt,
   Eye,
   EyeOff,
   Armchair,
-  AlertCircle,
   Pencil,
   TrendingUp,
-  CalendarDays,
-  DollarSign,
-  Clock,
-  ShoppingBag,
-  CheckCircle2,
-  Printer,
+  RefreshCw,
 } from "lucide-react";
 
 interface UserRow {
@@ -57,22 +50,25 @@ export default function AdminPage() {
         {/* Top Header */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500/10 text-orange-600">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
                 <ShieldCheck className="h-5 w-5" />
               </div>
-              <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
-                Admin Console
+              <h1 className="text-2xl font-bold tracking-tight text-white">
+                Executive Admin Console
               </h1>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 px-2.5 py-0.5 text-[11px] font-mono font-medium text-purple-300">
+                OPERATIONS CONTROL
+              </span>
             </div>
-            <p className="mt-1 text-sm text-zinc-500">
-              Floorplan arrangement, menu catalog, staff roles, and restaurant operations
+            <p className="mt-1 text-xs text-zinc-400">
+              Floorplan arrangement, menu catalog, staff roles, and restaurant financial telemetry
             </p>
           </div>
         </div>
 
-        {/* Modern Tab Navigation */}
-        <div className="flex items-center gap-2 border-b border-zinc-200 pb-1 overflow-x-auto w-full min-w-0">
+        {/* Tab Navigation Dock */}
+        <div className="flex items-center gap-1.5 rounded-2xl border border-white/[0.08] bg-obsidian-900/80 p-1.5 shadow-2xl backdrop-blur-xl overflow-x-auto no-scrollbar">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -81,10 +77,10 @@ export default function AdminPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition shrink-0 whitespace-nowrap ${
+                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition shrink-0 whitespace-nowrap ${
                   isActive
-                    ? "bg-orange-600 text-white shadow-xs"
-                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                    ? "bg-gradient-to-r from-amber-500 to-copper-600 text-obsidian-950 shadow-glow-copper"
+                    : "text-zinc-400 hover:bg-white/[0.04] hover:text-white"
                 }`}
               >
                 <Icon className="h-4 w-4" />
@@ -174,6 +170,7 @@ function TablesTab() {
     if (!editingTable || !editName.trim()) return;
     setEditError("");
     setEditSubmitting(true);
+
     try {
       const res = await fetch(`/api/tables/${editingTable.id}`, {
         method: "PATCH",
@@ -183,6 +180,7 @@ function TablesTab() {
           seats: Number(editSeats) || 4,
         }),
       });
+
       if (res.ok) {
         setEditingTable(null);
         loadTables();
@@ -197,326 +195,232 @@ function TablesTab() {
     }
   }
 
-  async function removeTable(id: number, tableName: string) {
-    if (!confirm(`Are you sure you want to delete ${tableName}?`)) return;
+  async function deleteTable(id: number) {
+    if (!confirm("Are you sure you want to delete this table?")) return;
     try {
       const res = await fetch(`/api/tables/${id}`, { method: "DELETE" });
-      if (!res.ok) {
+      if (res.ok) {
+        loadTables();
+      } else {
         const d = await res.json().catch(() => ({}));
-        alert(d.error || "Cannot delete table (may have active orders or history)");
+        alert(d.error || "Failed to delete table");
       }
-      loadTables();
     } catch {
-      alert("Network error removing table");
+      alert("Network error deleting table");
     }
   }
 
   return (
     <div className="space-y-6">
-      {/* Floor Plan Header & Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 sm:p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
+      {/* Control Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-base font-bold text-zinc-900">
-            Floorplan Overview ({loading ? "..." : tables.length} Total Tables)
-          </h3>
-          <div className="flex items-center gap-3 text-xs mt-1">
-            <span className="flex items-center gap-1.5 text-zinc-600">
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Free (
-              {tables.filter((t) => t.status === "FREE").length})
-            </span>
-            <span className="flex items-center gap-1.5 text-zinc-600">
-              <span className="h-2.5 w-2.5 rounded-full bg-amber-500" /> Occupied (
-              {tables.filter((t) => t.status === "OCCUPIED").length})
-            </span>
-            <span className="flex items-center gap-1.5 text-zinc-600">
-              <span className="h-2.5 w-2.5 rounded-full bg-orange-500" /> Checkout (
-              {tables.filter((t) => t.status === "CHECKOUT").length})
-            </span>
-          </div>
+          <h2 className="text-lg font-bold tracking-tight text-white">
+            Dining Floorplan Layout
+          </h2>
+          <p className="text-xs text-zinc-400">
+            Configure dining tables, guest seat capacities, and floor arrangement
+          </p>
         </div>
 
         <button
-          type="button"
-          onClick={() => {
-            setName("");
-            setSeats("4");
-            setError("");
-            setShowAddModal(true);
-          }}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-600 px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] transition shrink-0"
+          onClick={() => setShowAddModal(true)}
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-copper-600 px-4 py-2 text-xs font-bold text-obsidian-950 shadow-glow-copper hover:brightness-110 active:scale-95 transition"
         >
           <Plus className="h-4 w-4" />
-          Add Table
+          <span>Add Dining Table</span>
         </button>
       </div>
 
-      {/* Visual Card Grid of Tables */}
-      <div>
-        {tables.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-zinc-200 bg-white p-12 text-center">
-            <Armchair className="mx-auto h-10 w-10 text-zinc-400" />
-            <h4 className="mt-2 text-sm font-semibold text-zinc-800">No tables configured</h4>
-            <p className="mt-1 text-xs text-zinc-500">
-              Click &quot;Add Table&quot; above to configure your first restaurant table.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {tables.map((table) => {
-              const hasOrder = table.orders && table.orders.length > 0;
-              const order = hasOrder ? table.orders![0] : null;
-              const isCheckout = table.status === "CHECKOUT";
-              const isOccupied = table.status === "OCCUPIED" || hasOrder;
-
-              return (
-                <div
-                  key={table.id}
-                  className={`relative flex flex-col justify-between rounded-2xl border p-4 shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${
-                    isCheckout
-                      ? "border-orange-500/80 bg-orange-50/20"
-                      : isOccupied
-                      ? "border-amber-400/80 bg-amber-50/20"
-                      : "border-zinc-200 bg-white"
-                  }`}
-                >
-                  <div>
-                    {/* Header */}
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h4 className="text-lg font-black text-zinc-900">{table.name}</h4>
-                        <span className="inline-flex items-center gap-1 text-xs text-zinc-500 mt-0.5">
-                          <Users className="h-3.5 w-3.5" />
-                          {table.seats} seats
-                        </span>
-                      </div>
-
-                      {/* Status Badge */}
-                      <span
-                        className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                          isCheckout
-                            ? "bg-orange-100 text-orange-800"
-                            : isOccupied
-                            ? "bg-amber-100 text-amber-800"
-                            : "bg-emerald-100 text-emerald-800"
-                        }`}
-                      >
-                        {isCheckout ? "CHECKOUT" : isOccupied ? "OCCUPIED" : "FREE"}
-                      </span>
-                    </div>
-
-                    {/* Order Details / Empty State */}
-                    <div className="mt-4 rounded-xl bg-zinc-50/80 p-3 border border-zinc-100 text-xs">
-                      {order ? (
-                        <div className="space-y-1">
-                          <div className="flex justify-between font-semibold text-zinc-800">
-                            <span>Order #{order.id}</span>
-                            <span className="text-orange-600">
-                              {money(orderTotal(order.items))}
-                            </span>
-                          </div>
-                          <p className="text-zinc-500">
-                            Server: {order.waiter?.name || "Assigned Waiter"}
-                          </p>
-                          <p className="text-zinc-500">
-                            {order.items.reduce((s, i) => s + i.qty, 0)} items active
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="text-center py-2 text-zinc-400">
-                          <span className="block font-medium">Ready for guests</span>
-                          <span className="text-[10px]">No active order</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Card Footer Actions */}
-                  <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between">
-                    <span className="text-[11px] text-zinc-400">ID #{table.id}</span>
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingTable(table);
-                          setEditName(table.name);
-                          setEditSeats(table.seats.toString());
-                          setEditError("");
-                        }}
-                        className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-zinc-600 hover:bg-zinc-100 transition"
-                        title="Edit table"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => removeTable(table.id, table.name)}
-                        className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-rose-600 hover:bg-rose-50 transition"
-                        title="Delete table"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        Delete
-                      </button>
-                    </div>
-                  </div>
+      {/* Tables Grid */}
+      {loading ? (
+        <div className="flex min-h-[240px] items-center justify-center text-zinc-400">
+          <RefreshCw className="h-6 w-6 animate-spin text-amber-500" />
+        </div>
+      ) : tables.length === 0 ? (
+        <div className="rounded-3xl border border-dashed border-white/[0.12] bg-obsidian-900/40 p-12 text-center">
+          <Armchair className="mx-auto h-10 w-10 text-zinc-600 mb-3" />
+          <h3 className="text-sm font-bold text-white">No dining tables configured</h3>
+          <p className="mt-1 text-xs text-zinc-400">Add tables to initialize your restaurant floorplan.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {tables.map((t) => (
+            <div
+              key={t.id}
+              className="group flex flex-col justify-between rounded-2xl border border-white/[0.08] bg-obsidian-900/90 p-4 shadow-xl hover:border-amber-500/35 hover:shadow-glow-copper transition duration-200"
+            >
+              <div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-base font-bold text-white tracking-tight">
+                    {t.name}
+                  </span>
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-mono font-bold uppercase ${
+                      t.status === "FREE"
+                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                        : t.status === "OCCUPIED"
+                        ? "bg-amber-500/10 text-amber-300 border border-amber-500/20"
+                        : "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20"
+                    }`}
+                  >
+                    {t.status}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
 
-      {/* Add Table Modal */}
+                <div className="mt-3 flex items-center gap-2 text-xs font-mono text-zinc-400">
+                  <Armchair className="h-4 w-4 text-zinc-500" />
+                  <span>{t.seats} Chairs Capacity</span>
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-center justify-end gap-2 pt-3 border-t border-white/[0.08]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingTable(t);
+                    setEditName(t.name);
+                    setEditSeats(String(t.seats));
+                  }}
+                  className="rounded-lg p-1.5 text-zinc-400 hover:bg-white/[0.08] hover:text-white transition"
+                  title="Edit table"
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => deleteTable(t.id)}
+                  className="rounded-lg p-1.5 text-zinc-400 hover:bg-rose-500/15 hover:text-rose-400 transition"
+                  title="Delete table"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Modal: Add Table */}
       <Modal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
-        title="Add New Floor Table"
-        subtitle="Configure table code and seating capacity"
+        title="Add Dining Table"
+        subtitle="Specify table name and guest chair capacity"
+        maxWidth="max-w-md"
       >
         <form onSubmit={addTable} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
-              Table Name / Code
+            <label className="block text-xs font-mono uppercase tracking-wider text-zinc-400 mb-1.5">
+              Table Identifier
             </label>
             <input
               type="text"
-              placeholder="e.g. Table 7, Booth 3, Patio 2"
+              required
+              placeholder="e.g. Table 9, Booth A, Patio 3"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              required
-              className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
+              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white placeholder:text-zinc-500 focus:border-amber-500 focus:outline-hidden font-mono"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
-              Guest Capacity (Seats)
+            <label className="block text-xs font-mono uppercase tracking-wider text-zinc-400 mb-1.5">
+              Chair Seats Capacity
             </label>
-            <div className="flex items-center gap-2">
-              {[2, 4, 6, 8].map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setSeats(s.toString())}
-                  className={`flex-1 rounded-xl border py-2 text-xs font-bold transition ${
-                    seats === s.toString()
-                      ? "border-orange-500 bg-orange-50 text-orange-700"
-                      : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
-                  }`}
-                >
-                  {s}P
-                </button>
-              ))}
-              <input
-                type="number"
-                min="1"
-                max="24"
-                value={seats}
-                onChange={(e) => setSeats(e.target.value)}
-                className="w-20 rounded-xl border border-zinc-300 px-3 py-2 text-center text-xs font-bold text-zinc-900"
-              />
-            </div>
+            <input
+              type="number"
+              min="1"
+              max="24"
+              required
+              value={seats}
+              onChange={(e) => setSeats(e.target.value)}
+              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-hidden"
+            />
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-xs font-medium text-rose-700 border border-rose-200">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{error}</span>
+            <div className="p-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-xs text-rose-300">
+              {error}
             </div>
           )}
 
-          <div className="flex items-center justify-end gap-2 pt-2">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-white/[0.08]">
             <button
               type="button"
               onClick={() => setShowAddModal(false)}
-              className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition"
+              className="h-10 px-4 rounded-xl border border-white/[0.12] bg-white/[0.04] text-xs font-semibold text-zinc-300 hover:text-white"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] disabled:opacity-50 transition"
+              className="h-10 px-5 rounded-xl bg-gradient-to-r from-amber-500 to-copper-600 text-xs font-bold text-obsidian-950 shadow-glow-copper hover:brightness-110"
             >
-              <Plus className="h-4 w-4" />
-              {submitting ? "Adding..." : "Add Table"}
+              {submitting ? "Adding..." : "Save Table"}
             </button>
           </div>
         </form>
       </Modal>
 
-      {/* Edit Table Modal */}
+      {/* Modal: Edit Table */}
       <Modal
         isOpen={!!editingTable}
         onClose={() => setEditingTable(null)}
-        title={`Edit ${editingTable?.name || "Table"}`}
-        subtitle="Update table name or seating capacity"
+        title="Edit Dining Table"
+        subtitle={`Modifying ${editingTable?.name}`}
+        maxWidth="max-w-md"
       >
         <form onSubmit={updateTable} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
-              Table Name / Code
+            <label className="block text-xs font-mono uppercase tracking-wider text-zinc-400 mb-1.5">
+              Table Identifier
             </label>
             <input
               type="text"
+              required
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
-              required
-              className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
+              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-hidden"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
-              Guest Capacity (Seats)
+            <label className="block text-xs font-mono uppercase tracking-wider text-zinc-400 mb-1.5">
+              Chair Seats Capacity
             </label>
-            <div className="flex items-center gap-2">
-              {[2, 4, 6, 8].map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setEditSeats(s.toString())}
-                  className={`flex-1 rounded-xl border py-2 text-xs font-bold transition ${
-                    editSeats === s.toString()
-                      ? "border-orange-500 bg-orange-50 text-orange-700"
-                      : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
-                  }`}
-                >
-                  {s}P
-                </button>
-              ))}
-              <input
-                type="number"
-                min="1"
-                max="24"
-                value={editSeats}
-                onChange={(e) => setEditSeats(e.target.value)}
-                className="w-20 rounded-xl border border-zinc-300 px-3 py-2 text-center text-xs font-bold text-zinc-900"
-              />
-            </div>
+            <input
+              type="number"
+              min="1"
+              max="24"
+              required
+              value={editSeats}
+              onChange={(e) => setEditSeats(e.target.value)}
+              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-hidden"
+            />
           </div>
 
           {editError && (
-            <div className="flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-xs font-medium text-rose-700 border border-rose-200">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{editError}</span>
+            <div className="p-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-xs text-rose-300">
+              {editError}
             </div>
           )}
 
-          <div className="flex items-center justify-end gap-2 pt-2">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-white/[0.08]">
             <button
               type="button"
               onClick={() => setEditingTable(null)}
-              className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition"
+              className="h-10 px-4 rounded-xl border border-white/[0.12] bg-white/[0.04] text-xs font-semibold text-zinc-300 hover:text-white"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={editSubmitting}
-              className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] disabled:opacity-50 transition"
+              className="h-10 px-5 rounded-xl bg-gradient-to-r from-amber-500 to-copper-600 text-xs font-bold text-obsidian-950 shadow-glow-copper hover:brightness-110"
             >
-              {editSubmitting ? "Saving..." : "Save Changes"}
+              {editSubmitting ? "Updating..." : "Save Changes"}
             </button>
           </div>
         </form>
@@ -601,8 +505,9 @@ function MenuTab() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: name.trim(),
-          price: Number(price),
-          category: category.trim() || "General",
+          price: parseFloat(price),
+          category: category.trim() || "Mains",
+          available: true,
         }),
       });
 
@@ -614,10 +519,10 @@ function MenuTab() {
         loadMenu();
       } else {
         const d = await res.json().catch(() => ({}));
-        setError(d.error || "Failed to add menu item");
+        setError(d.error || "Failed to create dish");
       }
     } catch {
-      setError("Network error adding menu item");
+      setError("Network error creating dish");
     } finally {
       setSubmitting(false);
     }
@@ -628,28 +533,45 @@ function MenuTab() {
     if (!editingItem || !editName.trim() || !editPrice) return;
     setEditError("");
     setEditSubmitting(true);
+
     try {
       const res = await fetch(`/api/menu/${editingItem.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: editName.trim(),
-          price: Number(editPrice),
-          category: editCategory.trim() || "General",
+          price: parseFloat(editPrice),
+          category: editCategory.trim() || "Mains",
           available: editAvailable,
         }),
       });
+
       if (res.ok) {
         setEditingItem(null);
         loadMenu();
       } else {
         const d = await res.json().catch(() => ({}));
-        setEditError(d.error || "Failed to update item");
+        setEditError(d.error || "Failed to update dish");
       }
     } catch {
-      setEditError("Network error updating item");
+      setEditError("Network error updating dish");
     } finally {
       setEditSubmitting(false);
+    }
+  }
+
+  async function deleteItem(id: number) {
+    if (!confirm("Are you sure you want to delete this menu dish?")) return;
+    try {
+      const res = await fetch(`/api/menu/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        loadMenu();
+      } else {
+        const d = await res.json().catch(() => ({}));
+        alert(d.error || "Failed to delete dish");
+      }
+    } catch {
+      alert("Network error deleting dish");
     }
   }
 
@@ -662,178 +584,142 @@ function MenuTab() {
       });
       loadMenu();
     } catch {
-      alert("Failed to toggle availability");
+      alert("Network error updating availability");
     }
   }
 
-  async function removeItem(id: number, itemName: string) {
-    if (!confirm(`Are you sure you want to remove "${itemName}"?`)) return;
-    try {
-      await fetch(`/api/menu/${id}`, { method: "DELETE" });
-      loadMenu();
-    } catch {
-      alert("Failed to delete menu item");
-    }
-  }
   return (
     <div className="space-y-6">
-      {/* Filter, Search & Actions Bar */}
-      <div className="space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 sm:p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
-          {/* Category Filter Pills */}
-          <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto pb-1">
-            <button
-              type="button"
-              onClick={() => setSelectedCategory("All")}
-              className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
-                selectedCategory === "All"
-                  ? "bg-zinc-900 text-white shadow-xs"
-                  : "bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-50"
-              }`}
-            >
-              All Items ({loading ? "..." : items.length})
-            </button>
-            {categories.map((cat) => {
-              const count = items.filter((i) => i.category === cat).length;
-              const isSelected = selectedCategory === cat;
-              return (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
-                    isSelected
-                      ? "bg-orange-600 text-white shadow-xs"
-                      : "bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-50"
-                  }`}
-                >
-                  {cat} ({count})
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Search Box & Add Button */}
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <div className="relative w-full sm:w-56">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-              <input
-                type="text"
-                placeholder="Search catalog..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-xl border border-zinc-300 bg-white pl-9 pr-3 py-2 text-xs text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setName("");
-                setPrice("");
-                setCategory("");
-                setError("");
-                setShowAddModal(true);
-              }}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-orange-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] shrink-0 transition"
-            >
-              <Plus className="h-4 w-4" />
-              Add Item
-            </button>
-          </div>
+      {/* Search & Category Filter Toolbar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-bold tracking-tight text-white">
+            Menu Catalog & Pricing
+          </h2>
+          <p className="text-xs text-zinc-400">
+            Manage culinary offerings, categories, pricing, and availability
+          </p>
         </div>
 
-        {/* Menu Items Grid */}
-        {filteredItems.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-zinc-200 bg-white p-12 text-center">
-            <Utensils className="mx-auto h-10 w-10 text-zinc-400" />
-            <h4 className="mt-2 text-sm font-semibold text-zinc-800">No menu items match</h4>
-            <p className="mt-1 text-xs text-zinc-500">
-              Try adjusting your category filter or click &quot;Add Item&quot; to add new dishes.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {filteredItems.map((item) => (
-              <div
-                key={item.id}
-                className={`flex flex-col justify-between rounded-2xl border bg-white overflow-hidden shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${
-                  item.available ? "border-zinc-200" : "border-zinc-200/60 opacity-70 bg-zinc-50/50"
-                }`}
-              >
-                {/* Food Image Banner */}
-                <div className="relative h-36 w-full bg-zinc-100 overflow-hidden">
-                  <img
-                    src={getMenuItemImage(item)}
-                    alt={item.name}
-                    loading="lazy"
-                    decoding="async"
-                    className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
-                  />
-                  <div className="absolute top-2.5 left-2.5">
-                    <span className="inline-block rounded-md bg-white/90 backdrop-blur-xs px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-orange-700 shadow-2xs border border-zinc-200/60">
-                      {item.category || "General"}
-                    </span>
-                  </div>
-                  <div className="absolute bottom-2.5 right-2.5">
-                    <span className="inline-block rounded-lg bg-zinc-900/85 backdrop-blur-xs px-2.5 py-0.5 text-xs font-black text-white shadow-2xs">
-                      {money(item.price)}
-                    </span>
-                  </div>
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-copper-600 px-4 py-2 text-xs font-bold text-obsidian-950 shadow-glow-copper hover:brightness-110 active:scale-95 transition"
+        >
+          <Plus className="h-4 w-4" />
+          <span>Add Menu Item</span>
+        </button>
+      </div>
+
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-white/[0.08] bg-obsidian-900/80 p-2 sm:p-2.5 shadow-2xl backdrop-blur-xl">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+          {["All", ...categories].map((c) => (
+            <button
+              key={c}
+              onClick={() => setSelectedCategory(c)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition shrink-0 ${
+                selectedCategory === c
+                  ? "bg-white/10 text-white border border-amber-500/40 shadow-glow-copper"
+                  : "text-zinc-400 hover:text-white hover:bg-white/[0.04]"
+              }`}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-500" />
+          <input
+            type="text"
+            placeholder="Search dishes or categories..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full h-9 pl-8 pr-7 rounded-xl border border-white/[0.1] bg-obsidian-950/80 text-xs text-white placeholder:text-zinc-500 font-mono focus:border-amber-500 focus:outline-hidden"
+          />
+        </div>
+      </div>
+
+      {/* Menu Items Grid */}
+      {loading ? (
+        <div className="flex min-h-[240px] items-center justify-center text-zinc-400">
+          <RefreshCw className="h-6 w-6 animate-spin text-amber-500" />
+        </div>
+      ) : filteredItems.length === 0 ? (
+        <div className="rounded-3xl border border-dashed border-white/[0.12] bg-obsidian-900/40 p-12 text-center">
+          <ChefHat className="mx-auto h-10 w-10 text-zinc-600 mb-3" />
+          <h3 className="text-sm font-bold text-white">No dishes match your filter</h3>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredItems.map((item) => (
+            <div
+              key={item.id}
+              className={`group flex flex-col justify-between rounded-2xl border bg-obsidian-900/90 overflow-hidden shadow-xl transition-all duration-200 ${
+                item.available
+                  ? "border-white/[0.08] hover:border-amber-500/35 hover:shadow-glow-copper"
+                  : "border-white/[0.04] opacity-60 bg-obsidian-950/60"
+              }`}
+            >
+              <div className="relative h-36 w-full bg-obsidian-950 overflow-hidden">
+                <img
+                  src={getMenuItemImage(item)}
+                  alt={item.name}
+                  className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-obsidian-950 via-transparent to-black/30" />
+                <span className="absolute top-2.5 left-2.5 rounded-md bg-obsidian-950/80 border border-white/[0.12] px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-zinc-200 backdrop-blur-md">
+                  {item.category}
+                </span>
+                <span
+                  className={`absolute top-2.5 right-2.5 rounded-md px-2 py-0.5 text-[10px] font-mono font-semibold backdrop-blur-md ${
+                    item.available
+                      ? "bg-emerald-500/20 border border-emerald-500/30 text-emerald-400"
+                      : "bg-rose-500/20 border border-rose-500/30 text-rose-400"
+                  }`}
+                >
+                  {item.available ? "Active" : "Sold Out"}
+                </span>
+              </div>
+
+              <div className="p-4 flex-1 flex flex-col justify-between">
+                <div>
+                  <h3 className="font-bold text-sm text-white line-clamp-1">
+                    {item.name}
+                  </h3>
+                  <p className="mt-1 text-base font-black text-white font-mono tabular-nums">
+                    {money(item.price)}
+                  </p>
                 </div>
 
-                <div className="p-4 flex-1 flex flex-col justify-between">
-                  <h4 className="text-base font-bold text-zinc-900 leading-snug">
-                    {item.name}
-                  </h4>
-
-                <div className="mt-5 pt-3 border-t border-zinc-100 flex items-center justify-between">
-                  {/* Availability Toggle Switch */}
+                <div className="mt-4 flex items-center justify-between pt-3 border-t border-white/[0.08]">
                   <button
                     type="button"
                     onClick={() => toggleAvailability(item)}
-                    className="flex items-center gap-2 text-xs font-semibold"
-                    title="Toggle item availability"
+                    className="text-[11px] font-mono text-zinc-400 hover:text-white"
                   >
-                    <div
-                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                        item.available ? "bg-emerald-500" : "bg-zinc-300"
-                      }`}
-                    >
-                      <span
-                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                          item.available ? "translate-x-4" : "translate-x-0"
-                        }`}
-                      />
-                    </div>
-                    <span className={item.available ? "text-emerald-700" : "text-zinc-500"}>
-                      {item.available ? "In Stock" : "Sold Out"}
-                    </span>
+                    {item.available ? "Mark Sold Out" : "Mark Available"}
                   </button>
-
-                  <div className="flex items-center gap-1">
-                    {/* Edit Button */}
+                  <div className="flex items-center gap-1.5">
                     <button
                       type="button"
                       onClick={() => {
                         setEditingItem(item);
                         setEditName(item.name);
-                        setEditPrice(item.price.toString());
-                        setEditCategory(item.category || "");
+                        setEditPrice(String(item.price));
+                        setEditCategory(item.category);
                         setEditAvailable(item.available);
-                        setEditError("");
                       }}
-                      className="p-1.5 text-zinc-400 hover:text-zinc-700 rounded-lg hover:bg-zinc-100 transition"
-                      title="Edit item"
+                      className="rounded-lg p-1.5 text-zinc-400 hover:bg-white/[0.08] hover:text-white"
+                      title="Edit dish"
                     >
                       <Pencil className="h-4 w-4" />
                     </button>
-
-                    {/* Delete Button */}
                     <button
                       type="button"
-                      onClick={() => removeItem(item.id, item.name)}
-                      className="p-1.5 text-zinc-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition"
-                      title="Delete item"
+                      onClick={() => deleteItem(item.id)}
+                      className="rounded-lg p-1.5 text-zinc-400 hover:bg-rose-500/15 hover:text-rose-400"
+                      title="Delete dish"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -841,206 +727,171 @@ function MenuTab() {
                 </div>
               </div>
             </div>
-            ))}
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {/* Add Item Modal */}
+      {/* Modal: Add Menu Item */}
       <Modal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
-        title="Add Menu Item"
-        subtitle="Add a new dish or drink to the live POS catalog"
+        title="Add Menu Dish"
+        subtitle="Enter dish details, category, and price"
+        maxWidth="max-w-md"
       >
         <form onSubmit={addItem} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
-              Item Name
+            <label className="block text-xs font-mono uppercase tracking-wider text-zinc-400 mb-1.5">
+              Dish Name
             </label>
             <input
               type="text"
-              placeholder="e.g. Wagyu Truffle Burger, Espresso, Tiramisu"
+              required
+              placeholder="e.g. Wagyu Ribeye Steak"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              required
-              className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
+              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white placeholder:text-zinc-500 font-mono focus:border-amber-500 focus:outline-hidden"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-mono uppercase tracking-wider text-zinc-400 mb-1.5">
                 Price ($)
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 font-bold text-sm">
-                  $
-                </span>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  required
-                  className="w-full rounded-xl border border-zinc-300 bg-white pl-7 pr-3 py-2.5 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
-                />
-              </div>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                required
+                placeholder="16.50"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-hidden"
+              />
             </div>
-
             <div>
-              <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-mono uppercase tracking-wider text-zinc-400 mb-1.5">
                 Category
               </label>
               <input
                 type="text"
-                placeholder="Mains, Starters, Drinks"
+                placeholder="Mains, Starters..."
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                list="category-suggestions"
-                className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
+                className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-hidden"
               />
-              <datalist id="category-suggestions">
-                {categories.map((c) => (
-                  <option key={c} value={c} />
-                ))}
-              </datalist>
             </div>
-          </div>
-
-          {/* Category Suggestions */}
-          <div className="flex flex-wrap items-center gap-1.5 text-xs text-zinc-500">
-            <span>Suggestions:</span>
-            {["Starters", "Mains", "Desserts", "Beverages", "Sides"].map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => setCategory(c)}
-                className="rounded-md bg-zinc-100 px-2 py-0.5 hover:bg-zinc-200 text-zinc-700 transition"
-              >
-                {c}
-              </button>
-            ))}
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-xs font-medium text-rose-700 border border-rose-200">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{error}</span>
+            <div className="p-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-xs text-rose-300">
+              {error}
             </div>
           )}
 
-          <div className="flex items-center justify-end gap-2 pt-2">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-white/[0.08]">
             <button
               type="button"
               onClick={() => setShowAddModal(false)}
-              className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition"
+              className="h-10 px-4 rounded-xl border border-white/[0.12] bg-white/[0.04] text-xs font-semibold text-zinc-300 hover:text-white"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] disabled:opacity-50 transition"
+              className="h-10 px-5 rounded-xl bg-gradient-to-r from-amber-500 to-copper-600 text-xs font-bold text-obsidian-950 shadow-glow-copper hover:brightness-110"
             >
-              <Plus className="h-4 w-4" />
-              {submitting ? "Adding..." : "Add Item"}
+              {submitting ? "Adding..." : "Save Dish"}
             </button>
           </div>
         </form>
       </Modal>
 
-      {/* Edit Item Modal */}
+      {/* Modal: Edit Menu Item */}
       <Modal
         isOpen={!!editingItem}
         onClose={() => setEditingItem(null)}
-        title={`Edit ${editingItem?.name || "Item"}`}
-        subtitle="Update dish details, price, and category"
+        title="Edit Menu Dish"
+        subtitle={`Modifying ${editingItem?.name}`}
+        maxWidth="max-w-md"
       >
         <form onSubmit={updateItem} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
-              Item Name
+            <label className="block text-xs font-mono uppercase tracking-wider text-zinc-400 mb-1.5">
+              Dish Name
             </label>
             <input
               type="text"
+              required
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
-              required
-              className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
+              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-hidden"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-mono uppercase tracking-wider text-zinc-400 mb-1.5">
                 Price ($)
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 font-bold text-sm">
-                  $
-                </span>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={editPrice}
-                  onChange={(e) => setEditPrice(e.target.value)}
-                  required
-                  className="w-full rounded-xl border border-zinc-300 bg-white pl-7 pr-3 py-2.5 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
-                />
-              </div>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                required
+                value={editPrice}
+                onChange={(e) => setEditPrice(e.target.value)}
+                className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-hidden"
+              />
             </div>
-
             <div>
-              <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-mono uppercase tracking-wider text-zinc-400 mb-1.5">
                 Category
               </label>
               <input
                 type="text"
                 value={editCategory}
                 onChange={(e) => setEditCategory(e.target.value)}
-                list="category-suggestions"
-                className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
+                className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-hidden"
               />
             </div>
           </div>
 
-          <div>
-            <label className="flex items-center gap-2.5 text-xs font-semibold text-zinc-700 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={editAvailable}
-                onChange={(e) => setEditAvailable(e.target.checked)}
-                className="h-4 w-4 rounded border-zinc-300 text-orange-600 focus:ring-orange-500"
-              />
-              <span>Available for ordering (In Stock)</span>
+          <div className="flex items-center gap-2 pt-1">
+            <input
+              type="checkbox"
+              id="editAvailable"
+              checked={editAvailable}
+              onChange={(e) => setEditAvailable(e.target.checked)}
+              className="h-4 w-4 rounded border-white/20 bg-obsidian-950 text-amber-500"
+            />
+            <label htmlFor="editAvailable" className="text-xs text-zinc-300 font-medium">
+              Available for Ordering
             </label>
           </div>
 
           {editError && (
-            <div className="flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-xs font-medium text-rose-700 border border-rose-200">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{editError}</span>
+            <div className="p-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-xs text-rose-300">
+              {editError}
             </div>
           )}
 
-          <div className="flex items-center justify-end gap-2 pt-2">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-white/[0.08]">
             <button
               type="button"
               onClick={() => setEditingItem(null)}
-              className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition"
+              className="h-10 px-4 rounded-xl border border-white/[0.12] bg-white/[0.04] text-xs font-semibold text-zinc-300 hover:text-white"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={editSubmitting}
-              className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] disabled:opacity-50 transition"
+              className="h-10 px-5 rounded-xl bg-gradient-to-r from-amber-500 to-copper-600 text-xs font-bold text-obsidian-950 shadow-glow-copper hover:brightness-110"
             >
-              {editSubmitting ? "Saving..." : "Save Changes"}
+              {editSubmitting ? "Updating..." : "Save Changes"}
             </button>
           </div>
         </form>
@@ -1118,203 +969,165 @@ function UsersTab() {
     }
   }
 
-  // Filter users
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
-      const matchesRole = roleFilter === "ALL" || u.role === roleFilter;
-      const matchesSearch =
+      const matchRole = roleFilter === "ALL" || u.role === roleFilter;
+      const matchSearch =
         u.name.toLowerCase().includes(search.toLowerCase()) ||
         u.username.toLowerCase().includes(search.toLowerCase());
-      return matchesRole && matchesSearch;
+      return matchRole && matchSearch;
     });
   }, [users, roleFilter, search]);
 
-  const ROLE_BADGE: Record<
-    string,
-    { bg: string; text: string; border: string; icon: React.ComponentType<{ className?: string }> }
-  > = {
-    ADMIN: { bg: "bg-purple-100", text: "text-purple-800", border: "border-purple-200", icon: ShieldCheck },
-    WAITER: { bg: "bg-sky-100", text: "text-sky-800", border: "border-sky-200", icon: LayoutGrid },
-    KITCHEN: { bg: "bg-amber-100", text: "text-amber-800", border: "border-amber-200", icon: ChefHat },
-    CASHIER: { bg: "bg-emerald-100", text: "text-emerald-800", border: "border-emerald-200", icon: Receipt },
-  };
-
   return (
     <div className="space-y-6">
-      {/* Filter and User Directory Toolbar */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 sm:p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
-          {/* Role Filter Pills */}
-          <div className="flex flex-wrap items-center gap-1.5">
-            {["ALL", "WAITER", "KITCHEN", "CASHIER", "ADMIN"].map((r) => (
-              <button
-                key={r}
-                type="button"
-                onClick={() => setRoleFilter(r)}
-                className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
-                  roleFilter === r
-                    ? "bg-zinc-900 text-white shadow-xs"
-                    : "bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-50"
-                }`}
-              >
-                {r === "ALL" ? "All Roles" : r}
-              </button>
-            ))}
-          </div>
-
-          {/* Search & Add Button */}
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <div className="relative w-full sm:w-56">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-              <input
-                type="text"
-                placeholder="Search staff..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-xl border border-zinc-300 bg-white pl-9 pr-3 py-2 text-xs text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setForm({ username: "", password: "", name: "", role: "WAITER" });
-                setError("");
-                setShowAddModal(true);
-              }}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-orange-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] shrink-0 transition"
-            >
-              <Plus className="h-4 w-4" />
-              Add Staff
-            </button>
-          </div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-lg font-bold tracking-tight text-white">
+            Staff Members & Terminal Permissions
+          </h2>
+          <p className="text-xs text-zinc-400">
+            Account provisioning, station roles, and shift authorization
+          </p>
         </div>
 
-        {/* Directory Grid */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {filteredUsers.map((u) => {
-            const roleInfo = ROLE_BADGE[u.role] || ROLE_BADGE.WAITER;
-            const RoleIcon = roleInfo.icon;
-            const initials = u.name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-              .toUpperCase()
-              .slice(0, 2);
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-copper-600 px-4 py-2 text-xs font-bold text-obsidian-950 shadow-glow-copper hover:brightness-110 active:scale-95 transition"
+        >
+          <Plus className="h-4 w-4" />
+          <span>New Staff Member</span>
+        </button>
+      </div>
 
-            return (
-              <div
-                key={u.id}
-                className={`flex flex-col justify-between rounded-2xl border bg-white p-5 shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${
-                  u.active ? "border-zinc-200" : "border-zinc-200/60 opacity-60 bg-zinc-50"
-                }`}
-              >
-                <div>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-zinc-100 font-black text-zinc-700 text-sm border border-zinc-200">
-                        {initials}
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-zinc-900 leading-tight">{u.name}</h4>
-                        <span className="text-xs text-zinc-500">@{u.username}</span>
-                      </div>
-                    </div>
-                  </div>
+      {/* Filter toolbar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-white/[0.08] bg-obsidian-900/80 p-2 sm:p-2.5 shadow-2xl backdrop-blur-xl">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+          {["ALL", "ADMIN", "WAITER", "KITCHEN", "CASHIER"].map((r) => (
+            <button
+              key={r}
+              onClick={() => setRoleFilter(r)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition shrink-0 ${
+                roleFilter === r
+                  ? "bg-white/10 text-white border border-amber-500/40 shadow-glow-copper"
+                  : "text-zinc-400 hover:text-white hover:bg-white/[0.04]"
+              }`}
+            >
+              {r === "ALL" ? "All Roles" : r}
+            </button>
+          ))}
+        </div>
 
-                  <div className="mt-4 flex items-center justify-between">
-                    <span
-                      className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-bold border ${roleInfo.bg} ${roleInfo.text} ${roleInfo.border}`}
-                    >
-                      <RoleIcon className="h-3.5 w-3.5" />
-                      {u.role}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-5 pt-3 border-t border-zinc-100 flex items-center justify-between">
-                  <span className="text-[11px] text-zinc-400">ID #{u.id}</span>
-
-                  {/* Active / Inactive Switch */}
-                  <button
-                    type="button"
-                    onClick={() => toggleActive(u)}
-                    className="flex items-center gap-2 text-xs font-semibold"
-                    title="Toggle active status"
-                  >
-                    <div
-                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                        u.active ? "bg-emerald-500" : "bg-zinc-300"
-                      }`}
-                    >
-                      <span
-                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                          u.active ? "translate-x-4" : "translate-x-0"
-                        }`}
-                      />
-                    </div>
-                    <span className={u.active ? "text-emerald-700" : "text-zinc-500"}>
-                      {u.active ? "Active" : "Disabled"}
-                    </span>
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-500" />
+          <input
+            type="text"
+            placeholder="Search staff by name or username..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full h-9 pl-8 pr-7 rounded-xl border border-white/[0.1] bg-obsidian-950/80 text-xs text-white placeholder:text-zinc-500 font-mono focus:border-amber-500 focus:outline-hidden"
+          />
         </div>
       </div>
-      {/* Add Staff Account Modal */}
+
+      {/* Users Grid */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {filteredUsers.map((u) => (
+          <div
+            key={u.id}
+            className="rounded-2xl border border-white/[0.08] bg-obsidian-900/90 p-4 space-y-3 shadow-xl hover:border-white/[0.16] transition"
+          >
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="font-bold text-sm text-white">{u.name}</h3>
+                <p className="text-xs font-mono text-zinc-400">@{u.username}</p>
+              </div>
+
+              <span
+                className={`rounded-full px-2.5 py-0.5 text-[10px] font-mono font-bold uppercase border ${
+                  u.role === "ADMIN"
+                    ? "bg-purple-500/10 text-purple-300 border-purple-500/30"
+                    : u.role === "WAITER"
+                    ? "bg-amber-500/10 text-amber-300 border-amber-500/30"
+                    : u.role === "KITCHEN"
+                    ? "bg-rose-500/10 text-rose-300 border-rose-500/30"
+                    : "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
+                }`}
+              >
+                {u.role}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between pt-3 border-t border-white/[0.08] text-xs font-mono">
+              <span className={u.active ? "text-emerald-400" : "text-zinc-500"}>
+                {u.active ? "● Active Shift" : "○ Inactive"}
+              </span>
+              <button
+                type="button"
+                onClick={() => toggleActive(u)}
+                className="text-zinc-400 hover:text-white"
+              >
+                {u.active ? "Deactivate" : "Activate"}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Modal: Add User */}
       <Modal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
-        title="Add Staff Account"
-        subtitle="Security & role provisioning for team members"
+        title="Provision Staff Account"
+        subtitle="Create credentials and assign terminal station role"
+        maxWidth="max-w-md"
       >
         <form onSubmit={addUser} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
+            <label className="block text-xs font-mono uppercase tracking-wider text-zinc-400 mb-1.5">
+              Full Staff Name
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Maria Chen"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white placeholder:text-zinc-500 font-mono focus:border-amber-500 focus:outline-hidden"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-mono uppercase tracking-wider text-zinc-400 mb-1.5">
               Username
             </label>
             <input
               type="text"
-              placeholder="e.g. jdoe"
+              required
+              placeholder="e.g. marian"
               value={form.username}
-              onChange={(e) => setForm({ ...form, username: e.target.value.toLowerCase() })}
-              required
-              className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+              onChange={(e) => setForm({ ...form, username: e.target.value })}
+              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white placeholder:text-zinc-500 font-mono focus:border-amber-500 focus:outline-hidden"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
-              Full Name
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. John Doe"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              required
-              className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
-              Password
+            <label className="block text-xs font-mono uppercase tracking-wider text-zinc-400 mb-1.5">
+              Initial Password
             </label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
+                required
+                placeholder="Passcode"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
-                required
-                className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 pr-10 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+                className="w-full h-11 px-3.5 pr-10 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white placeholder:text-zinc-500 font-mono focus:border-amber-500 focus:outline-hidden"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -1322,43 +1135,41 @@ function UsersTab() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
-              Role
+            <label className="block text-xs font-mono uppercase tracking-wider text-zinc-400 mb-1.5">
+              Station Role
             </label>
             <select
               value={form.role}
               onChange={(e) => setForm({ ...form, role: e.target.value })}
-              className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-hidden"
             >
-              <option value="WAITER">Waiter (Floor & Order)</option>
-              <option value="KITCHEN">Kitchen (Chef / KDS)</option>
-              <option value="CASHIER">Cashier (POS & Billing)</option>
-              <option value="ADMIN">Admin (Full Access)</option>
+              <option value="WAITER">Floor Waitstaff (Waiter)</option>
+              <option value="KITCHEN">Kitchen Line (KDS)</option>
+              <option value="CASHIER">Cashier Register POS</option>
+              <option value="ADMIN">Executive Administrator</option>
             </select>
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-xs font-medium text-rose-700 border border-rose-200">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{error}</span>
+            <div className="p-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-xs text-rose-300">
+              {error}
             </div>
           )}
 
-          <div className="flex items-center justify-end gap-2 pt-2">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-white/[0.08]">
             <button
               type="button"
               onClick={() => setShowAddModal(false)}
-              className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition"
+              className="h-10 px-4 rounded-xl border border-white/[0.12] bg-white/[0.04] text-xs font-semibold text-zinc-300 hover:text-white"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] disabled:opacity-50 transition"
+              className="h-10 px-5 rounded-xl bg-gradient-to-r from-amber-500 to-copper-600 text-xs font-bold text-obsidian-950 shadow-glow-copper hover:brightness-110"
             >
-              <Plus className="h-4 w-4" />
-              {submitting ? "Creating..." : "Create Staff Account"}
+              {submitting ? "Provisioning..." : "Create Account"}
             </button>
           </div>
         </form>
@@ -1368,86 +1179,18 @@ function UsersTab() {
 }
 
 /* =========================================================================
-   TAB 4: SALES & REVENUE HISTORY
+   TAB 4: SALES & REVENUE TELEMETRY
    ========================================================================= */
-type FilterPeriod = "DAY" | "MONTH" | "CUSTOM" | "ALL";
-
 function SalesTab() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>("DAY");
-  const [customFrom, setCustomFrom] = useState("");
-  const [customTo, setCustomTo] = useState("");
-  const [showDateRangeModal, setShowDateRangeModal] = useState(false);
-  const [tempFrom, setTempFrom] = useState("");
-  const [tempTo, setTempTo] = useState("");
-  const [statusFilter, setStatusFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-  function applyDateRange() {
-    setCustomFrom(tempFrom);
-    setCustomTo(tempTo);
-    setFilterPeriod("CUSTOM");
-    setShowDateRangeModal(false);
-  }
-
-  function applyPreset(type: "yesterday" | "last7" | "last30" | "thisMonth" | "lastMonth") {
-    const today = new Date();
-    const formatYMD = (d: Date) => d.toISOString().split("T")[0];
-
-    if (type === "yesterday") {
-      const y = new Date(today);
-      y.setDate(today.getDate() - 1);
-      setTempFrom(formatYMD(y));
-      setTempTo(formatYMD(y));
-    } else if (type === "last7") {
-      const s = new Date(today);
-      s.setDate(today.getDate() - 7);
-      setTempFrom(formatYMD(s));
-      setTempTo(formatYMD(today));
-    } else if (type === "last30") {
-      const s = new Date(today);
-      s.setDate(today.getDate() - 30);
-      setTempFrom(formatYMD(s));
-      setTempTo(formatYMD(today));
-    } else if (type === "thisMonth") {
-      const s = new Date(today.getFullYear(), today.getMonth(), 1);
-      setTempFrom(formatYMD(s));
-      setTempTo(formatYMD(today));
-    } else if (type === "lastMonth") {
-      const s = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-      const e = new Date(today.getFullYear(), today.getMonth(), 0);
-      setTempFrom(formatYMD(s));
-      setTempTo(formatYMD(e));
-    }
-  }
   const loadSales = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (statusFilter !== "ALL") {
-        params.set("status", statusFilter);
-      }
-
-      const now = new Date();
-
-      if (filterPeriod === "DAY") {
-        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-        const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-        params.set("from", startOfDay.toISOString());
-        params.set("to", endOfDay.toISOString());
-      } else if (filterPeriod === "MONTH") {
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-        params.set("from", startOfMonth.toISOString());
-        params.set("to", endOfMonth.toISOString());
-      } else if (filterPeriod === "CUSTOM") {
-        if (customFrom) params.set("from", customFrom);
-        if (customTo) params.set("to", customTo);
-      }
-
-      const res = await fetch(`/api/orders?${params.toString()}`);
+      const res = await fetch("/api/orders");
       if (res.ok) {
         const data: Order[] = await res.json();
         setOrders(data);
@@ -1457,13 +1200,13 @@ function SalesTab() {
     } finally {
       setLoading(false);
     }
-  }, [filterPeriod, customFrom, customTo, statusFilter]);
+  }, []);
 
   useEffect(() => {
     loadSales();
   }, [loadSales]);
 
-  // Search query filter
+  // Search filter
   const filteredOrders = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return orders;
@@ -1471,642 +1214,225 @@ function SalesTab() {
       const matchId = `#${o.id}`.includes(q) || `${o.id}`.includes(q);
       const matchTable = o.table?.name.toLowerCase().includes(q) || false;
       const matchWaiter = o.waiter?.name.toLowerCase().includes(q) || false;
-      const matchItems = o.items.some((i) =>
-        i.menuItem?.name.toLowerCase().includes(q)
-      );
-      return matchId || matchTable || matchWaiter || matchItems;
+      return matchId || matchTable || matchWaiter;
     });
   }, [orders, searchQuery]);
 
-  // Summary Metrics calculations
+  // Summary stats
   const stats = useMemo(() => {
-    const paidOrders = filteredOrders.filter((o) => o.status === "PAID");
-    const totalRevenue = paidOrders.reduce((sum, o) => sum + orderTotal(o.items), 0);
-    const settledCount = paidOrders.length;
-    const totalItems = filteredOrders.reduce(
+    const paid = filteredOrders.filter((o) => o.status === "PAID");
+    const totalRev = paid.reduce((s, o) => s + orderTotal(o.items), 0);
+    const totalItemsCount = filteredOrders.reduce(
       (sum, o) => sum + o.items.reduce((s, i) => s + i.qty, 0),
       0
     );
-    const aov = settledCount > 0 ? totalRevenue / settledCount : 0;
+    const aov = paid.length > 0 ? totalRev / paid.length : 0;
     return {
-      totalRevenue,
-      settledCount,
+      totalRevenue: totalRev,
+      settledCount: paid.length,
       totalOrders: filteredOrders.length,
-      totalItems,
-      aov,
+      totalDishesSold: totalItemsCount,
+      averageOrderValue: aov,
     };
   }, [filteredOrders]);
 
   return (
-    <div className="space-y-3 sm:space-y-5">
-      {/* Top 4 KPI Summary Cards (Compact 2x2 on mobile, 4-col on desktop) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-        {/* Card 1: Total Revenue */}
-        <div className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-3 sm:p-5 shadow-xs transition-all duration-200 hover:shadow-md">
-          <div className="flex items-center justify-between gap-1">
-            <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-zinc-500 truncate">
-              Total Revenue
-            </span>
-            <div className="flex h-6 w-6 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-emerald-50 text-emerald-600">
-              <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            </div>
-          </div>
-          <div className="mt-1.5 sm:mt-3 flex items-baseline gap-1.5">
-            <span className="text-lg sm:text-3xl font-black tracking-tight text-zinc-900 truncate">
-              {money(stats.totalRevenue)}
-            </span>
-          </div>
-          <p className="mt-1 sm:mt-2 hidden sm:block text-xs text-zinc-500 truncate">
-            {filterPeriod === "DAY"
-              ? "Sales collected today"
-              : filterPeriod === "MONTH"
-              ? "Sales collected this month"
-              : filterPeriod === "CUSTOM"
-              ? "Selected custom date range"
-              : "All-time accumulated revenue"}
+    <div className="space-y-6">
+      {/* Top Controls */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-lg font-bold tracking-tight text-white">
+            Sales & Revenue Analytics
+          </h2>
+          <p className="text-xs text-zinc-400">
+            Real-time fiscal ledger, settled checks, average order value, and dish sales
           </p>
-          <div className="absolute top-0 right-0 h-1 w-full bg-emerald-500" />
         </div>
 
-        {/* Card 2: Settled Orders */}
-        <div className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-3 sm:p-5 shadow-xs transition-all duration-200 hover:shadow-md">
-          <div className="flex items-center justify-between gap-1">
-            <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-zinc-500 truncate">
-              Settled Orders
-            </span>
-            <div className="flex h-6 w-6 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-orange-50 text-orange-600">
-              <Receipt className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            </div>
-          </div>
-          <div className="mt-1.5 sm:mt-3 flex items-baseline gap-1.5">
-            <span className="text-lg sm:text-3xl font-black tracking-tight text-zinc-900 truncate">
-              {stats.settledCount}
-            </span>
-            <span className="text-[11px] sm:text-xs font-medium text-zinc-500 truncate">
-              of {stats.totalOrders}
-            </span>
-          </div>
-          <p className="mt-1 sm:mt-2 hidden sm:block text-xs text-zinc-500 truncate">
-            Completed & paid dining receipts
-          </p>
-          <div className="absolute top-0 right-0 h-1 w-full bg-orange-500" />
+        <button
+          onClick={loadSales}
+          disabled={loading}
+          className="inline-flex items-center gap-2 rounded-xl border border-white/[0.12] bg-obsidian-900 px-3.5 py-2 text-xs font-semibold text-zinc-300 shadow-xs hover:text-white active:scale-95 transition"
+        >
+          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin text-amber-400" : ""}`} />
+          <span>Refresh Ledger</span>
+        </button>
+      </div>
+
+      {/* 4 Financial KPI Cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-2xl border border-white/[0.08] bg-obsidian-900/90 p-4 shadow-xl">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 block">
+            Settled Revenue
+          </span>
+          <span className="text-2xl font-black text-emerald-400 font-mono tabular-nums mt-1 block">
+            {money(stats.totalRevenue)}
+          </span>
+          <span className="text-[11px] font-mono text-zinc-400 mt-1 block">
+            {stats.settledCount} paid checks
+          </span>
         </div>
 
-        {/* Card 3: Average Order Value */}
-        <div className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-3 sm:p-5 shadow-xs transition-all duration-200 hover:shadow-md">
-          <div className="flex items-center justify-between gap-1">
-            <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-zinc-500 truncate">
-              Avg Order Value
-            </span>
-            <div className="flex h-6 w-6 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-sky-50 text-sky-600">
-              <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            </div>
-          </div>
-          <div className="mt-1.5 sm:mt-3 flex items-baseline gap-1.5">
-            <span className="text-lg sm:text-3xl font-black tracking-tight text-zinc-900 truncate">
-              {money(stats.aov)}
-            </span>
-          </div>
-          <p className="mt-1 sm:mt-2 hidden sm:block text-xs text-zinc-500 truncate">
-            Average spend per dining table
-          </p>
-          <div className="absolute top-0 right-0 h-1 w-full bg-sky-500" />
+        <div className="rounded-2xl border border-white/[0.08] bg-obsidian-900/90 p-4 shadow-xl">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 block">
+            Average Check (AOV)
+          </span>
+          <span className="text-2xl font-black text-amber-300 font-mono tabular-nums mt-1 block">
+            {money(stats.averageOrderValue)}
+          </span>
+          <span className="text-[11px] font-mono text-zinc-400 mt-1 block">
+            Per paying party
+          </span>
         </div>
 
-        {/* Card 4: Items Sold */}
-        <div className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-3 sm:p-5 shadow-xs transition-all duration-200 hover:shadow-md">
-          <div className="flex items-center justify-between gap-1">
-            <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-zinc-500 truncate">
-              Items Sold
-            </span>
-            <div className="flex h-6 w-6 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-purple-50 text-purple-600">
-              <ShoppingBag className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            </div>
-          </div>
-          <div className="mt-1.5 sm:mt-3 flex items-baseline gap-1.5">
-            <span className="text-lg sm:text-3xl font-black tracking-tight text-zinc-900 truncate">
-              {stats.totalItems}
-            </span>
-            <span className="text-[11px] sm:text-xs font-medium text-zinc-500 truncate">items</span>
-          </div>
-          <p className="mt-1 sm:mt-2 hidden sm:block text-xs text-zinc-500 truncate">
-            Dishes and beverages served
-          </p>
-          <div className="absolute top-0 right-0 h-1 w-full bg-purple-500" />
+        <div className="rounded-2xl border border-white/[0.08] bg-obsidian-900/90 p-4 shadow-xl">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 block">
+            Total Orders Logged
+          </span>
+          <span className="text-2xl font-black text-white font-mono tabular-nums mt-1 block">
+            {stats.totalOrders}
+          </span>
+          <span className="text-[11px] font-mono text-zinc-400 mt-1 block">
+            All shift statuses
+          </span>
+        </div>
+
+        <div className="rounded-2xl border border-white/[0.08] bg-obsidian-900/90 p-4 shadow-xl">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 block">
+            Dishes Served
+          </span>
+          <span className="text-2xl font-black text-white font-mono tabular-nums mt-1 block">
+            {stats.totalDishesSold}
+          </span>
+          <span className="text-[11px] font-mono text-zinc-400 mt-1 block">
+            Individual preparations
+          </span>
         </div>
       </div>
 
-      {/* Filter and Range Toolbar */}
-      <div className="flex flex-col gap-2 sm:gap-3 bg-white p-2.5 sm:p-4 rounded-2xl border border-zinc-200/80 shadow-2xs">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2.5">
-          {/* Quick Period Filter Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
-            <button
-              type="button"
-              onClick={() => setFilterPeriod("DAY")}
-              className={`rounded-xl px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition shrink-0 ${
-                filterPeriod === "DAY"
-                  ? "bg-zinc-900 text-white shadow-xs"
-                  : "bg-zinc-50 text-zinc-600 border border-zinc-200/80 hover:bg-zinc-100"
-              }`}
-            >
-              Today
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setFilterPeriod("MONTH")}
-              className={`rounded-xl px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition shrink-0 ${
-                filterPeriod === "MONTH"
-                  ? "bg-zinc-900 text-white shadow-xs"
-                  : "bg-zinc-50 text-zinc-600 border border-zinc-200/80 hover:bg-zinc-100"
-              }`}
-            >
-              This Month
-            </button>
-
-            {/* Custom Date Range Pill */}
-            <button
-              type="button"
-              onClick={() => {
-                setTempFrom(customFrom);
-                setTempTo(customTo);
-                setShowDateRangeModal(true);
-              }}
-              className={`inline-flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition shrink-0 ${
-                filterPeriod === "CUSTOM"
-                  ? "bg-orange-600 text-white shadow-xs hover:bg-orange-700"
-                  : "bg-zinc-50 text-zinc-600 border border-zinc-200/80 hover:bg-zinc-100"
-              }`}
-            >
-              <CalendarDays className="h-3.5 w-3.5" />
-              <span>
-                {filterPeriod === "CUSTOM" && (customFrom || customTo)
-                  ? `${customFrom || "Start"} → ${customTo || "Today"}`
-                  : "Custom Range"}
-              </span>
-              <Pencil className="h-3 w-3 opacity-75 ml-0.5" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setFilterPeriod("ALL")}
-              className={`rounded-xl px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition shrink-0 ${
-                filterPeriod === "ALL"
-                  ? "bg-zinc-900 text-white shadow-xs"
-                  : "bg-zinc-50 text-zinc-600 border border-zinc-200/80 hover:bg-zinc-100"
-              }`}
-            >
-              All Time
-            </button>
+      {/* Transaction History Table */}
+      <div className="rounded-3xl border border-white/[0.08] bg-obsidian-900/90 p-5 shadow-2xl space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <h3 className="font-bold text-sm text-white">
+            Order Audit Ledger ({filteredOrders.length})
+          </h3>
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-500" />
+            <input
+              type="text"
+              placeholder="Filter by ID, table, waiter..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-8 pl-8 pr-7 rounded-xl border border-white/[0.1] bg-obsidian-950/80 text-xs text-white placeholder:text-zinc-500 font-mono focus:border-amber-500 focus:outline-hidden"
+            />
           </div>
+        </div>
 
-          {/* Status Select & Search */}
-          <div className="flex items-center gap-2">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-9 rounded-xl border border-zinc-200 bg-zinc-50/50 px-2.5 text-xs font-medium text-zinc-800 shadow-2xs focus:border-zinc-400 focus:bg-white focus:outline-hidden shrink-0"
-            >
-              <option value="ALL">All Status</option>
-              <option value="PAID">Paid Only</option>
-              <option value="OPEN">Dining</option>
-              <option value="CHECKOUT">Checkout</option>
-            </select>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs font-mono">
+            <thead>
+              <tr className="border-b border-white/[0.08] text-zinc-500 uppercase tracking-wider text-[10px]">
+                <th className="pb-3 pl-2">Order</th>
+                <th className="pb-3">Table</th>
+                <th className="pb-3">Server</th>
+                <th className="pb-3">Dishes</th>
+                <th className="pb-3">Amount</th>
+                <th className="pb-3">Status</th>
+                <th className="pb-3 text-right pr-2">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/[0.06] text-zinc-300">
+              {filteredOrders.map((o) => {
+                const total = orderTotal(o.items);
+                const itemCount = o.items.reduce((s, i) => s + i.qty, 0);
 
-            <div className="relative flex-1 md:w-60">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
-              <input
-                type="text"
-                placeholder="Search order, table..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-9 w-full rounded-xl border border-zinc-200 bg-zinc-50/50 pl-8 pr-2.5 text-xs text-zinc-900 placeholder:text-zinc-400 shadow-2xs focus:border-zinc-400 focus:bg-white focus:outline-hidden"
-              />
-            </div>
-          </div>
+                return (
+                  <tr key={o.id} className="hover:bg-white/[0.02] transition">
+                    <td className="py-3 pl-2 font-bold text-white">#{o.id}</td>
+                    <td className="py-3">{o.table?.name}</td>
+                    <td className="py-3">{o.waiter?.name || "Unassigned"}</td>
+                    <td className="py-3">{itemCount} items</td>
+                    <td className="py-3 font-bold text-white tabular-nums">{money(total)}</td>
+                    <td className="py-3">
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          o.status === "PAID"
+                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                            : o.status === "OPEN"
+                            ? "bg-amber-500/10 text-amber-300 border border-amber-500/20"
+                            : "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20"
+                        }`}
+                      >
+                        {o.status}
+                      </span>
+                    </td>
+                    <td className="py-3 text-right pr-2">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedOrder(o)}
+                        className="rounded-lg p-1.5 text-zinc-400 hover:text-white hover:bg-white/[0.08]"
+                        title="View order receipt"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      {/* Sales List / Table */}
-      {loading ? (
-        <div className="rounded-2xl border border-zinc-200/80 bg-white p-8 text-center shadow-xs">
-          <Clock className="mx-auto h-7 w-7 text-orange-500 animate-spin" />
-          <p className="mt-2 text-xs font-semibold text-zinc-800">
-            Loading sales records...
-          </p>
-        </div>
-      ) : filteredOrders.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-zinc-200 bg-white p-8 text-center shadow-xs">
-          <Receipt className="mx-auto h-8 w-8 text-zinc-400" />
-          <h4 className="mt-2 text-sm font-semibold text-zinc-800">
-            No sales history found
-          </h4>
-          <p className="mt-0.5 text-xs text-zinc-500">
-            {searchQuery
-              ? `No orders match "${searchQuery}".`
-              : "No sales records recorded for the selected filter criteria."}
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-2.5 sm:space-y-3">
-          {filteredOrders.map((order) => {
-            const isPaid = order.status === "PAID";
-            const isCheckout = order.status === "CHECKOUT";
-            const total = orderTotal(order.items);
-            const itemCount = order.items.reduce((s, i) => s + i.qty, 0);
-            const createdDate = new Date(order.createdAt);
-
-            return (
-              <div
-                key={order.id}
-                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-4 rounded-2xl border border-zinc-200/80 bg-white p-3 sm:p-4 shadow-xs transition-all duration-200 hover:shadow-md"
-              >
-                {/* Order Info */}
-                <div className="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
-                  <div
-                    className={`hidden xs:flex sm:flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl font-black text-xs sm:text-sm border ${
-                      isPaid
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                        : isCheckout
-                        ? "bg-indigo-50 text-indigo-700 border-indigo-200"
-                        : "bg-amber-50 text-amber-700 border-amber-200"
-                    }`}
-                  >
-                    <Receipt className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    {/* Title row */}
-                    <div className="flex items-center justify-between sm:justify-start gap-2">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="font-bold text-zinc-900 text-sm">
-                          Order #{order.id}
-                        </span>
-                        <span className="inline-flex items-center rounded-md bg-zinc-100 px-1.5 py-0.5 text-[11px] font-medium text-zinc-700">
-                          {order.table?.name || `T#${order.tableId}`}
-                        </span>
-                        <span
-                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                            isPaid
-                              ? "bg-emerald-100 text-emerald-800"
-                              : isCheckout
-                              ? "bg-indigo-100 text-indigo-800"
-                              : "bg-amber-100 text-amber-800"
-                          }`}
-                        >
-                          {isPaid ? (
-                            <>
-                              <CheckCircle2 className="h-2.5 w-2.5" />
-                              Paid
-                            </>
-                          ) : (
-                            order.status
-                          )}
-                        </span>
-                      </div>
-
-                      {/* Total Amount on Mobile (inline in header) */}
-                      <span className="sm:hidden text-base font-black text-zinc-900 tabular-nums">
-                        {money(total)}
-                      </span>
-                    </div>
-
-                    {/* Metadata: Date & Server */}
-                    <div className="mt-0.5 flex items-center gap-2 text-[11px] text-zinc-500 flex-wrap">
-                      <span>
-                        {createdDate.toLocaleDateString(undefined, {
-                          month: "short",
-                          day: "numeric",
-                        })}
-                        {" • "}
-                        {createdDate.toLocaleTimeString(undefined, {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
-                      <span>•</span>
-                      <span className="truncate">Server: {order.waiter?.name || "Staff"}</span>
-                    </div>
-
-                    {/* Ordered Items Preview */}
-                    <div className="mt-1 text-xs text-zinc-600 line-clamp-1">
-                      <span className="font-medium text-zinc-700">
-                        {itemCount} {itemCount === 1 ? "item" : "items"}:
-                      </span>{" "}
-                      {order.items
-                        .slice(0, 3)
-                        .map((it) => `${it.qty}× ${it.menuItem?.name || "Item"}`)
-                        .join(", ")}
-                      {order.items.length > 3 && (
-                        <span className="text-zinc-400">
-                          {" "}
-                          +{order.items.length - 3} more
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action / Desktop Amount */}
-                <div className="flex items-center justify-between sm:justify-end gap-3 pt-1.5 sm:pt-0 border-t sm:border-t-0 border-zinc-100">
-                  <div className="hidden sm:block text-right shrink-0">
-                    <span className="text-[10px] font-semibold text-zinc-400 block uppercase tracking-wider">
-                      Amount
-                    </span>
-                    <span className="text-xl font-black text-zinc-900 tabular-nums tracking-tight">
-                      {money(total)}
-                    </span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedOrder(order)}
-                    className="w-full sm:w-auto inline-flex min-h-[36px] items-center justify-center gap-1.5 rounded-xl border border-zinc-200 bg-zinc-50 sm:bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 shadow-2xs hover:border-zinc-300 hover:bg-zinc-100 transition shrink-0"
-                  >
-                    <Eye className="h-3.5 w-3.5 text-zinc-500" />
-                    <span>Receipt</span>
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Order Itemized Receipt Modal */}
+      {/* Modal: Order Detail & Receipt */}
       <Modal
         isOpen={!!selectedOrder}
         onClose={() => setSelectedOrder(null)}
-        title={selectedOrder ? `Order #${selectedOrder.id} Receipt` : "Order Receipt"}
-        subtitle={
-          selectedOrder
-            ? `${selectedOrder.table?.name || `Table #${selectedOrder.tableId}`} • Server: ${
-                selectedOrder.waiter?.name || "Staff"
-              }`
-            : undefined
-        }
-        maxWidth="max-w-xl"
+        title={`Order #${selectedOrder?.id} Receipt`}
+        subtitle={`${selectedOrder?.table?.name} • ${selectedOrder?.status}`}
+        maxWidth="max-w-md"
       >
         {selectedOrder && (
           <div className="space-y-4">
-            {/* Metadata Bar */}
-            <div className="rounded-xl bg-zinc-50 p-3.5 text-xs text-zinc-600 flex items-center justify-between border border-zinc-200/80">
-              <div>
-                <span className="text-zinc-400 block text-[10px] uppercase font-bold">
-                  Created At
-                </span>
-                <span className="font-semibold text-zinc-800">
+            <div className="rounded-2xl border border-white/[0.12] bg-white text-zinc-950 p-5 font-mono text-xs shadow-2xl">
+              <div className="text-center pb-3 border-b border-zinc-200">
+                <h3 className="font-black text-sm uppercase">TCS RestaurantOS</h3>
+                <p className="text-[10px] text-zinc-600">
                   {new Date(selectedOrder.createdAt).toLocaleString()}
-                </span>
+                </p>
+                <p className="text-xs font-bold mt-0.5">
+                  Order #{selectedOrder.id} • {selectedOrder.table?.name}
+                </p>
               </div>
-              <div className="text-right">
-                <span className="text-zinc-400 block text-[10px] uppercase font-bold">
-                  Status
-                </span>
-                <span className="font-bold text-emerald-700">
-                  {selectedOrder.status}
-                </span>
-              </div>
-            </div>
 
-            {/* Itemized Dish List */}
-            <div className="rounded-xl border border-zinc-200/80 bg-white overflow-hidden divide-y divide-zinc-100 max-h-72 overflow-y-auto">
-              {selectedOrder.items.map((item) => (
-                <div
-                  key={item.id}
-                  className="p-3 flex items-center justify-between gap-3 text-xs hover:bg-zinc-50/50"
-                >
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={getMenuItemImage(item.menuItem)}
-                      alt={item.menuItem?.name}
-                      loading="lazy"
-                      decoding="async"
-                      className="h-10 w-10 rounded-lg object-cover bg-zinc-100 shrink-0"
-                    />
-                    <div>
-                      <h5 className="font-bold text-zinc-900">
-                        {item.menuItem?.name || "Dish Item"}
-                      </h5>
-                      <span className="text-zinc-500 text-[11px]">
-                        {item.qty} × {money(item.price)}
-                      </span>
-                      {item.note && (
-                        <p className="text-[11px] text-amber-700 italic">
-                          Note: {item.note}
-                        </p>
-                      )}
-                    </div>
+              <div className="py-3 space-y-1.5 border-b border-zinc-200">
+                {selectedOrder.items.map((i) => (
+                  <div key={i.id} className="flex justify-between">
+                    <span>
+                      {i.qty}× {i.menuItem?.name}
+                    </span>
+                    <span className="font-bold">{money(i.qty * i.price)}</span>
                   </div>
-
-                  <span className="font-extrabold text-zinc-900 tabular-nums">
-                    {money(item.qty * item.price)}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* Totals Breakdown */}
-            <div className="border-t-2 border-dashed border-zinc-200 pt-3 space-y-1.5 text-xs text-zinc-600">
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span className="font-semibold text-zinc-800">
-                  {money(orderTotal(selectedOrder.items))}
-                </span>
+                ))}
               </div>
-              <div className="flex justify-between">
-                <span>Tax & Service</span>
-                <span className="font-semibold text-emerald-600">Included</span>
-              </div>
-              <div className="border-t border-zinc-200/80 pt-2.5 flex items-baseline justify-between">
-                <span className="text-sm font-bold uppercase text-zinc-900">
-                  Total Due / Paid
-                </span>
-                <span className="text-2xl font-black text-zinc-900">
-                  {money(orderTotal(selectedOrder.items))}
-                </span>
+
+              <div className="pt-3 flex justify-between font-black text-sm">
+                <span>TOTAL:</span>
+                <span>{money(orderTotal(selectedOrder.items))}</span>
               </div>
             </div>
 
-            {/* Modal Actions */}
-            <div className="flex items-center justify-end gap-2 pt-2">
+            <div className="flex justify-end pt-2">
               <button
                 type="button"
                 onClick={() => setSelectedOrder(null)}
-                className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition"
+                className="h-10 px-4 rounded-xl border border-white/[0.12] bg-white/[0.04] text-xs font-semibold text-zinc-300 hover:text-white"
               >
                 Close
-              </button>
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-zinc-900 px-4 py-2.5 text-xs font-bold text-white hover:bg-black active:scale-[0.99] transition shadow-xs"
-              >
-                <Printer className="h-4 w-4" />
-                <span>Print</span>
               </button>
             </div>
           </div>
         )}
-      </Modal>
-
-      {/* Custom Date Range Modal */}
-      <Modal
-        isOpen={showDateRangeModal}
-        onClose={() => setShowDateRangeModal(false)}
-        title="Custom Sales Date Range"
-        subtitle="Filter records by date presets or select specific start and end dates"
-        maxWidth="max-w-lg"
-      >
-        <div className="space-y-5">
-          {/* Quick Presets Section */}
-          <div>
-            <span className="block text-[11px] font-bold uppercase tracking-wider text-zinc-500 mb-2">
-              Quick Range Presets
-            </span>
-            <div className="flex flex-wrap items-center gap-1.5">
-              {(
-                [
-                  { id: "yesterday", label: "Yesterday" },
-                  { id: "last7", label: "Last 7 Days" },
-                  { id: "last30", label: "Last 30 Days" },
-                  { id: "thisMonth", label: "This Month" },
-                  { id: "lastMonth", label: "Last Month" },
-                ] as const
-              ).map((preset) => (
-                <button
-                  key={preset.id}
-                  type="button"
-                  onClick={() => applyPreset(preset.id)}
-                  className="rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-900 active:scale-95 transition-all shadow-2xs"
-                >
-                  {preset.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Date Pickers Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-            {/* Start Date Card */}
-            <div className="rounded-2xl border border-zinc-200 bg-zinc-50/70 p-4 transition-all focus-within:border-orange-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-orange-500/20">
-              <label className="block text-[11px] font-bold text-zinc-600 uppercase tracking-wider mb-2">
-                Start Date (From)
-              </label>
-              <div className="relative flex items-center">
-                <CalendarDays className="pointer-events-none absolute left-3.5 h-4 w-4 text-zinc-400" />
-                <input
-                  type="date"
-                  value={tempFrom}
-                  onChange={(e) => setTempFrom(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-300 bg-white pl-10 pr-3 py-2 text-sm font-semibold text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
-                />
-              </div>
-              {tempFrom ? (
-                <span className="block text-[11px] text-zinc-500 font-medium mt-2">
-                  {new Date(tempFrom + "T00:00:00").toLocaleDateString(undefined, {
-                    weekday: "short",
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </span>
-              ) : (
-                <span className="block text-[11px] text-zinc-400 mt-2">
-                  No start date selected
-                </span>
-              )}
-            </div>
-
-            {/* End Date Card */}
-            <div className="rounded-2xl border border-zinc-200 bg-zinc-50/70 p-4 transition-all focus-within:border-orange-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-orange-500/20">
-              <label className="block text-[11px] font-bold text-zinc-600 uppercase tracking-wider mb-2">
-                End Date (To)
-              </label>
-              <div className="relative flex items-center">
-                <CalendarDays className="pointer-events-none absolute left-3.5 h-4 w-4 text-zinc-400" />
-                <input
-                  type="date"
-                  value={tempTo}
-                  onChange={(e) => setTempTo(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-300 bg-white pl-10 pr-3 py-2 text-sm font-semibold text-zinc-900 shadow-2xs focus:border-orange-500 focus:outline-hidden"
-                />
-              </div>
-              {tempTo ? (
-                <span className="block text-[11px] text-zinc-500 font-medium mt-2">
-                  {new Date(tempTo + "T00:00:00").toLocaleDateString(undefined, {
-                    weekday: "short",
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </span>
-              ) : (
-                <span className="block text-[11px] text-zinc-400 mt-2">
-                  No end date selected
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Active Range Preview */}
-          {(tempFrom || tempTo) && (
-            <div className="rounded-xl border border-orange-200/90 bg-orange-50/80 p-3 text-xs text-orange-950 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <CalendarDays className="h-4 w-4 text-orange-600 shrink-0" />
-                <span>
-                  Filtering: <strong>{tempFrom || "Any past date"}</strong> →{" "}
-                  <strong>{tempTo || "Today"}</strong>
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setTempFrom("");
-                  setTempTo("");
-                }}
-                className="text-xs text-orange-700 hover:text-orange-900 font-bold underline ml-2"
-              >
-                Clear
-              </button>
-            </div>
-          )}
-
-          {/* Actions */}
-          <div className="flex items-center justify-between pt-2 border-t border-zinc-100">
-            <button
-              type="button"
-              onClick={() => {
-                setCustomFrom("");
-                setCustomTo("");
-                setFilterPeriod("DAY");
-                setShowDateRangeModal(false);
-              }}
-              className="text-xs font-semibold text-zinc-500 hover:text-rose-600 transition"
-            >
-              Reset to Today
-            </button>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setShowDateRangeModal(false)}
-                className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={applyDateRange}
-                className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] transition"
-              >
-                <CalendarDays className="h-4 w-4" />
-                <span>Apply Date Range</span>
-              </button>
-            </div>
-          </div>
-        </div>
       </Modal>
     </div>
   );

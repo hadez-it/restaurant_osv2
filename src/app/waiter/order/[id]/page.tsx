@@ -23,9 +23,7 @@ import {
   X,
   ChefHat,
   ShoppingBag,
-  UtensilsCrossed,
-  Check,
-  LayoutGrid,
+  Loader2,
 } from "lucide-react";
 
 export default function OrderPage() {
@@ -130,7 +128,6 @@ export default function OrderPage() {
     if (!order || order.status !== "OPEN" || busy) return;
     setItemBusyId(menuItem.id);
 
-    // Check if an unsent draft item for this menuItem already exists
     const existingDraft = order.items.find(
       (i) => !i.ticketId && i.menuItemId === menuItem.id
     );
@@ -199,7 +196,7 @@ export default function OrderPage() {
       method: "POST",
     });
     if (ok) {
-      setSuccessNotice("Order fired! Sent directly to the kitchen display.");
+      setSuccessNotice("Order fired successfully to kitchen display.");
     }
   }
 
@@ -217,9 +214,9 @@ export default function OrderPage() {
   if (!order) {
     return (
       <AppShell>
-        <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3">
-          <RefreshCw className="h-7 w-7 animate-spin text-orange-600" />
-          <p className="text-sm font-medium text-zinc-600">Loading POS terminal…</p>
+        <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-zinc-400">
+          <RefreshCw className="h-7 w-7 animate-spin text-amber-500" />
+          <p className="text-sm font-medium tracking-wide">Loading Order Terminal...</p>
         </div>
       </AppShell>
     );
@@ -228,8 +225,6 @@ export default function OrderPage() {
   const draft = order.items.filter((i) => !i.ticketId);
   const sent = order.items.filter((i) => i.ticketId);
   const total = orderTotal(order.items);
-  const draftTotal = orderTotal(draft);
-  const sentTotal = orderTotal(sent);
   const totalItemsCount = order.items.reduce((s, i) => s + i.qty, 0);
   const draftItemsCount = draft.reduce((s, i) => s + i.qty, 0);
   const isOpen = order.status === "OPEN";
@@ -248,49 +243,49 @@ export default function OrderPage() {
   return (
     <AppShell>
       <div className="space-y-5 pb-12">
-        {/* Top Header Bar */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-zinc-200/80 pb-4">
+        {/* Top Control Header */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-white/[0.08] pb-4">
           <div className="flex items-start sm:items-center gap-3">
             <Link
               href="/waiter"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 shadow-2xs hover:border-zinc-300 hover:bg-zinc-50 active:scale-95 transition-all"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/[0.12] bg-obsidian-900 text-zinc-300 hover:text-white hover:bg-obsidian-850 active:scale-95 transition-all shadow-xs"
               title="Back to Floor Plan"
             >
               <ArrowLeft className="h-5 w-5" />
             </Link>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                  POS Station
+                <span className="text-xs font-mono font-semibold uppercase tracking-wider text-zinc-400">
+                  POS STATION
                 </span>
-                <span className="text-zinc-300">•</span>
-                <span className="text-xs font-semibold text-zinc-600">
-                  Order #{order.id}
+                <span className="text-zinc-600">•</span>
+                <span className="text-xs font-mono font-semibold text-amber-400">
+                  ORDER #{order.id}
                 </span>
-                <span className="text-zinc-300">•</span>
+                <span className="text-zinc-600">•</span>
                 {isOpen && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200/80">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Active Order
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-mono font-semibold text-emerald-400 border border-emerald-500/30">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    ACTIVE DRAFT
                   </span>
                 )}
                 {isCheckout && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700 border border-blue-200/80">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/10 px-2.5 py-0.5 text-xs font-mono font-semibold text-indigo-300 border border-indigo-500/30">
                     <Clock className="h-3 w-3" />
-                    In Checkout
+                    IN CHECKOUT
                   </span>
                 )}
                 {isPaid && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700 border border-green-200/80">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-mono font-semibold text-emerald-400 border border-emerald-500/30">
                     <CheckCircle2 className="h-3 w-3" />
-                    Paid & Closed
+                    PAID & CLOSED
                   </span>
                 )}
               </div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 flex items-center gap-2 mt-0.5">
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2.5 mt-0.5">
                 <span>{order.table?.name || `Table #${order.tableId}`}</span>
                 {order.table?.seats && (
-                  <span className="text-xs font-normal text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded-md border border-zinc-200">
+                  <span className="text-xs font-mono font-normal text-zinc-400 bg-white/[0.06] px-2 py-0.5 rounded-md border border-white/[0.08]">
                     {order.table.seats} seats
                   </span>
                 )}
@@ -300,8 +295,8 @@ export default function OrderPage() {
 
           <div className="flex items-center justify-between sm:justify-end gap-4">
             <div className="text-left sm:text-right">
-              <span className="text-xs font-medium text-zinc-500 block">Total Bill</span>
-              <span className="text-2xl font-black text-zinc-900 tracking-tight">
+              <span className="text-xs font-mono uppercase tracking-wider text-zinc-400 block">Total Due</span>
+              <span className="text-2xl font-black text-white tracking-tight font-mono tabular-nums">
                 {money(total)}
               </span>
             </div>
@@ -309,23 +304,23 @@ export default function OrderPage() {
               onClick={() => load(false)}
               disabled={busy}
               title="Refresh order"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-600 shadow-2xs hover:border-zinc-300 hover:text-zinc-900 active:scale-95 transition-all disabled:opacity-50"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/[0.12] bg-obsidian-900 text-zinc-300 shadow-xs hover:border-white/[0.2] hover:text-white active:scale-95 transition-all disabled:opacity-50"
             >
-              <RefreshCw className={`h-4 w-4 ${busy ? "animate-spin text-orange-600" : ""}`} />
+              <RefreshCw className={`h-4 w-4 ${busy ? "animate-spin text-amber-400" : ""}`} />
             </button>
           </div>
         </div>
 
-        {/* Global Notifications / Status Alerts */}
+        {/* Global Notifications */}
         {error && (
-          <div className="flex items-center justify-between rounded-xl border border-red-200 bg-red-50/90 p-4 text-sm text-red-700 shadow-xs animate-toast">
+          <div className="flex items-center justify-between rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs sm:text-sm text-rose-300 shadow-xs animate-toast">
             <div className="flex items-center gap-2.5">
-              <AlertCircle className="h-5 w-5 shrink-0 text-red-600" />
+              <AlertCircle className="h-5 w-5 shrink-0 text-rose-400" />
               <span>{error}</span>
             </div>
             <button
               onClick={() => setError("")}
-              className="rounded-lg p-1 text-red-500 hover:bg-red-100 hover:text-red-800"
+              className="rounded-lg p-1 text-rose-400 hover:bg-rose-500/20 hover:text-rose-200"
             >
               <X className="h-4 w-4" />
             </button>
@@ -333,14 +328,14 @@ export default function OrderPage() {
         )}
 
         {successNotice && (
-          <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50/90 p-4 text-sm text-emerald-800 shadow-xs animate-toast">
+          <div className="flex items-center justify-between rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs sm:text-sm text-emerald-300 shadow-xs animate-toast">
             <div className="flex items-center gap-2.5">
-              <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
+              <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-400" />
               <span>{successNotice}</span>
             </div>
             <button
               onClick={() => setSuccessNotice("")}
-              className="rounded-lg p-1 text-emerald-600 hover:bg-emerald-100"
+              className="rounded-lg p-1 text-emerald-400 hover:bg-emerald-500/20"
             >
               <X className="h-4 w-4" />
             </button>
@@ -349,95 +344,64 @@ export default function OrderPage() {
 
         {/* Status Callout when in CHECKOUT */}
         {isCheckout && (
-          <div className="rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50/90 to-indigo-50/90 p-4 sm:p-5 shadow-xs">
+          <div className="rounded-2xl border border-indigo-500/30 bg-indigo-500/10 p-4 sm:p-5 shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-2xs">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-500/20 border border-indigo-500/30 text-indigo-300">
                   <Receipt className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-blue-950">
-                    Table is in Checkout
+                  <h2 className="text-base font-bold text-white">
+                    Table Settlement Pending
                   </h2>
-                  <p className="text-xs sm:text-sm text-blue-700">
-                    Customer is settling the bill at the cashier register. Ordering is locked.
+                  <p className="text-xs text-indigo-200/80">
+                    Customer bill is currently pending cashier settlement. Modifications are temporarily locked.
                   </p>
                 </div>
               </div>
-              <button
-                onClick={() => router.push("/waiter")}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-xs hover:bg-blue-700 active:scale-95 transition-all"
+              <Link
+                href="/cashier"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-500 px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-600 transition active:scale-95"
               >
-                <LayoutGrid className="h-4 w-4" />
-                Back to Floor Plan
-              </button>
+                <span>Go to Cashier Register</span>
+                <Receipt className="h-4 w-4" />
+              </Link>
             </div>
           </div>
         )}
 
-        {/* Status Callout when PAID */}
-        {isPaid && (
-          <div className="rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50/90 to-teal-50/90 p-4 sm:p-5 shadow-xs">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-2xs">
-                  <CheckCircle2 className="h-5 w-5" />
-                </div>
-                <div>
-                  <h2 className="text-base font-bold text-emerald-950">
-                    Order Paid & Completed
-                  </h2>
-                  <p className="text-xs sm:text-sm text-emerald-700">
-                    Payment has been settled with the cashier. Table is ready to be cleared.
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => router.push("/waiter")}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-xs hover:bg-emerald-700 active:scale-95 transition-all"
-              >
-                <LayoutGrid className="h-4 w-4" />
-                Back to Floor Plan
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Mobile View Toggle Tabs (Visible on < lg screens) */}
-        <div className="grid grid-cols-2 gap-2 lg:hidden">
+        {/* Mobile View Toggle */}
+        <div className="flex lg:hidden rounded-2xl border border-white/[0.08] bg-obsidian-900/80 p-1">
           <button
+            type="button"
             onClick={() => setMobileTab("menu")}
-            className={`flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-all ${
+            className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all ${
               mobileTab === "menu"
-                ? "bg-orange-600 text-white shadow-xs"
-                : "bg-white text-zinc-700 border border-zinc-200/80 hover:bg-zinc-50"
+                ? "bg-white/10 text-white border border-amber-500/30 shadow-xs"
+                : "text-zinc-400"
             }`}
           >
-            <UtensilsCrossed className="h-4 w-4" />
-            <span>Menu Catalog</span>
-            <span className="rounded-full bg-black/10 px-1.5 py-0.2 text-xs">
-              {menu.length}
-            </span>
+            Menu Catalog ({menu.length})
           </button>
           <button
+            type="button"
             onClick={() => setMobileTab("ticket")}
-            className={`flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-all relative ${
+            className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
               mobileTab === "ticket"
-                ? "bg-orange-600 text-white shadow-xs"
-                : "bg-white text-zinc-700 border border-zinc-200/80 hover:bg-zinc-50"
+                ? "bg-white/10 text-white border border-amber-500/30 shadow-xs"
+                : "text-zinc-400"
             }`}
           >
-            <Receipt className="h-4 w-4" />
-            <span>Ticket Slip</span>
-            {draftItemsCount > 0 && (
-              <span className="rounded-full bg-white text-orange-600 px-1.5 py-0.2 text-xs font-bold shadow-2xs">
-                {draftItemsCount}
+            <span>Live Ticket</span>
+            {totalItemsCount > 0 && (
+              <span className="rounded-full bg-amber-500 px-1.5 py-0.2 text-[10px] font-mono text-obsidian-950 font-black">
+                {totalItemsCount}
               </span>
             )}
           </button>
         </div>
 
-        {/* Main Dual-Panel POS Grid */}
+        {/* Main Dual-Panel POS Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* LEFT PANEL: Menu Catalog Browser */}
           <div
@@ -446,21 +410,21 @@ export default function OrderPage() {
             }`}
           >
             {/* Search & Category Filter Section */}
-            <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-xs space-y-3.5">
+            <div className="rounded-2xl border border-white/[0.08] bg-obsidian-900/80 p-4 shadow-2xl space-y-3.5 backdrop-blur-xl">
               {/* Search Bar */}
               <div className="relative">
-                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
                 <input
                   type="text"
-                  placeholder="Search dishes by name or category…"
+                  placeholder="Search dishes by name or category..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50/70 pl-10 pr-10 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-orange-500 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-orange-500/20 transition-all"
+                  className="w-full rounded-xl border border-white/[0.12] bg-obsidian-950/80 pl-10 pr-10 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:border-amber-500 focus:outline-hidden transition-all font-mono"
                 />
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery("")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
                     title="Clear search"
                   >
                     <X className="h-4 w-4" />
@@ -468,8 +432,8 @@ export default function OrderPage() {
                 )}
               </div>
 
-              {/* Category Pills with counts */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              {/* Category Pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
                 {categories.map((c) => {
                   const isActive = category === c;
                   const count = categoryCounts[c] ?? 0;
@@ -479,16 +443,16 @@ export default function OrderPage() {
                       onClick={() => setCategory(c)}
                       className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-semibold transition-all shrink-0 ${
                         isActive
-                          ? "bg-orange-600 text-white shadow-2xs"
-                          : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200/80 hover:text-zinc-900 border border-transparent"
+                          ? "bg-gradient-to-r from-amber-500 to-copper-600 text-obsidian-950 font-bold shadow-glow-copper"
+                          : "bg-white/[0.04] text-zinc-400 hover:bg-white/[0.08] hover:text-zinc-200 border border-white/[0.06]"
                       }`}
                     >
                       <span>{c}</span>
                       <span
-                        className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
+                        className={`rounded-full px-1.5 py-0.2 text-[10px] font-mono font-bold ${
                           isActive
-                            ? "bg-orange-700/80 text-white"
-                            : "bg-zinc-200/90 text-zinc-600"
+                            ? "bg-obsidian-950/30 text-obsidian-950"
+                            : "bg-white/[0.08] text-zinc-400"
                         }`}
                       >
                         {count}
@@ -502,12 +466,12 @@ export default function OrderPage() {
             {/* Dish Cards Grid */}
             <div>
               {filteredMenu.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-12 text-center">
-                  <ChefHat className="mx-auto h-10 w-10 text-zinc-300" />
-                  <h3 className="mt-3 text-base font-bold text-zinc-900">
+                <div className="rounded-2xl border border-dashed border-white/[0.12] bg-obsidian-900/40 p-12 text-center">
+                  <ChefHat className="mx-auto h-10 w-10 text-zinc-600" />
+                  <h3 className="mt-3 text-base font-bold text-white">
                     No dishes found
                   </h3>
-                  <p className="mt-1 text-xs sm:text-sm text-zinc-500">
+                  <p className="mt-1 text-xs text-zinc-400">
                     {searchQuery
                       ? `No items match your search for "${searchQuery}".`
                       : "No menu items in this category."}
@@ -515,7 +479,7 @@ export default function OrderPage() {
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery("")}
-                      className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
+                      className="mt-4 inline-flex items-center gap-1.5 rounded-xl border border-white/[0.12] bg-white/[0.05] px-3.5 py-1.5 text-xs font-semibold text-zinc-200 hover:bg-white/10"
                     >
                       <X className="h-3.5 w-3.5" />
                       Clear Filter
@@ -532,81 +496,81 @@ export default function OrderPage() {
                     return (
                       <div
                         key={m.id}
-                        className={`group relative flex flex-col justify-between rounded-2xl border bg-white overflow-hidden shadow-xs transition-all duration-200 ${
+                        className={`group relative flex flex-col justify-between rounded-2xl border bg-obsidian-900/90 overflow-hidden shadow-xl transition-all duration-200 ${
                           m.available
-                            ? "border-zinc-200/90 hover:border-orange-300 hover:shadow-md hover:-translate-y-0.5"
-                            : "border-zinc-200/50 bg-zinc-50/60 opacity-60"
+                            ? "border-white/[0.08] hover:border-amber-500/40 hover:shadow-glow-copper hover:-translate-y-0.5"
+                            : "border-white/[0.04] opacity-50 bg-obsidian-950/60"
                         }`}
                       >
                         {/* Food Photography Image Banner */}
-                        <div className="relative h-36 w-full bg-zinc-100 overflow-hidden">
+                        <div className="relative h-36 w-full bg-obsidian-950 overflow-hidden">
                           <img
                             src={getMenuItemImage(m)}
                             alt={m.name}
+                            className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
                             loading="lazy"
-                            decoding="async"
-                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                           />
+                          <div className="absolute inset-0 bg-gradient-to-t from-obsidian-950 via-transparent to-black/30" />
+
+                          {/* Category Badge Overlay */}
                           <div className="absolute top-2.5 left-2.5">
-                            <span className="inline-block rounded-md bg-white/90 backdrop-blur-xs px-2 py-0.5 text-[10px] font-bold text-zinc-800 uppercase tracking-wider shadow-2xs border border-zinc-200/60">
+                            <span className="inline-block rounded-md bg-obsidian-950/80 border border-white/[0.12] px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-zinc-200 backdrop-blur-md">
                               {m.category}
                             </span>
                           </div>
+
+                          {/* Availability / Quantity Tag */}
                           <div className="absolute top-2.5 right-2.5">
-                            {m.available ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/90 backdrop-blur-xs px-2 py-0.5 text-[10px] font-bold text-white shadow-2xs">
+                            {inDraftCount > 0 ? (
+                              <span className="inline-flex items-center gap-1 rounded-md bg-amber-500 px-2 py-0.5 text-[11px] font-mono font-black text-obsidian-950 shadow-sm">
+                                {inDraftCount} on ticket
+                              </span>
+                            ) : m.available ? (
+                              <span className="inline-block rounded-md bg-emerald-500/20 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-mono font-semibold text-emerald-400 backdrop-blur-md">
                                 Available
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-zinc-900/80 backdrop-blur-xs px-2 py-0.5 text-[10px] font-bold text-white shadow-2xs">
+                              <span className="inline-block rounded-md bg-rose-500/20 border border-rose-500/30 px-2 py-0.5 text-[10px] font-mono font-semibold text-rose-400 backdrop-blur-md">
                                 Sold Out
                               </span>
                             )}
                           </div>
                         </div>
 
-                        <div className="p-4 flex-1 flex flex-col justify-between">
+                        {/* Card Content & Action Button */}
+                        <div className="p-3.5 flex flex-col justify-between flex-1 gap-2.5">
                           <div>
-                            {/* Dish Name */}
-                            <h3 className="text-base font-bold text-zinc-900 group-hover:text-orange-950 transition-colors leading-snug line-clamp-2">
+                            <h3 className="font-bold text-sm text-white group-hover:text-amber-300 transition-colors line-clamp-1">
                               {m.name}
                             </h3>
-                          </div>
-
-                          <div className="mt-4 pt-3 border-t border-zinc-100 space-y-3">
-                            <div className="flex items-baseline justify-between">
-                              <span className="text-lg font-extrabold text-zinc-900">
+                            <div className="mt-1 flex items-baseline justify-between">
+                              <span className="text-base font-black text-white font-mono tabular-nums">
                                 {money(m.price)}
                               </span>
-                              {inDraftCount > 0 && (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2 py-0.5 text-xs font-bold text-orange-700 border border-orange-200/80 animate-pop">
-                                  <Check className="h-3 w-3 text-orange-600" />
-                                  {inDraftCount} in ticket
-                                </span>
-                              )}
                             </div>
-
-                            {/* Touch-Friendly + Add Button */}
-                            <button
-                              type="button"
-                              disabled={!canAdd}
-                              onClick={() => addItem(m)}
-                              className={`flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl py-2.5 px-4 text-sm font-bold shadow-2xs transition-all active:scale-[0.98] ${
-                                canAdd
-                                  ? "bg-orange-600 text-white hover:bg-orange-700 hover:shadow-sm"
-                                  : "bg-zinc-100 text-zinc-400 cursor-not-allowed"
-                              }`}
-                            >
-                              {isItemBusy ? (
-                                <RefreshCw className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <>
-                                  <Plus className="h-4 w-4 stroke-[2.5]" />
-                                  <span>{inDraftCount > 0 ? "Add Another" : "Add to Order"}</span>
-                                </>
-                              )}
-                            </button>
                           </div>
+
+                          <button
+                            type="button"
+                            disabled={!canAdd || isItemBusy}
+                            onClick={() => addItem(m)}
+                            className={`w-full min-h-[38px] flex items-center justify-center gap-1.5 rounded-xl text-xs font-bold transition-all active:scale-[0.98] ${
+                              canAdd
+                                ? inDraftCount > 0
+                                  ? "bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:bg-amber-500/30 hover:text-white"
+                                  : "bg-white/[0.06] border border-white/[0.12] text-zinc-200 hover:bg-gradient-to-r hover:from-amber-500 hover:to-copper-600 hover:text-obsidian-950 hover:border-transparent"
+                                : "bg-white/[0.02] text-zinc-600 border border-white/[0.04] cursor-not-allowed"
+                            }`}
+                          >
+                            {isItemBusy ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <>
+                                <Plus className="h-3.5 w-3.5" />
+                                <span>{inDraftCount > 0 ? "Add Another" : "Add to Order"}</span>
+                              </>
+                            )}
+                          </button>
                         </div>
                       </div>
                     );
@@ -616,131 +580,124 @@ export default function OrderPage() {
             </div>
           </div>
 
-          {/* RIGHT PANEL: Order Ticket Slip */}
+          {/* RIGHT PANEL: Live Order Ticket Dock */}
           <div
             className={`lg:col-span-5 xl:col-span-5 ${
               mobileTab === "menu" ? "hidden lg:block" : "block"
             }`}
           >
-            <div className="sticky top-20 rounded-2xl border border-zinc-200/90 bg-white shadow-sm overflow-hidden flex flex-col">
+            <div className="sticky top-20 rounded-3xl border border-white/[0.12] bg-obsidian-900/95 shadow-2xl overflow-hidden flex flex-col backdrop-blur-2xl shadow-card-dark">
               {/* Receipt Header Banner */}
-              <div className="border-b border-zinc-200/80 bg-zinc-900 text-white p-4 sm:p-5">
+              <div className="border-b border-white/[0.08] bg-obsidian-850/90 p-4 sm:p-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-600 text-white shadow-2xs">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 shadow-xs">
                       <Receipt className="h-5 w-5" />
                     </div>
                     <div>
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 block">
-                        Live Kitchen Ticket
+                      <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-zinc-400 block">
+                        LIVE KITCHEN TICKET
                       </span>
                       <h2 className="text-lg font-black tracking-tight text-white leading-none mt-0.5">
                         {order.table?.name || `Table #${order.tableId}`}
                       </h2>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <span className="text-xs font-mono font-medium text-zinc-400 block">
+                  <div className="text-right font-mono">
+                    <span className="text-xs font-semibold text-zinc-400 block">
                       Order #{order.id}
                     </span>
-                    <span className="text-xs font-medium text-emerald-400 inline-block">
+                    <span className="text-xs font-bold text-emerald-400 inline-block">
                       {order.status}
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Ticket Items Container */}
-              <div className="p-4 sm:p-5 space-y-5 max-h-[calc(100vh-380px)] overflow-y-auto">
+              {/* Ticket Items List */}
+              <div className="p-4 sm:p-5 space-y-4 max-h-[calc(100vh-380px)] overflow-y-auto">
                 {order.items.length === 0 ? (
-                  <div className="py-10 text-center space-y-2.5">
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-orange-50 text-orange-600">
+                  <div className="py-12 text-center space-y-2.5">
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.05] text-zinc-500">
                       <ShoppingBag className="h-6 w-6" />
                     </div>
-                    <h4 className="text-sm font-bold text-zinc-900">
+                    <h4 className="text-sm font-bold text-white">
                       No items on ticket yet
                     </h4>
-                    <p className="text-xs text-zinc-500 max-w-xs mx-auto">
-                      Select dishes from the menu catalog on the left to start taking the customer&apos;s order.
+                    <p className="text-xs text-zinc-400 max-w-xs mx-auto">
+                      Select dishes from the menu catalog on the left to add to the dining party&apos;s ticket.
                     </p>
                   </div>
                 ) : (
                   <>
-                    {/* SECTION 1: New / Unsent Items (Draft) */}
+                    {/* SECTION 1: New / Unsent Draft Items */}
                     {draft.length > 0 && (
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between border-b border-orange-100 pb-2">
+                        <div className="flex items-center justify-between border-b border-amber-500/20 pb-2">
                           <div className="flex items-center gap-2">
-                            <span className="flex h-2 w-2 rounded-full bg-orange-500 animate-pulse"></span>
-                            <span className="text-xs font-bold uppercase tracking-wider text-orange-950">
-                              New / Unsent Items
+                            <span className="flex h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+                            <span className="text-xs font-mono font-bold uppercase tracking-wider text-amber-300">
+                              PENDING KITCHEN FIRE
                             </span>
                           </div>
-                          <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-[11px] font-bold text-orange-800">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-[11px] font-mono font-bold text-amber-300">
                             <Clock className="h-3 w-3" />
                             {draftItemsCount} to fire
                           </span>
                         </div>
 
-                        <div className="divide-y divide-zinc-100">
+                        <div className="divide-y divide-white/[0.06]">
                           {draft.map((item) => (
                             <div
                               key={item.id}
-                              className="py-3 flex flex-col gap-2 transition-colors hover:bg-orange-50/40 rounded-xl px-1.5"
+                              className="py-3 flex flex-col gap-2 rounded-xl px-1.5 hover:bg-white/[0.02] transition"
                             >
                               <div className="flex items-start justify-between gap-3">
                                 <div>
-                                  <h4 className="text-sm font-bold text-zinc-900 leading-tight">
+                                  <h4 className="text-sm font-bold text-white leading-tight">
                                     {item.menuItem?.name}
                                   </h4>
-                                  <span className="text-xs font-medium text-zinc-500">
+                                  <span className="text-xs font-mono text-zinc-400">
                                     {money(item.price)} each
                                   </span>
                                 </div>
-                                <span className="text-sm font-extrabold text-zinc-900 tabular-nums">
+                                <span className="text-sm font-black text-amber-400 tabular-nums font-mono">
                                   {money(item.qty * item.price)}
                                 </span>
                               </div>
 
-                              {/* Quantity Stepper Controls (Touch-Friendly 44px+ targets) */}
+                              {/* Stepper Controls */}
                               <div className="flex items-center justify-between pt-1">
-                                <div className="flex items-center gap-1 rounded-xl border border-zinc-200 bg-zinc-50/80 p-0.5">
-                                  {/* Decrement Button (Min 44px target) */}
+                                <div className="flex items-center gap-1 rounded-xl border border-white/[0.1] bg-obsidian-950 p-0.5">
                                   <button
                                     type="button"
                                     disabled={!isOpen || busy}
                                     onClick={() => decrementItem(item.id, item.qty)}
-                                    aria-label="Decrease quantity"
-                                    className="flex h-11 w-11 items-center justify-center rounded-lg bg-white text-zinc-700 shadow-2xs hover:bg-zinc-100 hover:text-zinc-900 active:scale-95 transition-all disabled:opacity-50"
+                                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/[0.06] text-zinc-200 hover:bg-white/15 active:scale-95 transition disabled:opacity-50"
                                   >
-                                    <Minus className="h-4 w-4" />
+                                    <Minus className="h-3.5 w-3.5" />
                                   </button>
 
-                                  {/* Quantity Badge */}
-                                  <span className="w-9 text-center text-sm font-extrabold text-zinc-900 tabular-nums">
+                                  <span className="w-8 text-center text-xs font-mono font-black text-white tabular-nums">
                                     {item.qty}
                                   </span>
 
-                                  {/* Increment Button (Min 44px target) */}
                                   <button
                                     type="button"
                                     disabled={!isOpen || busy}
                                     onClick={() => incrementItem(item.id, item.qty)}
-                                    aria-label="Increase quantity"
-                                    className="flex h-11 w-11 items-center justify-center rounded-lg bg-white text-zinc-700 shadow-2xs hover:bg-zinc-100 hover:text-zinc-900 active:scale-95 transition-all disabled:opacity-50"
+                                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/[0.06] text-zinc-200 hover:bg-white/15 active:scale-95 transition disabled:opacity-50"
                                   >
-                                    <Plus className="h-4 w-4" />
+                                    <Plus className="h-3.5 w-3.5" />
                                   </button>
                                 </div>
 
-                                {/* Trash Delete Button (Min 44px target) */}
                                 <button
                                   type="button"
                                   disabled={!isOpen || busy}
                                   onClick={() => removeItem(item.id)}
-                                  aria-label="Remove item"
+                                  className="flex h-9 w-9 items-center justify-center rounded-xl text-zinc-500 hover:bg-rose-500/10 hover:text-rose-400 active:scale-95 transition disabled:opacity-50"
                                   title="Remove item"
-                                  className="flex h-11 w-11 items-center justify-center rounded-xl text-zinc-400 hover:bg-red-50 hover:text-red-600 active:scale-95 transition-all disabled:opacity-50"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </button>
@@ -751,41 +708,36 @@ export default function OrderPage() {
                       </div>
                     )}
 
-                    {/* SECTION 2: Sent to Kitchen (Fired) */}
+                    {/* SECTION 2: Already Fired Items */}
                     {sent.length > 0 && (
                       <div className="space-y-3 pt-2">
-                        <div className="flex items-center justify-between border-b border-zinc-200 pb-2">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-bold uppercase tracking-wider text-zinc-600">
-                              Sent to Kitchen
+                        <div className="flex items-center justify-between border-b border-emerald-500/20 pb-2">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                            <span className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-400">
+                              FIRED TO KITCHEN
                             </span>
                           </div>
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700 border border-amber-200/80">
-                            <Flame className="h-3 w-3 text-amber-600" />
-                            Fired ({sent.length} items)
+                          <span className="text-[11px] font-mono text-zinc-400">
+                            {sent.length} items
                           </span>
                         </div>
 
-                        <div className="divide-y divide-zinc-100">
+                        <div className="divide-y divide-white/[0.06]">
                           {sent.map((item) => (
                             <div
                               key={item.id}
-                              className="py-2.5 flex items-center justify-between text-zinc-600"
+                              className="py-2.5 flex items-center justify-between text-xs"
                             >
-                              <div className="flex items-center gap-2.5">
-                                <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-md bg-zinc-100 px-1.5 text-xs font-bold text-zinc-700">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono font-bold text-emerald-400">
                                   {item.qty}×
                                 </span>
-                                <div>
-                                  <span className="text-sm font-semibold text-zinc-800 block leading-tight">
-                                    {item.menuItem?.name}
-                                  </span>
-                                  <span className="text-[11px] text-zinc-400">
-                                    {money(item.price)} each {item.ticketId ? `• Slip #${item.ticketId}` : ""}
-                                  </span>
-                                </div>
+                                <span className="font-medium text-zinc-200">
+                                  {item.menuItem?.name}
+                                </span>
                               </div>
-                              <span className="text-sm font-semibold text-zinc-700 tabular-nums">
+                              <span className="font-mono font-semibold text-zinc-300 tabular-nums">
                                 {money(item.qty * item.price)}
                               </span>
                             </div>
@@ -797,219 +749,169 @@ export default function OrderPage() {
                 )}
               </div>
 
-              {/* Receipt Bill Calculation & Totals */}
-              <div className="border-t-2 border-dashed border-zinc-200 bg-zinc-50/70 p-4 sm:p-5 space-y-4">
-                <div className="space-y-1.5 text-xs text-zinc-600">
-                  <div className="flex justify-between">
+              {/* Bill Totals Dock & Actions */}
+              <div className="border-t border-white/[0.08] bg-obsidian-850/95 p-4 sm:p-5 space-y-4">
+                <div className="space-y-1.5 text-xs font-mono">
+                  <div className="flex justify-between text-zinc-400">
                     <span>Subtotal ({totalItemsCount} items)</span>
-                    <span className="font-semibold text-zinc-800">{money(total)}</span>
+                    <span className="tabular-nums">{money(total)}</span>
                   </div>
-                  {draft.length > 0 && sent.length > 0 && (
-                    <div className="flex justify-between text-zinc-400 text-[11px]">
-                      <span>Sent: {money(sentTotal)} • Unsent: {money(draftTotal)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span>Estimated Tax & Service</span>
-                    <span className="font-semibold text-emerald-600">Taxes Included</span>
+                  <div className="flex justify-between text-zinc-400">
+                    <span>Tax & Service</span>
+                    <span className="text-emerald-400">Included in Price</span>
                   </div>
-                </div>
-
-                <div className="border-t border-zinc-200/80 pt-3 flex items-baseline justify-between">
-                  <div>
-                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-500 block">
-                      Total Due
+                  <div className="flex justify-between items-baseline pt-2 border-t border-white/[0.08]">
+                    <span className="text-sm font-bold text-white font-sans">Total Due</span>
+                    <span className="text-2xl font-black text-white font-mono tabular-nums">
+                      {money(total)}
                     </span>
-                    <span className="text-xs text-zinc-400">All applicable fees included</span>
                   </div>
-                  <span className="text-3xl font-black tracking-tight text-zinc-900">
-                    {money(total)}
-                  </span>
                 </div>
 
-                {/* POS Action Buttons */}
-                {isOpen && (
-                  <div className="space-y-2.5 pt-1">
-                    {/* Primary Button: Fire to Kitchen */}
+                {/* Primary Action Controls */}
+                <div className="space-y-2.5">
+                  {/* Fire Button */}
+                  {isOpen && (
                     <button
                       type="button"
                       disabled={draft.length === 0 || busy}
                       onClick={() => setShowFireModal(true)}
-                      className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-orange-600 py-3 px-4 text-sm sm:text-base font-bold text-white shadow-sm hover:bg-orange-700 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      className={`w-full min-h-[44px] flex items-center justify-center gap-2 rounded-xl text-xs font-bold transition-all active:scale-[0.98] ${
+                        draft.length > 0
+                          ? "bg-gradient-to-r from-amber-500 to-copper-600 text-obsidian-950 font-black shadow-glow-copper hover:brightness-110"
+                          : "bg-white/[0.05] text-zinc-500 border border-white/[0.08] cursor-not-allowed"
+                      }`}
                     >
-                      <Flame className="h-5 w-5" />
+                      <Flame className="h-4 w-4" />
                       <span>
-                        Fire to Kitchen {draft.length > 0 ? `(${draftItemsCount} items)` : ""}
+                        {draft.length > 0
+                          ? `Fire ${draftItemsCount} New Items to Kitchen`
+                          : "No New Items to Fire"}
                       </span>
                     </button>
+                  )}
 
-                    {/* Secondary Button: Request Checkout */}
+                  {/* Checkout Request Button */}
+                  {isOpen && (
                     <button
                       type="button"
-                      disabled={sent.length === 0 || draft.length > 0 || busy}
+                      disabled={order.items.length === 0 || busy}
                       onClick={() => setShowCheckoutModal(true)}
-                      title={
-                        draft.length > 0
-                          ? "Fire or remove unsent items before requesting checkout"
-                          : sent.length === 0
-                          ? "Cannot checkout with an empty ticket"
-                          : "Send order to Cashier"
-                      }
-                      className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border-2 border-zinc-900 bg-transparent py-2.5 px-4 text-xs sm:text-sm font-bold text-zinc-900 hover:bg-zinc-900 hover:text-white active:scale-[0.99] transition-all disabled:border-zinc-300 disabled:text-zinc-400 disabled:cursor-not-allowed"
+                      className={`w-full min-h-[42px] flex items-center justify-center gap-2 rounded-xl text-xs font-semibold transition-all active:scale-[0.98] ${
+                        order.items.length > 0
+                          ? "border border-white/[0.14] bg-white/[0.04] text-zinc-200 hover:bg-white/[0.08] hover:text-white"
+                          : "border border-white/[0.04] text-zinc-600 cursor-not-allowed"
+                      }`}
                     >
                       <Receipt className="h-4 w-4" />
                       <span>Request Checkout (Send to Cashier)</span>
                     </button>
-                    {draft.length > 0 && sent.length > 0 && (
-                      <p className="text-[11px] text-center text-zinc-400">
-                        * Fire or clear new items before requesting checkout.
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {isCheckout && (
-                  <div className="rounded-xl bg-blue-100/60 p-3 text-center text-xs font-semibold text-blue-900">
-                    Order submitted to cashier. Awaiting customer payment.
-                  </div>
-                )}
-
-                {isPaid && (
-                  <div className="rounded-xl bg-green-100/60 p-3 text-center text-xs font-semibold text-green-900">
-                    Order is settled and paid.
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-        {/* Floating Mobile Ticket Bar */}
-        <div className="fixed bottom-4 left-4 right-4 z-30 lg:hidden print:hidden">
-          <button
-            type="button"
-            onClick={() => setMobileTab(mobileTab === "ticket" ? "menu" : "ticket")}
-            className="w-full flex items-center justify-between rounded-2xl bg-zinc-900 text-white p-3.5 shadow-xl border border-zinc-800 active:scale-[0.99] transition"
-          >
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-orange-600 text-white font-bold text-xs">
-                {totalItemsCount}
-              </div>
-              <div className="text-left">
-                <span className="text-xs font-bold block">
-                  {mobileTab === "ticket" ? "Back to Menu Catalog" : "View Order Ticket"}
-                </span>
-                <span className="text-[11px] text-zinc-400">
-                  {draftItemsCount > 0 ? `${draftItemsCount} new to fire` : "All items sent"}
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 font-black text-sm text-emerald-400">
-              <span>{money(total)}</span>
-              <Receipt className="h-4 w-4 text-white" />
-            </div>
-          </button>
-        </div>
-
-        {/* Fire to Kitchen Confirmation Modal */}
+        {/* Modal: Confirm Fire to Kitchen */}
         <Modal
           isOpen={showFireModal}
           onClose={() => setShowFireModal(false)}
           title="Fire Order to Kitchen"
-          subtitle={`${order.table?.name || `Table #${order.tableId}`} • Order #${order.id}`}
+          subtitle={`Table ${order.table?.name || order.tableId} • ${draftItemsCount} items ready to cook`}
+          maxWidth="max-w-md"
         >
           <div className="space-y-4">
-            <div className="rounded-xl bg-orange-50/80 p-4 border border-orange-200/80">
-              <div className="flex items-center gap-2 text-sm font-bold text-orange-950 mb-2">
-                <Flame className="h-4 w-4 text-orange-600" />
-                <span>Items to Send to Kitchen ({draftItemsCount})</span>
-              </div>
-              <div className="divide-y divide-orange-100 text-xs">
-                {draft.map((item) => (
-                  <div key={item.id} className="py-2 flex justify-between items-center">
-                    <span className="font-semibold text-zinc-900">
-                      {item.qty}× {item.menuItem?.name}
-                    </span>
-                    <span className="font-bold text-zinc-700">
-                      {money(item.qty * item.price)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-3 pt-2 border-t border-orange-200 flex justify-between font-bold text-sm text-zinc-900">
-                <span>New Items Subtotal</span>
-                <span className="text-orange-700">{money(draftTotal)}</span>
-              </div>
+            <p className="text-xs text-zinc-300">
+              The following {draftItemsCount} items will be sent immediately to the Kitchen Display System (KDS):
+            </p>
+
+            <div className="rounded-2xl border border-white/[0.08] bg-obsidian-950/80 p-3.5 space-y-2 max-h-48 overflow-y-auto">
+              {draft.map((item) => (
+                <div key={item.id} className="flex justify-between items-center text-xs">
+                  <span className="text-zinc-200">
+                    <span className="font-mono font-bold text-amber-400">{item.qty}×</span>{" "}
+                    {item.menuItem?.name}
+                  </span>
+                  <span className="font-mono font-semibold text-zinc-400 tabular-nums">
+                    {money(item.qty * item.price)}
+                  </span>
+                </div>
+              ))}
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-white/[0.08]">
               <button
                 type="button"
                 onClick={() => setShowFireModal(false)}
-                className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition"
+                className="min-h-[40px] rounded-xl border border-white/[0.12] bg-white/[0.04] px-4 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-white/[0.08] transition"
               >
                 Cancel
               </button>
               <button
                 type="button"
-                disabled={busy}
-                onClick={async () => {
+                onClick={() => {
                   setShowFireModal(false);
-                  await fireKitchen();
+                  fireKitchen();
                 }}
-                className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-xs hover:bg-orange-700 active:scale-[0.99] transition disabled:opacity-50"
+                className="min-h-[40px] inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-copper-600 px-4 text-xs font-bold text-obsidian-950 shadow-glow-copper hover:brightness-110 transition"
               >
                 <Flame className="h-4 w-4" />
-                {busy ? "Sending..." : "Confirm & Fire to Kitchen"}
+                <span>Confirm & Fire to Kitchen</span>
               </button>
             </div>
           </div>
         </Modal>
 
-        {/* Request Checkout Confirmation Modal */}
+        {/* Modal: Confirm Request Checkout */}
         <Modal
           isOpen={showCheckoutModal}
           onClose={() => setShowCheckoutModal(false)}
-          title="Request Checkout"
-          subtitle={`${order.table?.name || `Table #${order.tableId}`} • Order #${order.id}`}
+          title="Send to Cashier Register"
+          subtitle={`Final bill total: ${money(total)}`}
+          maxWidth="max-w-md"
         >
           <div className="space-y-4">
-            <div className="rounded-xl bg-zinc-50 p-4 border border-zinc-200">
-              <p className="text-xs text-zinc-600">
-                This will lock the order for editing and alert the cashier register that guests are ready to settle the bill.
-              </p>
-              <div className="mt-3 pt-3 border-t border-zinc-200 flex justify-between items-baseline">
-                <span className="text-xs font-bold uppercase text-zinc-500">
-                  Total Due ({totalItemsCount} items)
+            <p className="text-xs text-zinc-300 leading-relaxed">
+              This will lock the order for editing and alert the cashier register that Table {order.table?.name || order.tableId} is ready to pay.
+            </p>
+
+            <div className="rounded-2xl border border-white/[0.08] bg-obsidian-950/80 p-4 text-xs font-mono space-y-1.5">
+              <div className="flex justify-between text-zinc-400">
+                <span>Total Items:</span>
+                <span className="text-white font-bold">{totalItemsCount}</span>
+              </div>
+              <div className="flex justify-between text-zinc-400">
+                <span>Total Bill:</span>
+                <span className="text-base text-amber-400 font-bold tabular-nums">
+                  {money(total)}
                 </span>
-                <span className="text-2xl font-black text-zinc-900">{money(total)}</span>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-white/[0.08]">
               <button
                 type="button"
                 onClick={() => setShowCheckoutModal(false)}
-                className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition"
+                className="min-h-[40px] rounded-xl border border-white/[0.12] bg-white/[0.04] px-4 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-white/[0.08] transition"
               >
-                Cancel
+                Keep Open
               </button>
               <button
                 type="button"
-                disabled={busy}
-                onClick={async () => {
+                onClick={() => {
                   setShowCheckoutModal(false);
-                  await requestCheckout();
+                  requestCheckout();
                 }}
-                className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-xs hover:bg-black active:scale-[0.99] transition disabled:opacity-50"
+                className="min-h-[40px] inline-flex items-center gap-1.5 rounded-xl bg-indigo-500 px-4 text-xs font-bold text-white shadow-xs hover:bg-indigo-600 transition"
               >
                 <Receipt className="h-4 w-4" />
-                {busy ? "Submitting..." : "Send to Cashier"}
+                <span>Send to Cashier</span>
               </button>
             </div>
           </div>
         </Modal>
+      </div>
     </AppShell>
   );
 }

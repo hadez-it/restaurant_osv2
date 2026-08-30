@@ -63,13 +63,13 @@ export const DISH_IMAGES_BY_NAME: Record<string, string> = {
 
   // Sides
   "French Fries":
-    "https://images.unsplash.com/photo-1576107232684-1279f3908594?auto=format&fit=crop&w=600&q=80",
+    "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=600&q=80",
   "Garlic Bread":
     "https://images.unsplash.com/photo-1619535860434-ba1d8fa12536?auto=format&fit=crop&w=600&q=80",
   "Truffle Parmesan Fries":
     "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=600&q=80",
   "Crispy Onion Rings":
-    "https://images.unsplash.com/photo-1639024471287-032f6644dd40?auto=format&fit=crop&w=600&q=80",
+    "https://images.unsplash.com/photo-1619860860774-1e2e17343432?auto=format&fit=crop&w=600&q=80",
 
   // Drinks
   "Iced Tea":
@@ -87,7 +87,7 @@ export const DISH_IMAGES_BY_NAME: Record<string, string> = {
 
   // Desserts
   "Mango Sticky Rice":
-    "https://images.unsplash.com/photo-1621236378699-8597fee6a1ce?auto=format&fit=crop&w=600&q=80",
+    "https://images.unsplash.com/photo-1596797038530-2c107229654b?auto=format&fit=crop&w=600&q=80",
   "Ice Cream":
     "https://images.unsplash.com/photo-1560008511-11c63416e52d?auto=format&fit=crop&w=600&q=80",
   "Classic Tiramisu":

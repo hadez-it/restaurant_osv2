@@ -12,15 +12,12 @@ import {
   VolumeX,
   Clock,
   Flame,
-  AlertTriangle,
   RotateCcw,
-  Sparkles,
   ChevronDown,
   ChevronUp,
   RefreshCw,
   User,
   Check,
-  Layers,
 } from "lucide-react";
 
 type FilterStatus = "ACTIVE" | "ALL" | "COMPLETED";
@@ -82,9 +79,8 @@ function formatElapsedTime(createdAt: string, now: number): string {
   const totalSecs = Math.floor(diffMs / 1000);
   const mins = Math.floor(totalSecs / 60);
   const secs = totalSecs % 60;
-
   if (mins < 60) {
-    return `${mins}m ${secs < 10 ? "0" : ""}${secs}s`;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   }
   const hours = Math.floor(mins / 60);
   const remMins = mins % 60;
@@ -95,7 +91,7 @@ export default function KitchenPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [printTicket, setPrintTicket] = useState<Ticket | null>(null);
   const [previewTicket, setPreviewTicket] = useState<Ticket | null>(null);
-  const [autoPrint, setAutoPrint] = useState<boolean>(true);
+  const [autoPrint, setAutoPrint] = useState<boolean>(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [filter, setFilter] = useState<FilterStatus>("ACTIVE");
   const [isHistoryExpanded, setIsHistoryExpanded] = useState<boolean>(true);
@@ -157,7 +153,7 @@ export default function KitchenPage() {
 
   useEffect(() => {
     load();
-    const t = setInterval(load, 4000);
+    const t = setInterval(load, 3500);
     return () => clearInterval(t);
   }, [load]);
 
@@ -218,305 +214,159 @@ export default function KitchenPage() {
   const activeTickets = tickets.filter((t) => t.status === "NEW");
   const doneTickets = tickets.filter((t) => t.status === "DONE");
 
-  // Summary statistics for chef situational awareness
   const totalItemsCooking = activeTickets.reduce(
     (acc, t) => acc + t.items.reduce((s, i) => s + i.qty, 0),
     0
   );
 
-  const oldestActiveMinutes = activeTickets.reduce((max, t) => {
-    const mins = getElapsedMinutes(t.createdAt, now);
-    return mins > max ? mins : max;
-  }, 0);
-
   return (
     <AppShell>
       <div className="space-y-6">
-        {/* ================================================================= */}
-        {/* TOP ACTION BAR                                                    */}
-        {/* ================================================================= */}
-        <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 sm:p-5 shadow-xs">
+        {/* Top Action Bar */}
+        <div className="rounded-3xl border border-white/[0.1] bg-obsidian-900/90 p-4 sm:p-6 shadow-2xl backdrop-blur-xl">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            {/* Title & Live Active Ticket Counter Badge */}
+            {/* Title & Live Badge */}
             <div className="flex items-center gap-3.5">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-600 text-white shadow-sm ring-4 ring-orange-50">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-copper-600 text-obsidian-950 shadow-glow-copper font-black">
                 <Flame className="h-6 w-6" />
               </div>
               <div>
                 <div className="flex flex-wrap items-center gap-2.5">
-                  <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight">
-                    Kitchen Display System (KDS)
+                  <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                    Kitchen Display System
                   </h1>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-100 px-3 py-0.5 text-xs font-black text-orange-800 border border-orange-200">
-                    <span className="h-2 w-2 rounded-full bg-orange-600 animate-pulse" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-0.5 text-xs font-mono font-bold text-amber-400 border border-amber-500/30">
+                    <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
                     {activeTickets.length} {activeTickets.length === 1 ? "ACTIVE SLIP" : "ACTIVE SLIPS"}
                   </span>
                 </div>
-                <div className="flex items-center gap-3 text-xs text-zinc-700 font-semibold mt-0.5">
-                  <span>Chef Expedite Line</span>
-                  {activeTickets.length > 0 && (
-                    <>
-                      <span className="text-zinc-400">•</span>
-                      <span>
-                        <strong className="text-zinc-900">{totalItemsCooking}</strong> items in queue
-                      </span>
-                      {oldestActiveMinutes > 0 && (
-                        <>
-                          <span className="text-zinc-400">•</span>
-                          <span className={oldestActiveMinutes >= 20 ? "text-red-700 font-bold" : oldestActiveMinutes >= 10 ? "text-amber-700 font-bold" : ""}>
-                            Oldest: {oldestActiveMinutes}m
-                          </span>
-                        </>
-                      )}
-                    </>
-                  )}
-                  {lastSyncTime && (
-                    <span className="hidden sm:inline text-zinc-400 font-normal">
-                      (Synced {lastSyncTime})
-                    </span>
-                  )}
-                </div>
+                <p className="mt-1 text-xs text-zinc-400">
+                  Sub-second bump bar, course pacing, and automated order chime notifications
+                </p>
               </div>
             </div>
 
-            {/* Quick Controls: Auto-print, Audio Chime, Sync */}
-            <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-              {/* Auto-print Toggle Switch */}
-              <button
-                type="button"
-                onClick={() => setAutoPrint((prev) => !prev)}
-                className={`group flex h-10 items-center gap-2 rounded-xl border px-3 text-xs font-bold transition-all shadow-2xs ${
-                  autoPrint
-                    ? "border-emerald-300 bg-emerald-50 text-emerald-950 hover:bg-emerald-100"
-                    : "border-zinc-200 bg-zinc-50 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
-                }`}
-                title={
-                  autoPrint
-                    ? "Auto-print is ON: New slips print immediately to thermal printer"
-                    : "Auto-print is OFF: Slips display on screen only"
-                }
-              >
-                <Printer
-                  className={`h-4 w-4 ${autoPrint ? "text-emerald-600" : "text-zinc-400"}`}
-                />
-                <span>Auto-Print</span>
-                <span
-                  className={`relative inline-flex h-4 w-7 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                    autoPrint ? "bg-emerald-600" : "bg-zinc-300"
-                  }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
-                      autoPrint ? "translate-x-3" : "translate-x-0"
-                    }`}
-                  />
-                </span>
-              </button>
+            {/* Quick KPI Chips */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-obsidian-950/80 px-3.5 py-2">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">
+                    Total In Prep
+                  </span>
+                  <span className="text-base font-black text-white font-mono tabular-nums">
+                    {totalItemsCooking} items
+                  </span>
+                </div>
+              </div>
 
-              {/* Audio Chime Toggle */}
+              {/* Chime Audio Toggle */}
               <button
                 type="button"
-                onClick={() => {
-                  const next = !soundEnabled;
-                  setSoundEnabled(next);
-                  if (next) playKitchenChime();
-                }}
-                className={`flex h-10 items-center gap-2 rounded-xl border px-3 text-xs font-bold transition-all shadow-2xs ${
+                onClick={() => setSoundEnabled(!soundEnabled)}
+                className={`inline-flex h-10 items-center gap-2 rounded-xl px-3.5 text-xs font-mono font-semibold transition active:scale-95 border ${
                   soundEnabled
-                    ? "border-amber-300 bg-amber-50 text-amber-950 hover:bg-amber-100"
-                    : "border-zinc-200 bg-zinc-50 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-glow-emerald"
+                    : "bg-white/[0.04] border-white/[0.08] text-zinc-400 hover:text-zinc-200"
                 }`}
-                title={
-                  soundEnabled
-                    ? "Audio chime is ON: Plays chime sound on new orders (tap to test/mute)"
-                    : "Audio chime is OFF (tap to unmute)"
-                }
+                title={soundEnabled ? "Audio chimes active" : "Audio muted"}
               >
                 {soundEnabled ? (
-                  <Volume2 className="h-4 w-4 text-amber-600" />
+                  <>
+                    <Volume2 className="h-4 w-4" />
+                    <span>AUDIO ON</span>
+                  </>
                 ) : (
-                  <VolumeX className="h-4 w-4 text-zinc-400" />
+                  <>
+                    <VolumeX className="h-4 w-4" />
+                    <span>MUTED</span>
+                  </>
                 )}
-                <span>Audio Chime</span>
-                <span
-                  className={`rounded px-1.5 py-0.2 text-[10px] font-black uppercase ${
-                    soundEnabled
-                      ? "bg-amber-200 text-amber-900"
-                      : "bg-zinc-200 text-zinc-600"
-                  }`}
-                >
-                  {soundEnabled ? "ON" : "OFF"}
-                </span>
               </button>
 
-              {/* Manual Refresh Sync */}
+              {/* Auto-Print Toggle */}
+              <button
+                type="button"
+                onClick={() => setAutoPrint(!autoPrint)}
+                className={`inline-flex h-10 items-center gap-2 rounded-xl px-3.5 text-xs font-mono font-semibold transition active:scale-95 border ${
+                  autoPrint
+                    ? "bg-amber-500/10 border-amber-500/30 text-amber-300"
+                    : "bg-white/[0.04] border-white/[0.08] text-zinc-400 hover:text-zinc-200"
+                }`}
+                title="Automatically trigger thermal printer on new slip"
+              >
+                <Printer className="h-4 w-4" />
+                <span>{autoPrint ? "AUTO-PRINT ON" : "PRINT MANUAL"}</span>
+              </button>
+
+              {/* Sync Button */}
               <button
                 type="button"
                 onClick={handleManualRefresh}
                 disabled={refreshing}
-                className="flex h-10 items-center gap-1.5 rounded-xl border border-zinc-200 bg-white px-3 text-xs font-bold text-zinc-700 hover:bg-zinc-50 active:scale-95 transition-all shadow-2xs disabled:opacity-50"
-                title="Force refresh queue"
+                className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-white/[0.12] bg-white/[0.04] px-3.5 text-xs font-medium text-zinc-300 hover:bg-white/[0.08] hover:text-white transition active:scale-95"
               >
                 <RefreshCw
-                  className={`h-3.5 w-3.5 ${refreshing ? "animate-spin text-orange-600" : "text-zinc-500"}`}
+                  className={`h-3.5 w-3.5 text-zinc-400 ${refreshing ? "animate-spin text-amber-400" : ""}`}
                 />
                 <span className="hidden sm:inline">Sync</span>
               </button>
             </div>
           </div>
 
-          {/* Status Filter Tabs */}
-          <div className="mt-4 pt-3.5 border-t border-zinc-100 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-1.5 p-1 bg-zinc-100/90 rounded-xl border border-zinc-200/80 min-w-0 overflow-x-auto">
-              <button
-                type="button"
-                onClick={() => setFilter("ACTIVE")}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-black transition-all ${
-                  filter === "ACTIVE"
-                    ? "bg-white text-zinc-900 shadow-2xs border border-zinc-200/80"
-                    : "text-zinc-600 hover:text-zinc-900 hover:bg-white/50"
-                }`}
-              >
-                <Flame
-                  className={`h-3.5 w-3.5 ${filter === "ACTIVE" ? "text-orange-600" : "text-zinc-400"}`}
-                />
-                <span>Active / Cooking</span>
-                <span
-                  className={`px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${
-                    filter === "ACTIVE"
-                      ? "bg-orange-100 text-orange-800"
-                      : "bg-zinc-200 text-zinc-600"
-                  }`}
-                >
-                  {activeTickets.length}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setFilter("ALL")}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-black transition-all ${
-                  filter === "ALL"
-                    ? "bg-white text-zinc-900 shadow-2xs border border-zinc-200/80"
-                    : "text-zinc-600 hover:text-zinc-900 hover:bg-white/50"
-                }`}
-              >
-                <Layers
-                  className={`h-3.5 w-3.5 ${filter === "ALL" ? "text-zinc-900" : "text-zinc-400"}`}
-                />
-                <span>All Tickets</span>
-                <span
-                  className={`px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${
-                    filter === "ALL"
-                      ? "bg-zinc-800 text-white"
-                      : "bg-zinc-200 text-zinc-600"
-                  }`}
-                >
-                  {tickets.length}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setFilter("COMPLETED")}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-black transition-all ${
-                  filter === "COMPLETED"
-                    ? "bg-white text-zinc-900 shadow-2xs border border-zinc-200/80"
-                    : "text-zinc-600 hover:text-zinc-900 hover:bg-white/50"
-                }`}
-              >
-                <CheckCircle
-                  className={`h-3.5 w-3.5 ${filter === "COMPLETED" ? "text-emerald-600" : "text-zinc-400"}`}
-                />
-                <span>Completed / History</span>
-                <span
-                  className={`px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${
-                    filter === "COMPLETED"
-                      ? "bg-emerald-100 text-emerald-800"
-                      : "bg-zinc-200 text-zinc-600"
-                  }`}
-                >
-                  {doneTickets.length}
-                </span>
-              </button>
+          {/* Filter Tabs */}
+          <div className="mt-5 pt-4 border-t border-white/[0.08] flex items-center justify-between gap-4">
+            <div className="flex items-center gap-1.5">
+              {[
+                { id: "ACTIVE", label: "Active Queue", count: activeTickets.length },
+                { id: "COMPLETED", label: "Completed Slips", count: doneTickets.length },
+                { id: "ALL", label: "All Tickets", count: tickets.length },
+              ].map((tab) => {
+                const isActive = filter === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setFilter(tab.id as FilterStatus)}
+                    className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                      isActive
+                        ? "bg-white/10 text-white border border-amber-500/40 shadow-glow-copper"
+                        : "text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04] border border-transparent"
+                    }`}
+                  >
+                    <span>{tab.label}</span>
+                    <span
+                      className={`rounded-full px-2 py-0.2 text-[10px] font-mono font-bold ${
+                        isActive
+                          ? "bg-amber-400 text-obsidian-950"
+                          : "bg-white/[0.08] text-zinc-400"
+                      }`}
+                    >
+                      {tab.count}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
-            {/* Expedite Legend */}
-            <div className="hidden md:flex items-center gap-3 text-[11px] font-bold text-zinc-500">
-              <span className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-zinc-200 border border-zinc-400" />
-                &lt; 10m Normal
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-amber-400 border border-amber-500" />
-                10-20m Warning
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-red-500 border border-red-600 animate-pulse" />
-                &gt; 20m Urgent Alert
-              </span>
-            </div>
+            <span className="text-[11px] font-mono text-zinc-500 hidden sm:inline">
+              Last Poll: {lastSyncTime}
+            </span>
           </div>
         </div>
 
-        {/* ================================================================= */}
-        {/* ACTIVE EXPEDITE TICKETS GRID                                      */}
-        {/* ================================================================= */}
+        {/* ACTIVE TICKETS QUEUE */}
         {(filter === "ACTIVE" || filter === "ALL") && (
           <div>
             {activeTickets.length === 0 ? (
-              /* EMPTY STATE: "Kitchen is clear! All orders fulfilled" */
-              <div className="rounded-3xl border-2 border-dashed border-zinc-300 bg-white/90 p-8 sm:p-14 text-center shadow-xs max-w-2xl mx-auto my-6">
-                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-orange-100 text-orange-600 mb-4 ring-8 ring-orange-50/70 shadow-inner">
-                  <ChefHat className="h-10 w-10" />
+              <div className="rounded-3xl border border-dashed border-white/[0.12] bg-obsidian-900/40 p-12 sm:p-16 text-center max-w-2xl mx-auto my-6">
+                <div className="flex h-16 w-16 mx-auto items-center justify-center rounded-2xl bg-white/[0.04] text-amber-400 mb-4">
+                  <ChefHat className="h-8 w-8" />
                 </div>
-                <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-black mb-3 border border-emerald-200">
-                  <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
-                  <span>Line All Clear</span>
-                </div>
-                <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
-                  Kitchen is clear! All orders fulfilled
+                <h2 className="text-xl font-bold text-white tracking-tight">
+                  Kitchen Prep Line Clear
                 </h2>
-                <p className="mt-2 text-sm text-zinc-500 max-w-md mx-auto leading-relaxed font-medium">
-                  No active orders in the prep queue. New slips sent from the floor will appear here automatically with real-time audio chime alerts.
+                <p className="mt-2 text-xs text-zinc-400 max-w-md mx-auto leading-relaxed">
+                  No active orders in the prep queue. New slips fired from floor waitstaff will appear here instantly with live audio chimes.
                 </p>
-
-                <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5 text-xs font-bold text-zinc-600">
-                  <span className="flex items-center gap-1.5 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-1.5">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                    Auto-polling (4s)
-                  </span>
-                  <span className="flex items-center gap-1.5 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-1.5">
-                    {soundEnabled ? (
-                      <>
-                        <Volume2 className="h-3.5 w-3.5 text-emerald-600" />
-                        Chime Active
-                      </>
-                    ) : (
-                      <>
-                        <VolumeX className="h-3.5 w-3.5 text-zinc-400" />
-                        Chime Muted
-                      </>
-                    )}
-                  </span>
-                  <span className="flex items-center gap-1.5 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-1.5">
-                    <Printer className="h-3.5 w-3.5 text-zinc-500" />
-                    {autoPrint ? "Auto-print Active" : "Auto-print Off"}
-                  </span>
-                </div>
-
-                {doneTickets.length > 0 && filter === "ACTIVE" && (
-                  <div className="mt-7">
-                    <button
-                      type="button"
-                      onClick={() => setFilter("COMPLETED")}
-                      className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 px-5 py-2.5 text-xs font-black text-white hover:bg-zinc-800 transition-colors shadow-sm"
-                    >
-                      <RotateCcw className="h-3.5 w-3.5" />
-                      <span>Review Completed Orders ({doneTickets.length})</span>
-                    </button>
-                  </div>
-                )}
               </div>
             ) : (
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
@@ -525,213 +375,174 @@ export default function KitchenPage() {
                   const isUrgent = elapsedMins >= 20;
                   const isWarning = elapsedMins >= 10 && elapsedMins < 20;
 
-                  // Escalation styles
                   const cardBorder = isUrgent
-                    ? "border-2 border-red-500 shadow-md shadow-red-100/50 ring-2 ring-red-200/80"
+                    ? "border-2 border-rose-500 shadow-glow-rose urgent-ticket-glow"
                     : isWarning
-                    ? "border-2 border-amber-400 shadow-sm ring-1 ring-amber-200/70"
-                    : "border-2 border-zinc-300 shadow-xs hover:border-zinc-400";
+                    ? "border border-amber-500/60 shadow-glow-copper"
+                    : "border border-white/[0.12] shadow-xl";
 
                   const topBarColor = isUrgent
-                    ? "bg-red-600"
+                    ? "bg-rose-500"
                     : isWarning
                     ? "bg-amber-500"
-                    : "bg-zinc-900";
+                    : "bg-emerald-500";
 
-                  const timerBadgeStyle = isUrgent
-                    ? "bg-red-100 text-red-800 border-red-300 animate-pulse-subtle font-black"
+                  const timerBadge = isUrgent
+                    ? "bg-rose-500/20 text-rose-300 border-rose-500/40 animate-pulse"
                     : isWarning
-                    ? "bg-amber-100 text-amber-800 border-amber-300 font-bold"
-                    : "bg-zinc-100 text-zinc-700 border-zinc-200 font-bold";
+                    ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
+                    : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40";
 
-                  // Prepared items checklist calculation
-                  const preparedItemsCount = t.items.filter(
+                  const preparedCount = t.items.filter(
                     (item) => checkedItemMap[item.id]
                   ).length;
                   const allPrepared =
-                    t.items.length > 0 && preparedItemsCount === t.items.length;
+                    t.items.length > 0 && preparedCount === t.items.length;
 
                   return (
                     <div
                       key={t.id}
-                      className={`relative flex flex-col justify-between rounded-2xl bg-white overflow-hidden transition-all ${cardBorder}`}
+                      className={`relative flex flex-col justify-between rounded-3xl bg-obsidian-900 overflow-hidden transition-all backdrop-blur-xl ${cardBorder}`}
                     >
                       {/* Top Physical Perforation Accent Bar */}
                       <div className={`h-2.5 w-full ${topBarColor}`} />
 
-                      <div className="p-4 sm:p-5 flex-1 flex flex-col">
-                        {/* Slip Top Header: Slip Number, Order Number, Live Escalating Elapsed Timer */}
-                        <div className="flex items-center justify-between gap-2 mb-3">
-                          <div className="flex items-center gap-2">
-                            <span className="inline-flex items-center rounded-lg bg-zinc-900 px-2.5 py-1 text-xs font-black text-white tracking-wide shadow-2xs">
-                              SLIP #{t.id}
-                            </span>
-                            <span className="rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-black text-zinc-600 border border-zinc-200">
-                              Ord #{t.order.id}
-                            </span>
-                          </div>
-
-                          {/* Elapsed Timer Counter with color escalation badge */}
-                          <div
-                            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono border transition-all ${timerBadgeStyle}`}
-                            title={`Created at ${new Date(t.createdAt).toLocaleTimeString()}`}
-                          >
-                            <Clock className="h-3.5 w-3.5 shrink-0" />
-                            <span>{formatElapsedTime(t.createdAt, now)}</span>
-                          </div>
-                        </div>
-
-                        {/* Large Table Name & Server Attribution */}
-                        <div className="pb-3 border-b-2 border-dashed border-zinc-200 flex items-start justify-between gap-2">
-                          <div>
-                            <div className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight leading-none">
-                              {t.order.table.name}
-                            </div>
-                            <div className="flex items-center gap-2 mt-2 text-xs font-semibold text-zinc-600">
-                              <span className="flex items-center gap-1 text-zinc-700">
-                                <User className="h-3.5 w-3.5 text-zinc-400" />
-                                {t.order.waiter?.name || "Server"}
+                      <div className="p-5 flex-1 flex flex-col justify-between">
+                        <div>
+                          {/* Slip Header */}
+                          <div className="flex items-center justify-between gap-2 mb-3">
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex items-center rounded-lg bg-white/[0.08] border border-white/[0.12] px-2.5 py-1 text-xs font-mono font-black text-white tracking-wide">
+                                SLIP #{t.id}
                               </span>
-                              <span className="text-zinc-300">•</span>
-                              <span className="text-zinc-700 font-medium">
-                                {new Date(t.createdAt).toLocaleTimeString([], {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
+                              <span className="rounded-md bg-white/[0.04] px-2 py-0.5 text-xs font-mono text-zinc-400">
+                                Ord #{t.order.id}
                               </span>
                             </div>
-                          </div>
 
-                          {/* Prepared item progress pill */}
-                          <div className="text-right">
-                            <span
-                              className={`inline-flex items-center gap-1 text-[11px] font-extrabold px-2.5 py-1 rounded-lg border ${
-                                allPrepared
-                                  ? "bg-emerald-100 text-emerald-800 border-emerald-300"
-                                  : preparedItemsCount > 0
-                                  ? "bg-amber-50 text-amber-800 border-amber-300"
-                                  : "bg-zinc-100 text-zinc-600 border-zinc-200"
-                              }`}
+                            {/* Elapsed Timer Counter */}
+                            <div
+                              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono border transition-all ${timerBadge}`}
+                              title={`Created at ${new Date(t.createdAt).toLocaleTimeString()}`}
                             >
-                              {allPrepared && <Check className="h-3 w-3 stroke-[3]" />}
-                              {preparedItemsCount}/{t.items.length} Ready
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Interactive Item Checklist */}
-                        <div className="py-3 flex-1">
-                          <div className="mb-2 flex items-center justify-between text-[11px] font-bold text-zinc-600 uppercase tracking-wider">
-                            <span>Tap dish when prepared:</span>
-                            <span>{t.items.reduce((s, i) => s + i.qty, 0)} Total Qty</span>
+                              <Clock className="h-3.5 w-3.5 shrink-0" />
+                              <span className="font-bold tabular-nums">
+                                {formatElapsedTime(t.createdAt, now)}
+                              </span>
+                            </div>
                           </div>
 
-                          <div className="space-y-1.5">
+                          {/* Large Table Name & Server Info */}
+                          <div className="pb-3 border-b border-dashed border-white/[0.1] flex items-start justify-between gap-2">
+                            <div>
+                              <div className="text-2xl font-black text-white tracking-tight leading-none">
+                                {t.order.table.name}
+                              </div>
+                              <div className="flex items-center gap-2 mt-2 text-xs font-mono text-zinc-400">
+                                <span className="flex items-center gap-1">
+                                  <User className="h-3.5 w-3.5 text-zinc-500" />
+                                  {t.order.waiter?.name || "Server"}
+                                </span>
+                                <span>•</span>
+                                <span>
+                                  {new Date(t.createdAt).toLocaleTimeString([], {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </span>
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => setPreviewTicket(t)}
+                              className="rounded-xl p-2 text-zinc-400 hover:text-white hover:bg-white/[0.06] transition"
+                              title="Print ticket slip"
+                            >
+                              <Printer className="h-4 w-4" />
+                            </button>
+                          </div>
+
+                          {/* Prep Progress Bar */}
+                          <div className="my-3">
+                            <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400 mb-1">
+                              <span>Prep Progress</span>
+                              <span className="text-amber-400 font-bold">
+                                {preparedCount}/{t.items.length} dishes
+                              </span>
+                            </div>
+                            <div className="h-1.5 w-full rounded-full bg-white/[0.06] overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-amber-500 to-copper-500 transition-all duration-300"
+                                style={{
+                                  width: `${t.items.length > 0 ? (preparedCount / t.items.length) * 100 : 0}%`,
+                                }}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Itemized Dish Checklist */}
+                          <div className="space-y-2 py-2">
                             {t.items.map((item) => {
                               const isChecked = !!checkedItemMap[item.id];
                               return (
-                                <div
+                                <button
                                   key={item.id}
+                                  type="button"
                                   onClick={() => toggleItemCheck(item.id)}
-                                  role="button"
-                                  tabIndex={0}
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter" || e.key === " ") {
-                                      e.preventDefault();
-                                      toggleItemCheck(item.id);
-                                    }
-                                  }}
-                                  className={`group flex items-start gap-3 p-2.5 rounded-xl cursor-pointer select-none transition-all ${
+                                  className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-left transition-all active:scale-[0.99] ${
                                     isChecked
-                                      ? "bg-emerald-50/70 border border-emerald-300/80"
-                                      : "bg-zinc-50/90 hover:bg-zinc-100/90 border border-zinc-200/80 active:scale-[0.99]"
+                                      ? "bg-white/[0.02] border-white/[0.04] text-zinc-500 line-through"
+                                      : "bg-obsidian-950/80 border-white/[0.08] text-white hover:border-amber-500/30"
                                   }`}
                                 >
-                                  {/* Checkbox button */}
-                                  <div className="mt-0.5 shrink-0">
-                                    {isChecked ? (
-                                      <div className="flex h-5 w-5 items-center justify-center rounded-md bg-emerald-600 text-white shadow-2xs">
-                                        <Check className="h-3.5 w-3.5 stroke-[3]" />
-                                      </div>
-                                    ) : (
-                                      <div className="h-5 w-5 rounded-md border-2 border-zinc-400 group-hover:border-zinc-700 bg-white transition-colors" />
-                                    )}
-                                  </div>
-
-                                  {/* High-visibility Quantity Badge */}
-                                  <div className="shrink-0">
-                                    <span
-                                      className={`inline-flex min-w-[28px] items-center justify-center rounded-md px-1.5 py-0.5 text-xs font-black tracking-tight ${
+                                  <div className="flex items-center gap-3">
+                                    <div
+                                      className={`flex h-5 w-5 items-center justify-center rounded-md border text-xs transition ${
                                         isChecked
-                                          ? "bg-zinc-200 text-zinc-500"
-                                          : "bg-zinc-900 text-white shadow-2xs"
+                                          ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
+                                          : "border-white/[0.14] text-transparent"
                                       }`}
                                     >
-                                      {item.qty}×
+                                      <Check className="h-3.5 w-3.5" />
+                                    </div>
+                                    <span className="font-bold text-sm">
+                                      <span className="font-mono text-amber-400 mr-1.5">
+                                        {item.qty}×
+                                      </span>
+                                      {item.menuItem?.name}
                                     </span>
                                   </div>
 
-                                  {/* Dish Name & Customer Note */}
-                                  <div className="flex-1 min-w-0">
-                                    <div
-                                      className={`text-sm sm:text-base font-bold leading-snug tracking-tight transition-all ${
-                                        isChecked
-                                          ? "line-through text-zinc-600 font-medium"
-                                          : "text-zinc-900"
-                                      }`}
-                                    >
-                                      {item.menuItem.name}
-                                    </div>
-
-                                    {/* Prominent customer note callout */}
-                                    {item.note && (
-                                      <div className="mt-1.5 flex items-start gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-2 py-1 text-xs font-bold text-amber-900 shadow-2xs">
-                                        <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-600 mt-0.5" />
-                                        <span className="break-words">
-                                          Note: {item.note}
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
+                                  <span className="text-[10px] font-mono uppercase text-zinc-500">
+                                    {item.menuItem?.category}
+                                  </span>
+                                </button>
                               );
                             })}
                           </div>
                         </div>
 
-                        {/* Card Bottom Actions: Print Slip & Big Touch Mark Order Ready */}
-                        <div className="pt-3 border-t-2 border-dashed border-zinc-200 flex items-center gap-2">
-                          {/* Print Thermal Slip Button */}
+                        {/* Bump Action Button */}
+                        <div className="pt-4 border-t border-white/[0.08] mt-3">
                           <button
                             type="button"
-                            onClick={() => setPreviewTicket(t)}
-                            className="h-12 px-3.5 rounded-xl border border-zinc-300 bg-white hover:bg-zinc-100 hover:border-zinc-400 active:scale-95 text-zinc-700 font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-2xs"
-                            title="View slip details / print"
-                          >
-                            <Printer className="h-4 w-4 text-zinc-600" />
-                            <span className="hidden sm:inline">Slip</span>
-                          </button>
-
-                          {/* Mark Order Ready Button */}
-                          <button
-                            type="button"
-                            onClick={() => markDone(t.id)}
                             disabled={markingDoneId === t.id}
-                            className={`flex-1 h-12 rounded-xl font-black text-sm sm:text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-sm disabled:opacity-60 ${
+                            onClick={() => markDone(t.id)}
+                            className={`w-full min-h-[44px] flex items-center justify-center gap-2 rounded-xl text-xs font-black transition-all active:scale-[0.98] cursor-pointer ${
                               allPrepared
-                                ? "bg-emerald-600 hover:bg-emerald-700 text-white ring-2 ring-emerald-300/80"
-                                : "bg-orange-600 hover:bg-orange-700 text-white"
+                                ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-obsidian-950 shadow-glow-emerald hover:brightness-110"
+                                : "bg-gradient-to-r from-amber-500 to-copper-600 text-obsidian-950 shadow-glow-copper hover:brightness-110"
                             }`}
                           >
                             {markingDoneId === t.id ? (
-                              <>
-                                <RefreshCw className="h-5 w-5 animate-spin" />
-                                <span>Expediting...</span>
-                              </>
+                              <RefreshCw className="h-4 w-4 animate-spin text-obsidian-950" />
                             ) : (
                               <>
-                                <CheckCircle className="h-5 w-5 stroke-[2.5]" />
-                                <span>Mark Order Ready</span>
+                                <CheckCircle className="h-4 w-4 stroke-[2.5]" />
+                                <span>
+                                  {allPrepared ? "Complete & Bump Slip" : "Bump Slip (Mark Ready)"}
+                                </span>
                               </>
                             )}
                           </button>
@@ -745,275 +556,141 @@ export default function KitchenPage() {
           </div>
         )}
 
-        {/* ================================================================= */}
-        {/* COMPLETED / HISTORY SECTION                                       */}
-        {/* ================================================================= */}
-        {(filter === "COMPLETED" || (filter === "ALL" && doneTickets.length > 0)) && (
-          <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 sm:p-5 shadow-xs">
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-100">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
-                  <CheckCircle className="h-4 w-4" />
-                </div>
-                <div>
-                  <h2 className="text-base font-black text-zinc-900 tracking-tight">
-                    Completed Slips History
-                  </h2>
-                  <p className="text-xs text-zinc-500">
-                    Recently fulfilled kitchen tickets
-                  </p>
-                </div>
-                <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-bold text-zinc-600 border border-zinc-200">
-                  {doneTickets.length} fulfilled
-                </span>
-              </div>
-
-              {/* Expand / Collapse toggle */}
+        {/* COMPLETED TICKETS HISTORY */}
+        {(filter === "COMPLETED" || filter === "ALL") && (
+          <div className="space-y-4 pt-4">
+            <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-emerald-400" />
+                <span>Recently Expedited Slips ({doneTickets.length})</span>
+              </h2>
               <button
                 type="button"
                 onClick={() => setIsHistoryExpanded(!isHistoryExpanded)}
-                className="flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-xs font-bold text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors"
+                className="text-xs font-mono text-zinc-400 hover:text-white flex items-center gap-1"
               >
-                <span>{isHistoryExpanded ? "Collapse" : "Expand"}</span>
+                <span>{isHistoryExpanded ? "Collapse History" : "Expand History"}</span>
                 {isHistoryExpanded ? (
-                  <ChevronUp className="h-3.5 w-3.5" />
+                  <ChevronUp className="h-4 w-4" />
                 ) : (
-                  <ChevronDown className="h-3.5 w-3.5" />
+                  <ChevronDown className="h-4 w-4" />
                 )}
               </button>
             </div>
 
             {isHistoryExpanded && (
-              <div className="mt-4">
-                {doneTickets.length === 0 ? (
-                  <div className="p-8 text-center text-sm font-semibold text-zinc-400">
-                    No completed tickets on record yet for this shift.
-                  </div>
-                ) : (
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {doneTickets.map((t) => (
-                      <div
-                        key={t.id}
-                        className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-3.5 hover:bg-zinc-50 transition-colors flex flex-col justify-between"
-                      >
-                        <div>
-                          <div className="flex items-center justify-between gap-1 mb-1.5">
-                            <span className="font-black text-xs text-zinc-900">
-                              Slip #{t.id}
-                            </span>
-                            <span className="text-[11px] font-semibold text-zinc-600">
-                              {new Date(t.createdAt).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </span>
-                          </div>
-
-                          <div className="text-base font-black text-zinc-800">
-                            {t.order.table.name}
-                          </div>
-
-                          <div className="text-xs font-medium text-zinc-600 mb-2">
-                            Waiter: {t.order.waiter?.name || "Server"}
-                          </div>
-
-                          <div className="space-y-1 text-xs text-zinc-600 border-t border-zinc-200/70 pt-2 mb-3">
-                            {t.items.slice(0, 3).map((i) => (
-                              <div key={i.id} className="truncate">
-                                <span className="font-bold text-zinc-800">{i.qty}×</span>{" "}
-                                {i.menuItem.name}
-                              </div>
-                            ))}
-                            {t.items.length > 3 && (
-                              <div className="text-[11px] text-zinc-600 italic">
-                                +{t.items.length - 3} more items...
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-1.5 pt-2 border-t border-zinc-200/70">
-                          {/* Re-print Slip */}
-                          <button
-                            type="button"
-                            onClick={() => setPreviewTicket(t)}
-                            className="flex-1 rounded-lg border border-zinc-200 bg-white py-1.5 text-xs font-bold text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900 transition-colors flex items-center justify-center gap-1 shadow-2xs"
-                            title="View / re-print ticket slip"
-                          >
-                            <Printer className="h-3.5 w-3.5 text-zinc-500" />
-                            <span>Print</span>
-                          </button>
-
-                          {/* Recall Ticket back to kitchen queue */}
-                          <button
-                            type="button"
-                            onClick={() => recallTicket(t.id)}
-                            disabled={recallingId === t.id}
-                            className="flex-1 rounded-lg border border-orange-200 bg-orange-50 py-1.5 text-xs font-bold text-orange-700 hover:bg-orange-100 transition-colors flex items-center justify-center gap-1 shadow-2xs disabled:opacity-50"
-                            title="Re-open ticket and return to kitchen queue"
-                          >
-                            <RotateCcw
-                              className={`h-3.5 w-3.5 ${
-                                recallingId === t.id ? "animate-spin" : ""
-                              }`}
-                            />
-                            <span>Recall</span>
-                          </button>
+              <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+                {doneTickets.map((t) => (
+                  <div
+                    key={t.id}
+                    className="rounded-2xl border border-white/[0.06] bg-obsidian-900/60 p-4 space-y-3 opacity-75 hover:opacity-100 transition"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="font-mono text-xs font-bold text-zinc-400">
+                          SLIP #{t.id} • {t.order.table.name}
+                        </span>
+                        <div className="text-[11px] font-mono text-zinc-500">
+                          {new Date(t.createdAt).toLocaleTimeString()}
                         </div>
                       </div>
-                    ))}
+                      <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-mono text-emerald-400 font-bold">
+                        COMPLETED
+                      </span>
+                    </div>
+
+                    <div className="text-xs text-zinc-300 font-mono space-y-1">
+                      {t.items.map((i) => (
+                        <div key={i.id} className="flex justify-between">
+                          <span>
+                            {i.qty}× {i.menuItem?.name}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="pt-2 border-t border-white/[0.06] flex justify-end">
+                      <button
+                        type="button"
+                        disabled={recallingId === t.id}
+                        onClick={() => recallTicket(t.id)}
+                        className="inline-flex items-center gap-1 text-[11px] font-mono text-zinc-400 hover:text-amber-400 transition"
+                      >
+                        <RotateCcw className="h-3 w-3" />
+                        <span>Recall to Line</span>
+                      </button>
+                    </div>
                   </div>
-                )}
+                ))}
               </div>
             )}
           </div>
         )}
 
-        {/* ================================================================= */}
-        {/* PHYSICAL THERMAL PRINTER SLIP LAYOUT (HIDDEN UNTIL PRINT)         */}
-        {/* ================================================================= */}
-        {printTicket && (
-          <div className="print-area fixed left-0 top-0 hidden w-72 bg-white p-4 font-mono text-xs text-black print:block leading-tight">
-            <div className="text-center font-black text-sm uppercase tracking-wider pb-0.5">
-              *** KITCHEN EXPEDITE SLIP ***
-            </div>
-            <div className="text-center text-[10px] text-zinc-600 pb-2 border-b border-black">
-              TCS RestaurantOS
-            </div>
-
-            <div className="py-2 space-y-0.5 text-xs">
-              <div className="flex justify-between font-bold">
-                <span>SLIP #{printTicket.id}</span>
-                <span>ORDER #{printTicket.order.id}</span>
-              </div>
-              <div className="text-base font-black uppercase tracking-tight pt-1">
-                TABLE: {printTicket.order.table.name}
-              </div>
-              <div>Server: {printTicket.order.waiter?.name || "Staff"}</div>
-              <div>Time: {new Date(printTicket.createdAt).toLocaleTimeString()}</div>
-              <div>Date: {new Date(printTicket.createdAt).toLocaleDateString()}</div>
-            </div>
-
-            <div className="my-1.5 border-t-2 border-dashed border-black" />
-
-            <div className="py-1">
-              <div className="text-[10px] font-bold uppercase tracking-wider pb-1">
-                QTY / DISH SPECIFICATION
-              </div>
-              <div className="space-y-2">
-                {printTicket.items.map((i) => (
-                  <div key={i.id} className="text-xs">
-                    <div className="font-bold flex items-start gap-1.5">
-                      <span className="text-sm font-black">{i.qty}×</span>
-                      <span className="flex-1">{i.menuItem.name}</span>
-                    </div>
-                    {i.note && (
-                      <div className="pl-5 text-[11px] font-black uppercase">
-                        ** NOTE: {i.note} **
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="my-2 border-t-2 border-dashed border-black" />
-
-            <div className="text-center text-[10px] space-y-0.5">
-              <div>
-                Total Items:{" "}
-                {printTicket.items.reduce((s, i) => s + i.qty, 0)}
-              </div>
-              <div>Printed: {new Date().toLocaleTimeString()}</div>
-              <div className="pt-1 font-bold">================================</div>
-              <div className="font-bold">--- END OF TICKET ---</div>
-            </div>
-          </div>
-        )}
-
-        {/* Ticket Slip Preview Modal */}
+        {/* Modal: Ticket Slip Printable Preview */}
         <Modal
           isOpen={!!previewTicket}
           onClose={() => setPreviewTicket(null)}
-          title={previewTicket ? `Expedite Slip #${previewTicket.id}` : "Ticket Slip"}
-          subtitle={
-            previewTicket
-              ? `Table: ${previewTicket.order.table.name} • Server: ${
-                  previewTicket.order.waiter?.name || "Staff"
-                }`
-              : undefined
-          }
-          maxWidth="max-w-md"
+          title={`Thermal Print Slip #${previewTicket?.id}`}
+          subtitle={`Table ${previewTicket?.order.table.name} • Print Preview`}
+          maxWidth="max-w-sm"
         >
           {previewTicket && (
-            <div className="space-y-4 font-mono">
-              <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 text-xs space-y-3">
-                <div className="flex justify-between font-bold border-b border-dashed border-zinc-300 pb-2 text-zinc-800">
-                  <span>SLIP #{previewTicket.id}</span>
-                  <span>ORDER #{previewTicket.order.id}</span>
-                </div>
-                <div className="text-sm font-black text-zinc-900 uppercase">
-                  TABLE: {previewTicket.order.table.name}
-                </div>
-                <div className="text-zinc-600">
-                  <div>Server: {previewTicket.order.waiter?.name || "Staff"}</div>
-                  <div>Time: {new Date(previewTicket.createdAt).toLocaleTimeString()}</div>
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-white/[0.12] bg-white text-zinc-950 p-5 font-mono text-xs shadow-2xl">
+                <div className="text-center pb-3 border-b-2 border-dashed border-zinc-300">
+                  <h3 className="font-black text-base uppercase">TCS RestaurantOS</h3>
+                  <p className="text-[10px] text-zinc-600">KITCHEN EXPEDITE ORDER</p>
+                  <p className="text-xs font-bold mt-1">
+                    SLIP #{previewTicket.id} • ORD #{previewTicket.order.id}
+                  </p>
                 </div>
 
-                <div className="border-t border-dashed border-zinc-300 pt-2 space-y-2">
+                <div className="py-3 border-b border-zinc-200">
+                  <div className="text-lg font-black">{previewTicket.order.table.name}</div>
+                  <div className="text-[11px] text-zinc-600">
+                    Server: {previewTicket.order.waiter?.name || "Unassigned"}
+                  </div>
+                  <div className="text-[11px] text-zinc-600">
+                    Time: {new Date(previewTicket.createdAt).toLocaleTimeString()}
+                  </div>
+                </div>
+
+                <div className="py-3 space-y-2 border-b border-zinc-200">
                   {previewTicket.items.map((i) => (
-                    <div key={i.id} className="flex justify-between items-start">
-                      <div>
-                        <span className="font-black text-zinc-900">{i.qty}× </span>
-                        <span className="font-bold text-zinc-800">{i.menuItem.name}</span>
-                        {i.note && (
-                          <div className="text-[11px] text-amber-700 font-sans mt-0.5">
-                            * {i.note}
-                          </div>
-                        )}
-                      </div>
+                    <div key={i.id} className="flex justify-between font-bold">
+                      <span>
+                        {i.qty}× {i.menuItem?.name}
+                      </span>
                     </div>
                   ))}
                 </div>
 
-                <div className="border-t border-dashed border-zinc-300 pt-2 flex justify-between font-bold text-zinc-800">
-                  <span>Total Items:</span>
-                  <span>{previewTicket.items.reduce((s, i) => s + i.qty, 0)}</span>
+                <div className="pt-3 text-center text-[10px] text-zinc-500">
+                  END OF KITCHEN SLIP
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-1 font-sans">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/[0.08]">
                 <button
                   type="button"
                   onClick={() => setPreviewTicket(null)}
-                  className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition"
+                  className="min-h-[40px] rounded-xl border border-white/[0.12] bg-white/[0.04] px-4 text-xs font-semibold text-zinc-300 hover:text-white"
                 >
                   Close
                 </button>
                 <button
                   type="button"
                   onClick={() => {
-                    setPrintTicket(previewTicket);
+                    const t = previewTicket;
                     setPreviewTicket(null);
+                    setPrintTicket(t);
                   }}
-                  className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 px-4 py-2.5 text-xs font-bold text-white hover:bg-black active:scale-[0.99] transition shadow-xs"
+                  className="min-h-[40px] inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-copper-600 px-4 text-xs font-bold text-obsidian-950 shadow-glow-copper hover:brightness-110"
                 >
                   <Printer className="h-4 w-4" />
-                  Print Slip
+                  <span>Send to Printer</span>
                 </button>
-                {previewTicket.status === "NEW" && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      markDone(previewTicket.id);
-                      setPreviewTicket(null);
-                    }}
-                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 active:scale-[0.99] transition shadow-xs"
-                  >
-                    <CheckCircle className="h-4 w-4" />
-                    Mark Ready
-                  </button>
-                )}
               </div>
             </div>
           )}
