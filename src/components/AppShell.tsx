@@ -13,6 +13,7 @@ import {
   Sparkles,
   User,
 } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 interface Me {
   id: number;
@@ -227,6 +228,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 <User className="h-3.5 w-3.5" />
               </div>
             </div>
+
+            {/* Theme Mode Switcher */}
+            <ThemeToggle />
 
             {/* Shift Sign-Out */}
             <button

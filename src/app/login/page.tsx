@@ -19,6 +19,7 @@ import {
   Radio,
   Cpu,
 } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 interface DemoStation {
   id: string;
@@ -157,6 +158,11 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-[100dvh] w-full flex flex-col lg:flex-row bg-obsidian-950 text-zinc-100 selection:bg-amber-500/30 selection:text-amber-200 relative overflow-hidden">
+      {/* Top right theme toggle */}
+      <div className="absolute top-4 right-4 z-30">
+        <ThemeToggle showLabel />
+      </div>
+
       {/* Background ambient lighting */}
       <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle_at_30%_20%,rgba(217,119,6,0.12),transparent_50%)]" />
       <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle_at_80%_80%,rgba(16,185,129,0.06),transparent_50%)]" />
