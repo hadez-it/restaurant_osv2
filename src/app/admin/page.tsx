@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
 import Modal from "@/components/Modal";
 import { TableInfo, MenuItem, Order, orderTotal, money } from "@/lib/types";
-import { getMenuItemImage } from "@/lib/menu-images";
+import { getMenuItemImage, FALLBACK_FOOD_IMAGE } from "@/lib/menu-images";
 import {
   LayoutGrid,
   Utensils,
@@ -21,6 +21,7 @@ import {
   Pencil,
   TrendingUp,
   RefreshCw,
+  Printer,
 } from "lucide-react";
 
 interface UserRow {
@@ -320,7 +321,7 @@ function TablesTab() {
               placeholder="e.g. Table 9, Booth A, Patio 3"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white placeholder:text-zinc-500 focus:border-amber-500 focus:outline-hidden font-mono"
+              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white placeholder:text-zinc-500 focus:border-amber-500 focus:outline-none font-mono"
             />
           </div>
 
@@ -335,7 +336,7 @@ function TablesTab() {
               required
               value={seats}
               onChange={(e) => setSeats(e.target.value)}
-              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-hidden"
+              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-none"
             />
           </div>
 
@@ -382,7 +383,7 @@ function TablesTab() {
               required
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
-              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-hidden"
+              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-none"
             />
           </div>
 
@@ -397,7 +398,7 @@ function TablesTab() {
               required
               value={editSeats}
               onChange={(e) => setEditSeats(e.target.value)}
-              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-hidden"
+              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-none"
             />
           </div>
 
@@ -634,7 +635,7 @@ function MenuTab() {
             placeholder="Search dishes or categories..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full h-9 pl-8 pr-7 rounded-xl border border-white/[0.1] bg-obsidian-950/80 text-xs text-white placeholder:text-zinc-500 font-mono focus:border-amber-500 focus:outline-hidden"
+            className="w-full h-9 pl-8 pr-7 rounded-xl border border-white/[0.1] bg-obsidian-950/80 text-xs text-white placeholder:text-zinc-500 font-mono focus:border-amber-500 focus:outline-none"
           />
         </div>
       </div>
@@ -664,6 +665,13 @@ function MenuTab() {
                 <img
                   src={getMenuItemImage(item)}
                   alt={item.name}
+                  onError={(e) => {
+                    const target = e.currentTarget as HTMLImageElement;
+                    if (!target.dataset.fallback) {
+                      target.dataset.fallback = "true";
+                      target.src = FALLBACK_FOOD_IMAGE;
+                    }
+                  }}
                   className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
                   loading="lazy"
                 />
@@ -750,7 +758,7 @@ function MenuTab() {
               placeholder="e.g. Wagyu Ribeye Steak"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white placeholder:text-zinc-500 font-mono focus:border-amber-500 focus:outline-hidden"
+              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white placeholder:text-zinc-500 font-mono focus:border-amber-500 focus:outline-none"
             />
           </div>
 
@@ -767,7 +775,7 @@ function MenuTab() {
                 placeholder="16.50"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-hidden"
+                className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-none"
               />
             </div>
             <div>
@@ -779,7 +787,7 @@ function MenuTab() {
                 placeholder="Mains, Starters..."
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-hidden"
+                className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-none"
               />
             </div>
           </div>
@@ -827,7 +835,7 @@ function MenuTab() {
               required
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
-              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-hidden"
+              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-none"
             />
           </div>
 
@@ -843,7 +851,7 @@ function MenuTab() {
                 required
                 value={editPrice}
                 onChange={(e) => setEditPrice(e.target.value)}
-                className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-hidden"
+                className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-none"
               />
             </div>
             <div>
@@ -854,7 +862,7 @@ function MenuTab() {
                 type="text"
                 value={editCategory}
                 onChange={(e) => setEditCategory(e.target.value)}
-                className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-hidden"
+                className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-none"
               />
             </div>
           </div>
@@ -1025,7 +1033,7 @@ function UsersTab() {
             placeholder="Search staff by name or username..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full h-9 pl-8 pr-7 rounded-xl border border-white/[0.1] bg-obsidian-950/80 text-xs text-white placeholder:text-zinc-500 font-mono focus:border-amber-500 focus:outline-hidden"
+            className="w-full h-9 pl-8 pr-7 rounded-xl border border-white/[0.1] bg-obsidian-950/80 text-xs text-white placeholder:text-zinc-500 font-mono focus:border-amber-500 focus:outline-none"
           />
         </div>
       </div>
@@ -1093,7 +1101,7 @@ function UsersTab() {
               placeholder="e.g. Maria Chen"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white placeholder:text-zinc-500 font-mono focus:border-amber-500 focus:outline-hidden"
+              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white placeholder:text-zinc-500 font-mono focus:border-amber-500 focus:outline-none"
             />
           </div>
 
@@ -1107,7 +1115,7 @@ function UsersTab() {
               placeholder="e.g. marian"
               value={form.username}
               onChange={(e) => setForm({ ...form, username: e.target.value })}
-              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white placeholder:text-zinc-500 font-mono focus:border-amber-500 focus:outline-hidden"
+              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white placeholder:text-zinc-500 font-mono focus:border-amber-500 focus:outline-none"
             />
           </div>
 
@@ -1122,7 +1130,7 @@ function UsersTab() {
                 placeholder="Passcode"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
-                className="w-full h-11 px-3.5 pr-10 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white placeholder:text-zinc-500 font-mono focus:border-amber-500 focus:outline-hidden"
+                className="w-full h-11 px-3.5 pr-10 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white placeholder:text-zinc-500 font-mono focus:border-amber-500 focus:outline-none"
               />
               <button
                 type="button"
@@ -1141,7 +1149,7 @@ function UsersTab() {
             <select
               value={form.role}
               onChange={(e) => setForm({ ...form, role: e.target.value })}
-              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-hidden"
+              className="w-full h-11 px-3.5 rounded-xl border border-white/[0.12] bg-obsidian-950 text-sm text-white font-mono focus:border-amber-500 focus:outline-none"
             >
               <option value="WAITER">Floor Waitstaff (Waiter)</option>
               <option value="KITCHEN">Kitchen Line (KDS)</option>
@@ -1323,7 +1331,7 @@ function SalesTab() {
               placeholder="Filter by ID, table, waiter..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-8 pl-8 pr-7 rounded-xl border border-white/[0.1] bg-obsidian-950/80 text-xs text-white placeholder:text-zinc-500 font-mono focus:border-amber-500 focus:outline-hidden"
+              className="w-full h-8 pl-8 pr-7 rounded-xl border border-white/[0.1] bg-obsidian-950/80 text-xs text-white placeholder:text-zinc-500 font-mono focus:border-amber-500 focus:outline-none"
             />
           </div>
         </div>
@@ -1394,7 +1402,7 @@ function SalesTab() {
       >
         {selectedOrder && (
           <div className="space-y-4">
-            <div className="rounded-2xl border border-white/[0.12] bg-white text-zinc-950 p-5 font-mono text-xs shadow-2xl">
+            <div className="print-area rounded-2xl border border-white/[0.12] bg-white text-zinc-950 p-5 font-mono text-xs shadow-2xl">
               <div className="text-center pb-3 border-b border-zinc-200">
                 <h3 className="font-black text-sm uppercase">TCS RestaurantOS</h3>
                 <p className="text-[10px] text-zinc-600">
@@ -1422,13 +1430,21 @@ function SalesTab() {
               </div>
             </div>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/[0.08] print:hidden">
               <button
                 type="button"
                 onClick={() => setSelectedOrder(null)}
                 className="h-10 px-4 rounded-xl border border-white/[0.12] bg-white/[0.04] text-xs font-semibold text-zinc-300 hover:text-white"
               >
                 Close
+              </button>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="h-10 inline-flex items-center gap-1.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-copper-600 text-xs font-bold text-obsidian-950 shadow-glow-copper hover:brightness-110"
+              >
+                <Printer className="h-4 w-4" />
+                <span>Print Receipt</span>
               </button>
             </div>
           </div>

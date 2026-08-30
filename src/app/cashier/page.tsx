@@ -53,8 +53,12 @@ export default function CashierPage() {
   // Initialize today's collections from localStorage
   useEffect(() => {
     try {
-      const savedCollections = localStorage.getItem("orange_pos_cashier_collections");
-      const savedCount = localStorage.getItem("orange_pos_cashier_count");
+      const savedCollections =
+        localStorage.getItem("tcs_pos_cashier_collections") ||
+        localStorage.getItem("orange_pos_cashier_collections");
+      const savedCount =
+        localStorage.getItem("tcs_pos_cashier_count") ||
+        localStorage.getItem("orange_pos_cashier_count");
       if (savedCollections) setTodayCollections(parseFloat(savedCollections) || 0);
       if (savedCount) setTodayCount(parseInt(savedCount, 10) || 0);
     } catch {
@@ -130,8 +134,8 @@ export default function CashierPage() {
       setTodayCollections(newTotal);
       setTodayCount(newCount);
       try {
-        localStorage.setItem("orange_pos_cashier_collections", newTotal.toFixed(2));
-        localStorage.setItem("orange_pos_cashier_count", newCount.toString());
+        localStorage.setItem("tcs_pos_cashier_collections", newTotal.toFixed(2));
+        localStorage.setItem("tcs_pos_cashier_count", newCount.toString());
       } catch {
         // ignore
       }
@@ -579,7 +583,7 @@ export default function CashierPage() {
                       min="0"
                       value={tenderedAmount}
                       onChange={(e) => setTenderedAmount(e.target.value)}
-                      className="w-full text-right h-10 pl-7 pr-3 rounded-xl border border-white/[0.14] bg-obsidian-900 text-base font-bold text-white font-mono focus:border-amber-500 focus:outline-hidden"
+                      className="w-full text-right h-10 pl-7 pr-3 rounded-xl border border-white/[0.14] bg-obsidian-900 text-base font-bold text-white font-mono focus:border-amber-500 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -643,7 +647,7 @@ export default function CashierPage() {
           {printedReceipt && (
             <div className="space-y-4">
               {/* Thermal Receipt Paper Visual */}
-              <div className="rounded-2xl border border-white/[0.12] bg-white text-zinc-950 p-6 font-mono text-xs shadow-2xl">
+              <div className="print-area rounded-2xl border border-white/[0.12] bg-white text-zinc-950 p-6 font-mono text-xs shadow-2xl">
                 <div className="text-center pb-3 border-b-2 border-dashed border-zinc-300">
                   <h3 className="font-black text-base uppercase">TCS RestaurantOS</h3>
                   <p className="text-[10px] text-zinc-600">OFFICIAL FISCAL RECEIPT</p>
@@ -688,7 +692,7 @@ export default function CashierPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/[0.08]">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/[0.08] print:hidden">
                 <button
                   type="button"
                   onClick={() => {

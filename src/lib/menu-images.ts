@@ -3,6 +3,9 @@
  * Used as primary mock data and intelligent fallbacks for menu items.
  */
 
+export const FALLBACK_FOOD_IMAGE =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 400' fill='%23181d27'%3E%3Crect width='600' height='400' fill='%23181d27'/%3E%3Ccircle cx='300' cy='180' r='60' fill='%2327272a' stroke='%233f3f46' stroke-width='4'/%3E%3Cpath d='M280 180h40M300 160v40' stroke='%2371717a' stroke-width='4' stroke-linecap='round'/%3E%3Ctext x='50%25' y='72%25' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='16' font-weight='bold' fill='%2371717a'%3EDelicious Dish%3C/text%3E%3C/svg%3E";
+
 export const DEFAULT_CATEGORY_IMAGES: Record<string, string> = {
   Mains:
     "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80", // Steak & ribs

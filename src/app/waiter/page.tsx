@@ -145,10 +145,18 @@ export default function WaiterPage() {
       const activeOrder = table.orders?.[0];
       const orderIdMatch = activeOrder ? `#${activeOrder.id}`.includes(query) || `${activeOrder.id}`.includes(query) : false;
       const waiterMatch = activeOrder?.waiter?.name.toLowerCase().includes(query) ?? false;
+      const statusMatch = table.status.toLowerCase().includes(query);
 
-      return nameMatch || seatsMatch || orderIdMatch || waiterMatch;
+      return nameMatch || seatsMatch || orderIdMatch || waiterMatch || statusMatch;
     });
   }, [tables, statusFilter, searchQuery]);
+
+  const STATUS_TABS = [
+    { id: "ALL", label: "All", count: stats.total },
+    { id: "FREE", label: "Available", count: stats.free },
+    { id: "OCCUPIED", label: "Dining", count: stats.occupied },
+    { id: "CHECKOUT", label: "Bill", count: stats.checkout },
+  ];
 
   return (
     <AppShell>
@@ -161,6 +169,7 @@ export default function WaiterPage() {
               <span>{errorMessage}</span>
             </div>
             <button
+              type="button"
               onClick={() => setErrorMessage(null)}
               className="rounded-lg p-1 text-rose-400 hover:bg-rose-500/20"
             >
@@ -169,23 +178,17 @@ export default function WaiterPage() {
           </div>
         )}
 
-        {/* Floorplan Control Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-white/[0.08] bg-obsidian-900/80 p-2.5 sm:p-3 shadow-2xl backdrop-blur-xl">
-          {/* Status Filter Tabs */}
+        {/* Filter Navigation Bar */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-2xl border border-white/[0.08] bg-obsidian-900/80 p-2 sm:p-2.5 shadow-2xl backdrop-blur-xl">
+          {/* Status Tabs */}
           <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
-            {[
-              { id: "ALL", label: "All", count: stats.total },
-              { id: "FREE", label: "Available", count: stats.free },
-              { id: "OCCUPIED", label: "Dining", count: stats.occupied },
-              { id: "CHECKOUT", label: "Bill", count: stats.checkout },
-            ].map((tab) => {
+            {STATUS_TABS.map((tab) => {
               const active = statusFilter === tab.id;
               return (
                 <button
                   key={tab.id}
-                  type="button"
                   onClick={() => setStatusFilter(tab.id as FilterStatus)}
-                  className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+                  className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold transition shrink-0 whitespace-nowrap ${
                     active
                       ? "bg-white/10 text-white border border-amber-500/40 shadow-glow-copper"
                       : "text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04] border border-transparent"
@@ -193,7 +196,7 @@ export default function WaiterPage() {
                 >
                   <span>{tab.label}</span>
                   <span
-                    className={`rounded-full px-1.5 py-0.2 text-[10px] font-mono ${
+                    className={`rounded-full px-1.5 py-0.5 text-[10px] font-mono ${
                       active ? "bg-amber-400 text-obsidian-950 font-black" : "bg-white/[0.08] text-zinc-400"
                     }`}
                   >
@@ -213,7 +216,7 @@ export default function WaiterPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search tables..."
-                className="h-8.5 w-full rounded-xl border border-white/[0.1] bg-obsidian-950/80 pl-8 pr-7 text-xs text-white placeholder:text-zinc-500 focus:border-amber-500 focus:outline-hidden transition font-mono"
+                className="h-9 w-full rounded-xl border border-white/[0.1] bg-obsidian-950/80 pl-8 pr-7 text-xs text-white placeholder:text-zinc-500 focus:border-amber-500 focus:outline-none transition font-mono"
               />
               {searchQuery && (
                 <button
@@ -230,7 +233,7 @@ export default function WaiterPage() {
               type="button"
               onClick={() => load(true)}
               disabled={isRefreshing}
-              className="inline-flex h-8.5 items-center gap-1.5 rounded-xl border border-white/[0.1] bg-obsidian-950/60 px-2.5 text-xs font-semibold text-zinc-300 hover:bg-white/[0.06] transition"
+              className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-white/[0.1] bg-obsidian-950/60 px-2.5 text-xs font-semibold text-zinc-300 hover:bg-white/[0.06] transition"
               title="Refresh tables"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin text-amber-400" : "text-zinc-500"}`} />

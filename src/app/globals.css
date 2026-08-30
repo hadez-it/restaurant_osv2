@@ -228,6 +228,15 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
 /* Printable Thermal Receipt & Kitchen Order Styling */
 @media print {
+  @page {
+    margin: 0;
+    size: auto;
+  }
+  html,
+  body {
+    background: white !important;
+    color: #000000 !important;
+  }
   body * {
     visibility: hidden;
   }
@@ -240,10 +249,23 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     left: 0;
     top: 0;
     width: 100%;
-    margin: 0;
-    padding: 16px;
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 20px;
     background: white !important;
-    color: black !important;
-    font-family: monospace !important;
+    color: #000000 !important;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
+  .print-area h1,
+  .print-area h2,
+  .print-area h3,
+  .print-area p,
+  .print-area span,
+  .print-area div {
+    color: #000000 !important;
   }
 }
+

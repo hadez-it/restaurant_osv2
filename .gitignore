@@ -45,3 +45,4 @@ src/generated/
 .omp/
 CLAUDE.md
 skills-lock.json
+graphify-out/

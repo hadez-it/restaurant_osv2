@@ -47,15 +47,15 @@ export default function Modal({
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-obsidian-950/80 backdrop-blur-md print:hidden animate-backdrop"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-obsidian-950/80 backdrop-blur-md animate-backdrop print:bg-transparent print:p-0 print:static print:block"
       aria-modal="true"
       role="dialog"
     >
       <div
-        className={`relative flex flex-col max-h-[92dvh] sm:max-h-[90vh] w-full ${maxWidth} overflow-hidden rounded-t-2xl sm:rounded-2xl bg-obsidian-900 shadow-2xl border border-white/[0.12] animate-modal shadow-card-dark`}
+        className={`relative flex flex-col max-h-[92dvh] sm:max-h-[90vh] w-full ${maxWidth} overflow-hidden rounded-t-2xl sm:rounded-2xl bg-obsidian-900 shadow-2xl border border-white/[0.12] animate-modal shadow-card-dark print:border-none print:shadow-none print:bg-transparent print:max-h-none print:overflow-visible print:w-full print:max-w-none`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/[0.08] px-5 py-4 bg-obsidian-850/90 backdrop-blur-xl">
+        <div className="flex items-center justify-between border-b border-white/[0.08] px-5 py-4 bg-obsidian-850/90 backdrop-blur-xl print:hidden">
           <div>
             <div className="font-bold text-white text-base flex items-center gap-2">
               {title}
@@ -75,7 +75,7 @@ export default function Modal({
         </div>
 
         {/* Body */}
-        <div className="p-5 overflow-y-auto text-zinc-200">{children}</div>
+        <div className="p-5 overflow-y-auto text-zinc-200 print:p-0 print:overflow-visible">{children}</div>
       </div>
     </div>
   );

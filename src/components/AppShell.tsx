@@ -122,7 +122,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-obsidian-950 text-zinc-100 flex flex-col relative selection:bg-amber-500/25 selection:text-amber-200">
       {/* Top subtle ambient warmth overlay */}
-      <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(217,119,6,0.08),transparent)]" />
+      <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(217,119,6,0.08),transparent)] print:hidden" />
 
       {/* Top Command Bar */}
       <header className="sticky top-0 z-40 border-b border-white/[0.07] bg-obsidian-950/85 backdrop-blur-2xl shadow-2xl print:hidden">
@@ -178,7 +178,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                       }`}
                     />
                     <span className="hidden md:inline">{item.label}</span>
-                    <span className="md:hidden text-[11px] font-mono text-zinc-400">
+                    <span
+                      className={`md:hidden text-[11px] font-mono ${
+                        isActive ? "text-amber-300 font-bold" : "text-zinc-400"
+                      }`}
+                    >
                       {item.stationCode}
                     </span>
                     {isActive && (

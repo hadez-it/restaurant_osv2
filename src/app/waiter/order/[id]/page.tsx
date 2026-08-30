@@ -7,7 +7,7 @@ import Link from "next/link";
 import AppShell from "@/components/AppShell";
 import Modal from "@/components/Modal";
 import { MenuItem, Order, orderTotal, money } from "@/lib/types";
-import { getMenuItemImage } from "@/lib/menu-images";
+import { getMenuItemImage, FALLBACK_FOOD_IMAGE } from "@/lib/menu-images";
 import {
   Search,
   Flame,
@@ -359,13 +359,22 @@ export default function OrderPage() {
                   </p>
                 </div>
               </div>
-              <Link
-                href="/cashier"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-500 px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-600 transition active:scale-95"
-              >
-                <span>Go to Cashier Register</span>
-                <Receipt className="h-4 w-4" />
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/waiter"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-white/[0.08] border border-white/[0.12] px-3.5 py-2.5 text-xs font-semibold text-zinc-200 hover:bg-white/[0.12] transition active:scale-95"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  <span>Floor Plan</span>
+                </Link>
+                <Link
+                  href="/cashier"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-500 px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-600 transition active:scale-95"
+                >
+                  <span>Cashier Register</span>
+                  <Receipt className="h-4 w-4" />
+                </Link>
+              </div>
             </div>
           </div>
         )}
@@ -394,7 +403,7 @@ export default function OrderPage() {
           >
             <span>Live Ticket</span>
             {totalItemsCount > 0 && (
-              <span className="rounded-full bg-amber-500 px-1.5 py-0.2 text-[10px] font-mono text-obsidian-950 font-black">
+              <span className="rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-mono text-obsidian-950 font-black">
                 {totalItemsCount}
               </span>
             )}
@@ -419,7 +428,7 @@ export default function OrderPage() {
                   placeholder="Search dishes by name or category..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full rounded-xl border border-white/[0.12] bg-obsidian-950/80 pl-10 pr-10 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:border-amber-500 focus:outline-hidden transition-all font-mono"
+                  className="w-full rounded-xl border border-white/[0.12] bg-obsidian-950/80 pl-10 pr-10 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:border-amber-500 focus:outline-none transition-all font-mono"
                 />
                 {searchQuery && (
                   <button
@@ -449,7 +458,7 @@ export default function OrderPage() {
                     >
                       <span>{c}</span>
                       <span
-                        className={`rounded-full px-1.5 py-0.2 text-[10px] font-mono font-bold ${
+                        className={`rounded-full px-1.5 py-0.5 text-[10px] font-mono font-bold ${
                           isActive
                             ? "bg-obsidian-950/30 text-obsidian-950"
                             : "bg-white/[0.08] text-zinc-400"
@@ -507,6 +516,13 @@ export default function OrderPage() {
                           <img
                             src={getMenuItemImage(m)}
                             alt={m.name}
+                            onError={(e) => {
+                              const target = e.currentTarget as HTMLImageElement;
+                              if (!target.dataset.fallback) {
+                                target.dataset.fallback = "true";
+                                target.src = FALLBACK_FOOD_IMAGE;
+                              }
+                            }}
                             className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
                             loading="lazy"
                           />
@@ -820,7 +836,7 @@ export default function OrderPage() {
           isOpen={showFireModal}
           onClose={() => setShowFireModal(false)}
           title="Fire Order to Kitchen"
-          subtitle={`Table ${order.table?.name || order.tableId} • ${draftItemsCount} items ready to cook`}
+          subtitle={`${order.table?.name || `Table #${order.tableId}`} • ${draftItemsCount} items ready to cook`}
           maxWidth="max-w-md"
         >
           <div className="space-y-4">
@@ -875,7 +891,7 @@ export default function OrderPage() {
         >
           <div className="space-y-4">
             <p className="text-xs text-zinc-300 leading-relaxed">
-              This will lock the order for editing and alert the cashier register that Table {order.table?.name || order.tableId} is ready to pay.
+              This will lock the order for editing and alert the cashier register that {order.table?.name || `Table #${order.tableId}`} is ready to pay.
             </p>
 
             <div className="rounded-2xl border border-white/[0.08] bg-obsidian-950/80 p-4 text-xs font-mono space-y-1.5">

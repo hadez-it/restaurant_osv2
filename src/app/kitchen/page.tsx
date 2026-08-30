@@ -334,7 +334,7 @@ export default function KitchenPage() {
                   >
                     <span>{tab.label}</span>
                     <span
-                      className={`rounded-full px-2 py-0.2 text-[10px] font-mono font-bold ${
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-mono font-bold ${
                         isActive
                           ? "bg-amber-400 text-obsidian-950"
                           : "bg-white/[0.08] text-zinc-400"
@@ -632,12 +632,12 @@ export default function KitchenPage() {
           isOpen={!!previewTicket}
           onClose={() => setPreviewTicket(null)}
           title={`Thermal Print Slip #${previewTicket?.id}`}
-          subtitle={`Table ${previewTicket?.order.table.name} • Print Preview`}
+          subtitle={`${previewTicket?.order.table.name} • Print Preview`}
           maxWidth="max-w-sm"
         >
           {previewTicket && (
             <div className="space-y-4">
-              <div className="rounded-2xl border border-white/[0.12] bg-white text-zinc-950 p-5 font-mono text-xs shadow-2xl">
+              <div className="print-area rounded-2xl border border-white/[0.12] bg-white text-zinc-950 p-5 font-mono text-xs shadow-2xl">
                 <div className="text-center pb-3 border-b-2 border-dashed border-zinc-300">
                   <h3 className="font-black text-base uppercase">TCS RestaurantOS</h3>
                   <p className="text-[10px] text-zinc-600">KITCHEN EXPEDITE ORDER</p>
@@ -671,7 +671,7 @@ export default function KitchenPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/[0.08]">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/[0.08] print:hidden">
                 <button
                   type="button"
                   onClick={() => setPreviewTicket(null)}
@@ -681,20 +681,53 @@ export default function KitchenPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    const t = previewTicket;
-                    setPreviewTicket(null);
-                    setPrintTicket(t);
-                  }}
+                  onClick={() => window.print()}
                   className="min-h-[40px] inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-copper-600 px-4 text-xs font-bold text-obsidian-950 shadow-glow-copper hover:brightness-110"
                 >
                   <Printer className="h-4 w-4" />
-                  <span>Send to Printer</span>
+                  <span>Print Ticket Slip</span>
                 </button>
               </div>
             </div>
           )}
         </Modal>
+
+        {/* Off-screen thermal slip for auto-print & background printer jobs */}
+        {printTicket && (
+          <div className="print-area hidden print:block bg-white text-zinc-950 p-5 font-mono text-xs">
+            <div className="text-center pb-3 border-b-2 border-dashed border-zinc-300">
+              <h3 className="font-black text-base uppercase">TCS RestaurantOS</h3>
+              <p className="text-[10px] text-zinc-600">KITCHEN EXPEDITE ORDER</p>
+              <p className="text-xs font-bold mt-1">
+                SLIP #{printTicket.id} • ORD #{printTicket.order.id}
+              </p>
+            </div>
+
+            <div className="py-3 border-b border-zinc-200">
+              <div className="text-lg font-black">{printTicket.order.table.name}</div>
+              <div className="text-[11px] text-zinc-600">
+                Server: {printTicket.order.waiter?.name || "Unassigned"}
+              </div>
+              <div className="text-[11px] text-zinc-600">
+                Time: {new Date(printTicket.createdAt).toLocaleTimeString()}
+              </div>
+            </div>
+
+            <div className="py-3 space-y-2 border-b border-zinc-200">
+              {printTicket.items.map((i) => (
+                <div key={i.id} className="flex justify-between font-bold">
+                  <span>
+                    {i.qty}× {i.menuItem?.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-3 text-center text-[10px] text-zinc-500">
+              END OF KITCHEN SLIP
+            </div>
+          </div>
+        )}
       </div>
     </AppShell>
   );

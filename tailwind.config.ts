@@ -39,6 +39,8 @@ const config: Config = {
         },
       },
       boxShadow: {
+        "2xs": "0 1px rgb(0 0 0 / 0.05)",
+        "xs": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
         "glow-copper": "0 0 24px -4px rgba(245, 158, 11, 0.22)",
         "glow-emerald": "0 0 24px -4px rgba(16, 185, 129, 0.22)",
         "glow-rose": "0 0 24px -4px rgba(244, 63, 94, 0.22)",
