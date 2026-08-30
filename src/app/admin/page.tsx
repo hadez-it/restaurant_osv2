@@ -1260,52 +1260,52 @@ function SalesTab() {
       </div>
 
       {/* 4 Financial KPI Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl border border-white/[0.08] bg-obsidian-900/90 p-4 shadow-xl">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 block">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-2xl border border-white/[0.08] bg-obsidian-900/90 p-3.5 sm:p-4 shadow-xl">
+          <span className="text-[9px] sm:text-[10px] font-mono uppercase tracking-wider text-zinc-400 block">
             Settled Revenue
           </span>
-          <span className="text-2xl font-black text-emerald-400 font-mono tabular-nums mt-1 block">
+          <span className="text-xl sm:text-2xl font-black text-emerald-400 font-mono tabular-nums mt-0.5 sm:mt-1 block">
             {money(stats.totalRevenue)}
           </span>
-          <span className="text-[11px] font-mono text-zinc-400 mt-1 block">
+          <span className="text-[10px] sm:text-[11px] font-mono text-zinc-400 mt-0.5 sm:mt-1 block truncate">
             {stats.settledCount} paid checks
           </span>
         </div>
 
-        <div className="rounded-2xl border border-white/[0.08] bg-obsidian-900/90 p-4 shadow-xl">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 block">
+        <div className="rounded-2xl border border-white/[0.08] bg-obsidian-900/90 p-3.5 sm:p-4 shadow-xl">
+          <span className="text-[9px] sm:text-[10px] font-mono uppercase tracking-wider text-zinc-400 block">
             Average Check (AOV)
           </span>
-          <span className="text-2xl font-black text-amber-300 font-mono tabular-nums mt-1 block">
+          <span className="text-xl sm:text-2xl font-black text-amber-300 font-mono tabular-nums mt-0.5 sm:mt-1 block">
             {money(stats.averageOrderValue)}
           </span>
-          <span className="text-[11px] font-mono text-zinc-400 mt-1 block">
+          <span className="text-[10px] sm:text-[11px] font-mono text-zinc-400 mt-0.5 sm:mt-1 block truncate">
             Per paying party
           </span>
         </div>
 
-        <div className="rounded-2xl border border-white/[0.08] bg-obsidian-900/90 p-4 shadow-xl">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 block">
-            Total Orders Logged
+        <div className="rounded-2xl border border-white/[0.08] bg-obsidian-900/90 p-3.5 sm:p-4 shadow-xl">
+          <span className="text-[9px] sm:text-[10px] font-mono uppercase tracking-wider text-zinc-400 block">
+            Total Orders
           </span>
-          <span className="text-2xl font-black text-white font-mono tabular-nums mt-1 block">
+          <span className="text-xl sm:text-2xl font-black text-white font-mono tabular-nums mt-0.5 sm:mt-1 block">
             {stats.totalOrders}
           </span>
-          <span className="text-[11px] font-mono text-zinc-400 mt-1 block">
+          <span className="text-[10px] sm:text-[11px] font-mono text-zinc-400 mt-0.5 sm:mt-1 block truncate">
             All shift statuses
           </span>
         </div>
 
-        <div className="rounded-2xl border border-white/[0.08] bg-obsidian-900/90 p-4 shadow-xl">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 block">
+        <div className="rounded-2xl border border-white/[0.08] bg-obsidian-900/90 p-3.5 sm:p-4 shadow-xl">
+          <span className="text-[9px] sm:text-[10px] font-mono uppercase tracking-wider text-zinc-400 block">
             Dishes Served
           </span>
-          <span className="text-2xl font-black text-white font-mono tabular-nums mt-1 block">
+          <span className="text-xl sm:text-2xl font-black text-white font-mono tabular-nums mt-0.5 sm:mt-1 block">
             {stats.totalDishesSold}
           </span>
-          <span className="text-[11px] font-mono text-zinc-400 mt-1 block">
-            Individual preparations
+          <span className="text-[10px] sm:text-[11px] font-mono text-zinc-400 mt-0.5 sm:mt-1 block truncate">
+            Preparations
           </span>
         </div>
       </div>
