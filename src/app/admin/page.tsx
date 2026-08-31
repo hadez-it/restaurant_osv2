@@ -1217,9 +1217,10 @@ function SalesTab() {
     if (!q) return orders;
     return orders.filter((o) => {
       const matchId = `#${o.id}`.includes(q) || `${o.id}`.includes(q);
-      const matchTable = o.table?.name.toLowerCase().includes(q) || false;
+      const matchTable = (o.orderType === "TAKEAWAY" ? "takeaway" : o.table?.name || "").toLowerCase().includes(q);
+      const matchCustomer = (o.customerName || "").toLowerCase().includes(q);
       const matchWaiter = o.waiter?.name.toLowerCase().includes(q) || false;
-      return matchId || matchTable || matchWaiter;
+      return matchId || matchTable || matchCustomer || matchWaiter;
     });
   }, [orders, searchQuery]);
 
@@ -1354,7 +1355,15 @@ function SalesTab() {
                 return (
                   <tr key={o.id} className="hover:bg-white/[0.02] transition">
                     <td className="py-3 pl-2 font-bold text-white">#{o.id}</td>
-                    <td className="py-3">{o.table?.name}</td>
+                    <td className="py-3">
+                      {o.orderType === "TAKEAWAY" ? (
+                        <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-xs font-semibold text-amber-300">
+                          🛍️ {o.customerName ? o.customerName : "Takeaway"}
+                        </span>
+                      ) : (
+                        o.table?.name || `Table #${o.tableId}`
+                      )}
+                    </td>
                     <td className="py-3">{o.waiter?.name || "Unassigned"}</td>
                     <td className="py-3">{itemCount} items</td>
                     <td className="py-3 font-bold text-white tabular-nums">{money(total)}</td>
@@ -1394,7 +1403,7 @@ function SalesTab() {
         isOpen={!!selectedOrder}
         onClose={() => setSelectedOrder(null)}
         title={`Order #${selectedOrder?.id} Receipt`}
-        subtitle={`${selectedOrder?.table?.name} • ${selectedOrder?.status}`}
+        subtitle={`${selectedOrder?.orderType === "TAKEAWAY" ? `Takeaway ${selectedOrder.customerName ? `(${selectedOrder.customerName})` : `#${selectedOrder.id}`}` : (selectedOrder?.table?.name || `Table #${selectedOrder?.tableId}`)} • ${selectedOrder?.status}`}
         maxWidth="max-w-md"
       >
         {selectedOrder && (
@@ -1406,7 +1415,7 @@ function SalesTab() {
                   {new Date(selectedOrder.createdAt).toLocaleString()}
                 </p>
                 <p className="text-xs font-bold mt-0.5">
-                  Order #{selectedOrder.id} • {selectedOrder.table?.name}
+                  Order #{selectedOrder.id} • {selectedOrder.orderType === "TAKEAWAY" ? `Takeaway ${selectedOrder.customerName ? `(${selectedOrder.customerName})` : ""}` : (selectedOrder.table?.name || `Table #${selectedOrder.tableId}`)}
                 </p>
               </div>
 

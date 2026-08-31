@@ -16,9 +16,11 @@ import {
   AlertCircle,
   Eye,
   Armchair,
+  ShoppingBag,
 } from "lucide-react";
+import { Order } from "@/lib/types";
 
-type FilterStatus = "ALL" | "FREE" | "OCCUPIED" | "CHECKOUT";
+type FilterStatus = "ALL" | "FREE" | "OCCUPIED" | "CHECKOUT" | "TAKEAWAY";
 
 const STATUS_CONFIG: Record<
   string,
@@ -55,25 +57,38 @@ const STATUS_CONFIG: Record<
 
 export default function WaiterPage() {
   const [tables, setTables] = useState<TableInfo[]>([]);
+  const [takeaways, setTakeaways] = useState<Order[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<FilterStatus>("ALL");
   const [busyTableId, setBusyTableId] = useState<number | null>(null);
   const [selectedTable, setSelectedTable] = useState<TableInfo | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showTakeoutModal, setShowTakeoutModal] = useState(false);
+  const [takeoutCustomerName, setTakeoutCustomerName] = useState("");
+  const [creatingTakeout, setCreatingTakeout] = useState(false);
   const router = useRouter();
 
   const load = useCallback(async (showSpinner = false) => {
     if (showSpinner) setIsRefreshing(true);
     try {
-      const res = await fetch("/api/tables");
-      if (res.ok) {
-        const data = await res.json();
+      const [tRes, oRes] = await Promise.all([
+        fetch("/api/tables"),
+        fetch("/api/orders?status=OPEN,CHECKOUT"),
+      ]);
+
+      if (tRes.ok) {
+        const data = await tRes.json();
         setTables(data);
-        setErrorMessage(null);
       } else {
         setErrorMessage("Failed to refresh tables from server.");
       }
+
+      if (oRes.ok) {
+        const allOrders: Order[] = await oRes.json();
+        setTakeaways(allOrders.filter((o) => o.orderType === "TAKEAWAY"));
+      }
+      setErrorMessage(null);
     } catch {
       setErrorMessage("Network error refreshing floor plan.");
     } finally {
@@ -91,8 +106,37 @@ export default function WaiterPage() {
     return () => clearInterval(interval);
   }, [load]);
 
+  async function createTakeawayOrder() {
+    setCreatingTakeout(true);
+    setErrorMessage(null);
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderType: "TAKEAWAY",
+          customerName: takeoutCustomerName.trim() || undefined,
+        }),
+      });
+
+      if (res.ok) {
+        const order = await res.json();
+        setShowTakeoutModal(false);
+        setTakeoutCustomerName("");
+        router.push(`/waiter/order/${order.id}`);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setErrorMessage(err.error || "Failed to create takeaway order.");
+      }
+    } catch {
+      setErrorMessage("Network error creating takeaway order.");
+    } finally {
+      setCreatingTakeout(false);
+    }
+  }
+
   async function openTable(table: TableInfo) {
-    const active = table.orders?.[0];
+    const active = table.status !== "FREE" ? table.orders?.[0] : null;
     if (active) {
       router.push(`/waiter/order/${active.id}`);
       return;
@@ -124,14 +168,16 @@ export default function WaiterPage() {
   }
 
   const stats = useMemo(() => {
-    const total = tables.length;
+    const total = tables.length + takeaways.length;
     const free = tables.filter((t) => t.status === "FREE").length;
     const occupied = tables.filter((t) => t.status === "OCCUPIED").length;
     const checkout = tables.filter((t) => t.status === "CHECKOUT").length;
-    return { total, free, occupied, checkout };
-  }, [tables]);
+    const takeawayCount = takeaways.length;
+    return { total, free, occupied, checkout, takeawayCount };
+  }, [tables, takeaways]);
 
   const filteredTables = useMemo(() => {
+    if (statusFilter === "TAKEAWAY") return [];
     return tables.filter((table) => {
       if (statusFilter !== "ALL" && table.status !== statusFilter) {
         return false;
@@ -151,11 +197,25 @@ export default function WaiterPage() {
     });
   }, [tables, statusFilter, searchQuery]);
 
+  const filteredTakeaways = useMemo(() => {
+    if (statusFilter !== "ALL" && statusFilter !== "TAKEAWAY") return [];
+    return takeaways.filter((order) => {
+      if (!searchQuery.trim()) return true;
+      const query = searchQuery.toLowerCase().trim();
+      const idMatch = `#${order.id}`.includes(query) || `${order.id}`.includes(query);
+      const nameMatch = (order.customerName || "").toLowerCase().includes(query);
+      const waiterMatch = order.waiter?.name.toLowerCase().includes(query) ?? false;
+      const typeMatch = "takeaway".includes(query) || "takeout".includes(query);
+      return idMatch || nameMatch || waiterMatch || typeMatch;
+    });
+  }, [takeaways, statusFilter, searchQuery]);
+
   const STATUS_TABS = [
     { id: "ALL", label: "All", count: stats.total },
     { id: "FREE", label: "Available", count: stats.free },
     { id: "OCCUPIED", label: "Dining", count: stats.occupied },
     { id: "CHECKOUT", label: "Bill", count: stats.checkout },
+    { id: "TAKEAWAY", label: "Takeout", count: stats.takeawayCount },
   ];
 
   return (
@@ -238,14 +298,108 @@ export default function WaiterPage() {
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin text-amber-400" : "text-zinc-500"}`} />
             </button>
+
+            <button
+              type="button"
+              onClick={() => setShowTakeoutModal(true)}
+              className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-copper-600 px-3 text-xs font-black text-obsidian-950 shadow-glow-copper hover:brightness-110 active:scale-95 transition shrink-0"
+            >
+              <ShoppingBag className="h-3.5 w-3.5" />
+              <span>+ Takeout</span>
+            </button>
           </div>
         </div>
+
+        {/* Takeaway Orders Section (when on ALL or TAKEOUT) */}
+        {filteredTakeaways.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <ShoppingBag className="h-4 w-4 text-amber-400" />
+              <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-300">
+                Active Takeout Orders ({filteredTakeaways.length})
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-4">
+              {filteredTakeaways.map((o) => {
+                const total = orderTotal(o.items);
+                const isCheckout = o.status === "CHECKOUT";
+                const itemCount = o.items.reduce((sum, i) => sum + i.qty, 0);
+
+                return (
+                  <div
+                    key={o.id}
+                    className={`group relative flex flex-col justify-between rounded-3xl border bg-obsidian-900 p-4 sm:p-5 shadow-xl transition-all duration-200 ${
+                      isCheckout
+                        ? "border-indigo-500/40 shadow-2xl"
+                        : "border-amber-500/40 shadow-glow-copper"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-[11px] font-mono font-medium text-amber-300">
+                        <ShoppingBag className="h-3 w-3 text-amber-400" />
+                        <span>Takeout</span>
+                      </span>
+
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider ${
+                          isCheckout
+                            ? "bg-indigo-500/10 text-indigo-300 border-indigo-500/30"
+                            : "bg-amber-500/10 text-amber-300 border-amber-500/30"
+                        }`}
+                      >
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            isCheckout ? "bg-indigo-400" : "bg-amber-400"
+                          }`}
+                        />
+                        {isCheckout ? "Bill Ready" : "Preparing"}
+                      </span>
+                    </div>
+
+                    <div className="py-2">
+                      <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight group-hover:text-amber-300 transition-colors truncate">
+                        {o.customerName || `Order #${o.id}`}
+                      </h2>
+
+                      <div className="mt-2 min-h-[32px] flex items-center">
+                        <div className="flex items-baseline justify-between w-full">
+                          <span className="text-xs font-mono text-zinc-400">
+                            #{o.id} • {itemCount} items
+                          </span>
+                          <span className="text-lg font-black text-white font-mono tabular-nums">
+                            {money(total)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-2">
+                      <button
+                        type="button"
+                        onClick={() => router.push(`/waiter/order/${o.id}`)}
+                        className={`w-full h-10 flex items-center justify-center gap-1.5 rounded-xl px-3 text-xs font-bold transition active:scale-[0.98] ${
+                          isCheckout
+                            ? "bg-indigo-500/20 border border-indigo-500/40 text-indigo-200 hover:bg-indigo-500/30 hover:text-white"
+                            : "bg-white/[0.08] border border-amber-500/40 text-amber-300 hover:bg-amber-500/15 hover:text-white"
+                        }`}
+                      >
+                        <span>{isCheckout ? "View Bill" : "Order Details"}</span>
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* High-Visibility Table Cards Grid */}
         {filteredTables.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-4">
             {filteredTables.map((t) => {
-              const active = t.orders?.[0];
+              const active = t.status !== "FREE" ? t.orders?.[0] : null;
               const total = active ? orderTotal(active.items) : 0;
               const isBusy = busyTableId === t.id;
               const cfg = STATUS_CONFIG[t.status] || STATUS_CONFIG.FREE;
@@ -450,6 +604,68 @@ export default function WaiterPage() {
               </div>
             </div>
           )}
+        </Modal>
+
+        {/* Modal: New Takeout Order */}
+        <Modal
+          isOpen={showTakeoutModal}
+          onClose={() => {
+            if (!creatingTakeout) setShowTakeoutModal(false);
+          }}
+          title="New Takeout Order"
+          subtitle="Create an order without reserving a dine-in table"
+          maxWidth="max-w-md"
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-mono text-zinc-400 mb-1.5">
+                Customer Name / Phone (Optional)
+              </label>
+              <input
+                type="text"
+                value={takeoutCustomerName}
+                onChange={(e) => setTakeoutCustomerName(e.target.value)}
+                placeholder="e.g. Alex (09-123456)"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    createTakeawayOrder();
+                  }
+                }}
+                className="w-full h-10 rounded-xl border border-white/[0.1] bg-obsidian-950 px-3 text-sm text-white placeholder:text-zinc-600 focus:border-amber-500 focus:outline-none transition"
+              />
+              <p className="text-[11px] text-zinc-500 mt-1">
+                Leave blank to automatically assign the next order number.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/[0.08]">
+              <button
+                type="button"
+                onClick={() => setShowTakeoutModal(false)}
+                disabled={creatingTakeout}
+                className="h-10 px-4 rounded-xl border border-white/[0.12] bg-white/[0.04] text-xs font-semibold text-zinc-300 hover:text-white transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={createTakeawayOrder}
+                disabled={creatingTakeout}
+                className="h-10 px-5 rounded-xl bg-gradient-to-r from-amber-500 to-copper-600 text-xs font-black text-obsidian-950 shadow-glow-copper hover:brightness-110 active:scale-95 transition disabled:opacity-50 inline-flex items-center gap-1.5"
+              >
+                {creatingTakeout ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-obsidian-950" />
+                ) : (
+                  <>
+                    <ShoppingBag className="h-4 w-4 stroke-[2.5]" />
+                    <span>Create Takeout</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </Modal>
       </div>
     </AppShell>

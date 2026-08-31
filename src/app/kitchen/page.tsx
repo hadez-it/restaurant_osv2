@@ -435,8 +435,12 @@ export default function KitchenPage() {
                           {/* Large Table Name & Server Info */}
                           <div className="pb-3 border-b border-dashed border-white/[0.1] flex items-start justify-between gap-2">
                             <div>
-                              <div className="text-2xl font-black text-white tracking-tight leading-none">
-                                {t.order.table.name}
+                              <div className="flex items-center gap-2">
+                                <div className="text-2xl font-black text-white tracking-tight leading-none">
+                                  {t.order.orderType === "TAKEAWAY"
+                                    ? `🛍️ Takeaway ${t.order.customerName ? `(${t.order.customerName})` : `#${t.order.id}`}`
+                                    : t.order.table?.name || `Table #${t.order.tableId}`}
+                                </div>
                               </div>
                               <div className="flex items-center gap-2 mt-2 text-xs font-mono text-zinc-400">
                                 <span className="flex items-center gap-1">
@@ -588,7 +592,7 @@ export default function KitchenPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <span className="font-mono text-xs font-bold text-zinc-400">
-                          SLIP #{t.id} • {t.order.table.name}
+                          SLIP #{t.id} • {t.order.orderType === "TAKEAWAY" ? `Takeaway ${t.order.customerName ? `(${t.order.customerName})` : `#${t.order.id}`}` : (t.order.table?.name || `Table #${t.order.tableId}`)}
                         </span>
                         <div className="text-[11px] font-mono text-zinc-500">
                           {new Date(t.createdAt).toLocaleTimeString()}
@@ -632,7 +636,7 @@ export default function KitchenPage() {
           isOpen={!!previewTicket}
           onClose={() => setPreviewTicket(null)}
           title={`Thermal Print Slip #${previewTicket?.id}`}
-          subtitle={`${previewTicket?.order.table.name} • Print Preview`}
+          subtitle={`${previewTicket?.order.orderType === "TAKEAWAY" ? `Takeaway #${previewTicket.order.id}` : (previewTicket?.order.table?.name || `Table #${previewTicket?.order.tableId}`)} • Print Preview`}
           maxWidth="max-w-sm"
         >
           {previewTicket && (
@@ -647,7 +651,11 @@ export default function KitchenPage() {
                 </div>
 
                 <div className="py-3 border-b border-zinc-200">
-                  <div className="text-lg font-black">{previewTicket.order.table.name}</div>
+                  <div className="text-lg font-black">
+                    {previewTicket.order.orderType === "TAKEAWAY"
+                      ? `Takeaway ${previewTicket.order.customerName ? `(${previewTicket.order.customerName})` : `#${previewTicket.order.id}`}`
+                      : previewTicket.order.table?.name || `Table #${previewTicket.order.tableId}`}
+                  </div>
                   <div className="text-[11px] text-zinc-600">
                     Server: {previewTicket.order.waiter?.name || "Unassigned"}
                   </div>
@@ -704,7 +712,11 @@ export default function KitchenPage() {
             </div>
 
             <div className="py-3 border-b border-zinc-200">
-              <div className="text-lg font-black">{printTicket.order.table.name}</div>
+              <div className="text-lg font-black">
+                {printTicket.order.orderType === "TAKEAWAY"
+                  ? `Takeaway ${printTicket.order.customerName ? `(${printTicket.order.customerName})` : `#${printTicket.order.id}`}`
+                  : printTicket.order.table?.name || `Table #${printTicket.order.tableId}`}
+              </div>
               <div className="text-[11px] text-zinc-600">
                 Server: {printTicket.order.waiter?.name || "Unassigned"}
               </div>

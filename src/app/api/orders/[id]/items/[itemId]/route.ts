@@ -9,7 +9,7 @@ export async function DELETE(
   { params }: { params: { id: string; itemId: string } }
 ) {
   try {
-    requireRole("WAITER", "ADMIN");
+    requireRole("WAITER", "ADMIN", "CASHIER");
     const item = await prisma.orderItem.findUnique({ where: { id: Number(params.itemId) } });
     if (!item || item.orderId !== Number(params.id)) {
       return NextResponse.json({ error: "Item not found" }, { status: 404 });
@@ -30,7 +30,7 @@ export async function PATCH(
   { params }: { params: { id: string; itemId: string } }
 ) {
   try {
-    requireRole("WAITER", "ADMIN");
+    requireRole("WAITER", "ADMIN", "CASHIER");
     const item = await prisma.orderItem.findUnique({ where: { id: Number(params.itemId) } });
     if (!item || item.orderId !== Number(params.id)) {
       return NextResponse.json({ error: "Item not found" }, { status: 404 });

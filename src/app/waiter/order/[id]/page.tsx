@@ -262,6 +262,15 @@ export default function OrderPage() {
                 <span className="text-xs font-mono font-semibold text-amber-400">
                   ORDER #{order.id}
                 </span>
+                {order.orderType === "TAKEAWAY" ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-mono font-bold text-amber-300 border border-amber-500/30">
+                    🛍️ TAKEAWAY
+                  </span>
+                ) : (
+                  <span className="text-xs font-mono font-semibold uppercase tracking-wider text-zinc-400">
+                    DINE-IN
+                  </span>
+                )}
                 <span className="text-zinc-600">•</span>
                 {isOpen && (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-mono font-semibold text-emerald-400 border border-emerald-500/30">
@@ -283,8 +292,12 @@ export default function OrderPage() {
                 )}
               </div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2.5 mt-0.5">
-                <span>{order.table?.name || `Table #${order.tableId}`}</span>
-                {order.table?.seats && (
+                <span>
+                  {order.orderType === "TAKEAWAY"
+                    ? `Takeaway ${order.customerName ? `(${order.customerName})` : `#${order.id}`}`
+                    : order.table?.name || (order.tableId ? `Table #${order.tableId}` : `Order #${order.id}`)}
+                </span>
+                {order.orderType !== "TAKEAWAY" && order.table?.seats && (
                   <span className="text-xs font-mono font-normal text-zinc-400 bg-white/[0.06] px-2 py-0.5 rounded-md border border-white/[0.08]">
                     {order.table.seats} seats
                   </span>
@@ -617,7 +630,9 @@ export default function OrderPage() {
                         LIVE KITCHEN TICKET
                       </span>
                       <h2 className="text-lg font-black tracking-tight text-white leading-none mt-0.5">
-                        {order.table?.name || `Table #${order.tableId}`}
+                        {order.orderType === "TAKEAWAY"
+                          ? `Takeaway ${order.customerName ? `(${order.customerName})` : `#${order.id}`}`
+                          : order.table?.name || (order.tableId ? `Table #${order.tableId}` : `Order #${order.id}`)}
                       </h2>
                     </div>
                   </div>
@@ -836,7 +851,7 @@ export default function OrderPage() {
           isOpen={showFireModal}
           onClose={() => setShowFireModal(false)}
           title="Fire Order to Kitchen"
-          subtitle={`${order.table?.name || `Table #${order.tableId}`} • ${draftItemsCount} items ready to cook`}
+          subtitle={`${order.orderType === "TAKEAWAY" ? `Takeaway #${order.id}` : (order.table?.name || `Table #${order.tableId}`)} • ${draftItemsCount} items ready to cook`}
           maxWidth="max-w-md"
         >
           <div className="space-y-4">
@@ -862,7 +877,7 @@ export default function OrderPage() {
               <button
                 type="button"
                 onClick={() => setShowFireModal(false)}
-                className="min-h-[40px] rounded-xl border border-white/[0.12] bg-white/[0.04] px-4 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-white/[0.08] transition"
+                className="min-h-[40px] rounded-xl border border-white/[0.12] bg-white/[0.04] px-4 text-xs font-semibold text-zinc-300 hover:text-white"
               >
                 Cancel
               </button>
@@ -872,7 +887,8 @@ export default function OrderPage() {
                   setShowFireModal(false);
                   fireKitchen();
                 }}
-                className="min-h-[40px] inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-copper-600 px-4 text-xs font-bold text-obsidian-950 shadow-glow-copper hover:brightness-110 transition"
+                disabled={busy}
+                className="min-h-[40px] inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-copper-600 px-4 text-xs font-bold text-obsidian-950 shadow-glow-copper hover:brightness-110"
               >
                 <Flame className="h-4 w-4" />
                 <span>Confirm & Fire to Kitchen</span>
@@ -881,17 +897,17 @@ export default function OrderPage() {
           </div>
         </Modal>
 
-        {/* Modal: Confirm Request Checkout */}
+        {/* Modal: Request Checkout */}
         <Modal
           isOpen={showCheckoutModal}
           onClose={() => setShowCheckoutModal(false)}
           title="Send to Cashier Register"
-          subtitle={`Final bill total: ${money(total)}`}
+          subtitle={order.orderType === "TAKEAWAY" ? `Takeaway Order #${order.id}` : (order.table?.name || `Table #${order.tableId}`)}
           maxWidth="max-w-md"
         >
           <div className="space-y-4">
             <p className="text-xs text-zinc-300 leading-relaxed">
-              This will lock the order for editing and alert the cashier register that {order.table?.name || `Table #${order.tableId}`} is ready to pay.
+              This will lock the order for editing and alert the cashier register that {order.orderType === "TAKEAWAY" ? `Takeaway #${order.id}` : (order.table?.name || `Table #${order.tableId}`)} is ready to pay.
             </p>
 
             <div className="rounded-2xl border border-white/[0.08] bg-obsidian-950/80 p-4 text-xs font-mono space-y-1.5">

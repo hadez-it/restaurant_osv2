@@ -19,12 +19,14 @@ export interface OrderItem {
 
 export interface Order {
   id: number;
-  tableId: number;
+  tableId?: number | null;
   status: string;
+  orderType?: string;
+  customerName?: string | null;
   createdAt: string;
   items: OrderItem[];
   waiter?: { id: number; name: string };
-  table?: TableInfo;
+  table?: TableInfo | null;
   tickets?: { id: number; status: string }[];
 }
 
@@ -40,7 +42,7 @@ export interface Ticket {
   id: number;
   status: string;
   createdAt: string;
-  order: Order & { table: TableInfo; waiter: { name: string } };
+  order: Order & { table?: TableInfo | null; waiter: { name: string } };
   items: OrderItem[];
 }
 

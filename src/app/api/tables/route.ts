@@ -14,6 +14,7 @@ export async function GET() {
         orders: {
           where: { status: { in: ["OPEN", "CHECKOUT"] } },
           include: { items: { include: { menuItem: true } }, waiter: true },
+          orderBy: { createdAt: "desc" },
         },
       },
     });

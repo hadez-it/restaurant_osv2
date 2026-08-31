@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import Modal from "@/components/Modal";
 import { TableInfo, Order, orderTotal, money } from "@/lib/types";
@@ -16,14 +17,20 @@ import {
   TrendingUp,
   RefreshCw,
   Armchair,
+  ShoppingBag,
+  Loader2,
 } from "lucide-react";
 
 type PaymentMethod = "CASH" | "CARD" | "QR";
 
 export default function CashierPage() {
+  const router = useRouter();
   const [tables, setTables] = useState<TableInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [showTakeoutModal, setShowTakeoutModal] = useState(false);
+  const [takeoutCustomerName, setTakeoutCustomerName] = useState("");
+  const [creatingTakeout, setCreatingTakeout] = useState(false);
 
   // Selected table/order for checkout modal
   const [activePayment, setActivePayment] = useState<{
@@ -66,11 +73,16 @@ export default function CashierPage() {
     }
   }, []);
 
+  const [takeawayOrders, setTakeawayOrders] = useState<Order[]>([]);
+
   const load = useCallback(() => {
-    fetch("/api/tables")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data: TableInfo[]) => {
-        setTables(data);
+    Promise.all([
+      fetch("/api/tables").then((r) => (r.ok ? r.json() : [])),
+      fetch("/api/orders?status=OPEN,CHECKOUT").then((r) => (r.ok ? r.json() : [])),
+    ])
+      .then(([tablesData, ordersData]: [TableInfo[], Order[]]) => {
+        setTables(tablesData);
+        setTakeawayOrders(ordersData.filter((o) => o.orderType === "TAKEAWAY"));
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -82,19 +94,44 @@ export default function CashierPage() {
     return () => clearInterval(timer);
   }, [load]);
 
-  // Derived queues
+  // Derived queues: partition active orders by order status (CHECKOUT vs OPEN)
   const withOrders = tables.filter((t) => (t.orders?.length ?? 0) > 0);
-  const checkoutQueue = withOrders.filter((t) => t.status === "CHECKOUT");
-  const diningQueue = withOrders.filter((t) => t.status !== "CHECKOUT");
+  const checkoutQueue: { table: TableInfo; order: Order }[] = [];
+  const diningQueue: { table: TableInfo; order: Order }[] = [];
+
+  tables.forEach((t) => {
+    (t.orders || []).forEach((o) => {
+      if (o.status === "CHECKOUT") {
+        checkoutQueue.push({ table: t, order: o });
+      } else if (o.status === "OPEN") {
+        diningQueue.push({ table: t, order: o });
+      }
+    });
+  });
+
+  // Include takeaway orders into settlement & active queues
+  takeawayOrders.forEach((o) => {
+    const virtualTable: TableInfo = {
+      id: 0,
+      name: o.customerName ? `Takeout (${o.customerName})` : `Takeout #${o.id}`,
+      seats: 0,
+      status: o.status === "CHECKOUT" ? "CHECKOUT" : "OCCUPIED",
+    };
+    if (o.status === "CHECKOUT") {
+      checkoutQueue.push({ table: virtualTable, order: o });
+    } else if (o.status === "OPEN") {
+      diningQueue.push({ table: virtualTable, order: o });
+    }
+  });
 
   // Aggregate metrics
   const pendingBillsCount = checkoutQueue.length;
   const totalDiners = withOrders.reduce((sum, t) => sum + (t.seats || 2), 0);
 
   // Open payment modal
-  const openPaymentModal = (table: TableInfo) => {
-    if (!table.orders || table.orders.length === 0) return;
-    const order = table.orders[0];
+  const openPaymentModal = (table: TableInfo, orderToPay?: Order) => {
+    const order = orderToPay || table.orders?.[0];
+    if (!order) return;
     const total = orderTotal(order.items);
     setActivePayment({ table, order });
     setPaymentMethod("CASH");
@@ -166,6 +203,34 @@ export default function CashierPage() {
   const remainingDue = Math.max(0, currentTotal - currentTendered);
   const isSufficient = currentTendered >= currentTotal - 0.001;
 
+  const createTakeawayOrder = async () => {
+    setCreatingTakeout(true);
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderType: "TAKEAWAY",
+          customerName: takeoutCustomerName.trim() || undefined,
+        }),
+      });
+
+      if (res.ok) {
+        const order = await res.json();
+        setShowTakeoutModal(false);
+        setTakeoutCustomerName("");
+        router.push(`/waiter/order/${order.id}`);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || "Failed to create takeaway order");
+      }
+    } catch {
+      alert("Network error creating takeaway order");
+    } finally {
+      setCreatingTakeout(false);
+    }
+  };
+
   const handlePrintReceipt = () => {
     window.print();
   };
@@ -194,6 +259,15 @@ export default function CashierPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setShowTakeoutModal(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-copper-600 px-3.5 py-2 text-xs font-black text-obsidian-950 shadow-glow-copper hover:brightness-110 active:scale-95 transition shrink-0"
+            >
+              <ShoppingBag className="h-4 w-4" />
+              <span>New Takeout</span>
+            </button>
+
             <button
               onClick={load}
               disabled={loading}
@@ -337,14 +411,13 @@ export default function CashierPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {checkoutQueue.map((table) => {
-                  const order = table.orders![0];
+                {checkoutQueue.map(({ table, order }) => {
                   const total = orderTotal(order.items);
                   const itemCount = order.items.reduce((s, i) => s + i.qty, 0);
 
                   return (
                     <div
-                      key={table.id}
+                      key={order.id}
                       className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-amber-500/40 bg-obsidian-900 p-5 shadow-glow-copper transition hover:border-amber-500"
                     >
                       {/* Top status */}
@@ -354,13 +427,21 @@ export default function CashierPage() {
                             <span className="text-xl font-black text-white">
                               {table.name}
                             </span>
-                            <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.06] border border-white/[0.08] px-2 py-0.5 text-xs font-mono text-zinc-300">
-                              <Armchair className="h-3 w-3 text-zinc-400" />
-                              {table.seats} seats
-                            </span>
+                            {order.orderType === "TAKEAWAY" ? (
+                              <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-xs font-mono text-amber-300">
+                                <ShoppingBag className="h-3 w-3 text-amber-400" />
+                                Takeout
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.06] border border-white/[0.08] px-2 py-0.5 text-xs font-mono text-zinc-300">
+                                <Armchair className="h-3 w-3 text-zinc-400" />
+                                {table.seats} seats
+                              </span>
+                            )}
                           </div>
                           <div className="mt-1 text-xs font-mono text-zinc-400">
                             <span>Order #{order.id}</span>
+                            {order.customerName && <span> • {order.customerName}</span>}
                             {order.waiter && <span> • {order.waiter.name}</span>}
                           </div>
                         </div>
@@ -397,7 +478,7 @@ export default function CashierPage() {
                       {/* Action Button */}
                       <button
                         type="button"
-                        onClick={() => openPaymentModal(table)}
+                        onClick={() => openPaymentModal(table, order)}
                         className="w-full min-h-[44px] flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-copper-600 text-obsidian-950 font-black text-xs shadow-glow-copper hover:brightness-110 active:scale-[0.98] transition"
                       >
                         <Receipt className="h-4 w-4" />
@@ -434,21 +515,26 @@ export default function CashierPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {diningQueue.map((table) => {
-                  const order = table.orders![0];
+                {diningQueue.map(({ table, order }) => {
                   const total = orderTotal(order.items);
                   const itemCount = order.items.reduce((s, i) => s + i.qty, 0);
 
                   return (
                     <div
-                      key={table.id}
+                      key={order.id}
                       className="rounded-2xl border border-white/[0.08] bg-obsidian-900/80 p-4 space-y-3 shadow-sm hover:border-white/[0.14] transition"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-white">{table.name}</span>
-                        <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-mono font-bold text-emerald-400">
-                          DINING
-                        </span>
+                        <span className="font-bold text-white truncate">{table.name}</span>
+                        {order.orderType === "TAKEAWAY" ? (
+                          <span className="rounded-full bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-[10px] font-mono font-bold text-amber-300">
+                            TAKEOUT
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-mono font-bold text-emerald-400">
+                            DINING
+                          </span>
+                        )}
                       </div>
 
                       <div className="text-xs font-mono space-y-1 text-zinc-400">
@@ -468,7 +554,7 @@ export default function CashierPage() {
 
                       <button
                         type="button"
-                        onClick={() => openPaymentModal(table)}
+                        onClick={() => openPaymentModal(table, order)}
                         className="w-full py-2 text-xs font-semibold rounded-xl border border-white/[0.12] bg-white/[0.04] text-zinc-200 hover:bg-white/[0.08] hover:text-white transition"
                       >
                         Open Settlement
@@ -624,7 +710,11 @@ export default function CashierPage() {
                   ) : (
                     <>
                       <CheckCircle2 className="h-4 w-4 stroke-[2.5]" />
-                      <span>Complete Settlement & Release Table</span>
+                      <span>
+                        {activePayment.order.orderType === "TAKEAWAY"
+                          ? "Complete Settlement & Close Order"
+                          : "Complete Settlement & Release Table"}
+                      </span>
                     </>
                   )}
                 </button>
@@ -641,7 +731,11 @@ export default function CashierPage() {
             setActivePayment(null);
           }}
           title="Payment Settled Successfully"
-          subtitle="Table released and ready for new guests"
+          subtitle={
+            printedReceipt?.order.orderType === "TAKEAWAY"
+              ? "Takeout order completed and receipt printed"
+              : "Table released and ready for new guests"
+          }
           maxWidth="max-w-md"
         >
           {printedReceipt && (
@@ -714,6 +808,68 @@ export default function CashierPage() {
               </div>
             </div>
           )}
+        </Modal>
+
+        {/* Modal: New Takeout Order */}
+        <Modal
+          isOpen={showTakeoutModal}
+          onClose={() => {
+            if (!creatingTakeout) setShowTakeoutModal(false);
+          }}
+          title="New Takeout Order"
+          subtitle="Create an order without reserving a dine-in table"
+          maxWidth="max-w-md"
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-mono text-zinc-400 mb-1.5">
+                Customer Name / Phone (Optional)
+              </label>
+              <input
+                type="text"
+                value={takeoutCustomerName}
+                onChange={(e) => setTakeoutCustomerName(e.target.value)}
+                placeholder="e.g. Alex (09-123456)"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    createTakeawayOrder();
+                  }
+                }}
+                className="w-full h-10 rounded-xl border border-white/[0.1] bg-obsidian-950 px-3 text-sm text-white placeholder:text-zinc-600 focus:border-amber-500 focus:outline-none transition"
+              />
+              <p className="text-[11px] text-zinc-500 mt-1">
+                Leave blank to automatically assign the next order number.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/[0.08]">
+              <button
+                type="button"
+                onClick={() => setShowTakeoutModal(false)}
+                disabled={creatingTakeout}
+                className="h-10 px-4 rounded-xl border border-white/[0.12] bg-white/[0.04] text-xs font-semibold text-zinc-300 hover:text-white transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={createTakeawayOrder}
+                disabled={creatingTakeout}
+                className="h-10 px-5 rounded-xl bg-gradient-to-r from-amber-500 to-copper-600 text-xs font-black text-obsidian-950 shadow-glow-copper hover:brightness-110 active:scale-95 transition disabled:opacity-50 inline-flex items-center gap-1.5"
+              >
+                {creatingTakeout ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-obsidian-950" />
+                ) : (
+                  <>
+                    <ShoppingBag className="h-4 w-4 stroke-[2.5]" />
+                    <span>Create Takeout</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </Modal>
       </div>
     </AppShell>

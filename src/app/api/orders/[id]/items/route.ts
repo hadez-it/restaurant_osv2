@@ -6,7 +6,7 @@ import { handleError } from "@/lib/api";
 // Add draft items (not yet sent to kitchen)
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    requireRole("WAITER", "ADMIN");
+    requireRole("WAITER", "ADMIN", "CASHIER");
     const orderId = Number(params.id);
     const order = await prisma.order.findUnique({ where: { id: orderId } });
     if (!order || order.status !== "OPEN") {

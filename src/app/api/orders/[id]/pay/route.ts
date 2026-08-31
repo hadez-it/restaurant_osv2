@@ -17,7 +17,14 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
         where: { id: orderId },
         data: { status: "PAID", paidAt: new Date() },
       });
-      await tx.table.update({ where: { id: order.tableId }, data: { status: "FREE" } });
+      if (order.tableId) {
+        const hasOtherOpen = await tx.order.findFirst({
+          where: { tableId: order.tableId, status: "OPEN" },
+        });
+        if (!hasOtherOpen) {
+          await tx.table.update({ where: { id: order.tableId }, data: { status: "FREE" } });
+        }
+      }
       return o;
     });
     return NextResponse.json(updated);

@@ -3,10 +3,10 @@ import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
 import { handleError } from "@/lib/api";
 
-// Waiter sends order to cashier for checkout
+// Waiter or Cashier sends order for checkout
 export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    requireRole("WAITER", "ADMIN");
+    requireRole("WAITER", "ADMIN", "CASHIER");
     const orderId = Number(params.id);
     const order = await prisma.order.findUnique({
       where: { id: orderId },
@@ -24,7 +24,9 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
     }
     const updated = await prisma.$transaction(async (tx) => {
       const o = await tx.order.update({ where: { id: orderId }, data: { status: "CHECKOUT" } });
-      await tx.table.update({ where: { id: order.tableId }, data: { status: "CHECKOUT" } });
+      if (order.tableId) {
+        await tx.table.update({ where: { id: order.tableId }, data: { status: "FREE" } });
+      }
       return o;
     });
     return NextResponse.json(updated);
